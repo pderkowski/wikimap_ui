@@ -5,9 +5,9 @@ $(document).ready(function() {
       x: 'x',
       type: 'scatter',
       columns: [
-        ['title'],
         ['x'],
-        ['y']
+        ['y'],
+        ['titles']
       ],
     },
     axis: {
@@ -19,27 +19,24 @@ $(document).ready(function() {
     tooltip: {
       grouped: false,
       format: {
-        name: function (name, ratio, id, index) { return title[index]; },
-        value: function (value, ratio, id, index) { return '('+x[index]+', '+y[index]+')'; }
+        title: function (x) { return 'Data ' + x; },
+        name: function (name, ratio, id, index) { return ': ' + $(document).data('chart.titles')[index]; },
+        value: function (value, ratio, id, index) { return index + ': (' + $(document).data('chart.x')[index]+', ' + $(document).data('chart.y')[index]+')'; }
       }
     }
   });
 
-  var x = [0, 1, 2, 3.5, 4, 5];
-  var y = [50, 20, 10, 40, 15, 25];
-  var title = ['a', 'b', 'c', 'd', 'e'];
-
   $.getJSON($SCRIPT_ROOT + 'data')
     .done(function(data) {
-      x = data["x"];
-      y = data["y"];
-      title = data["title"];
+      $(document).data('chart.x', data["x"]);
+      $(document).data('chart.y', data["y"]);
+      $(document).data('chart.titles', data["titles"]);
 
       chart.load({
         columns: [
-          ['x'].concat(x),
-          ['y'].concat(y),
-          ['title'].concat(title)
+          ['x'].concat($(document).data('chart.x')),
+          ['y'].concat($(document).data('chart.y')),
+          ['titles'].concat($(document).data('chart.titles')),
         ]
       });
     });

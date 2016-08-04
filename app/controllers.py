@@ -1,5 +1,6 @@
 from app import app
 from flask import render_template, request, url_for, jsonify
+import model
 
 @app.route("/")
 def chart():
@@ -10,4 +11,4 @@ def chart():
 
 @app.route("/data")
 def data():
-    return jsonify({ 'x': [0, 1, 2, 3, 4, 5], 'y': [0, 1, 2, 3, 4, 5], 'title': ['a', 'b', 'c', 'd', 'e', 'f']})
+    return jsonify(model.getSortedData(5))
