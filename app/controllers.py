@@ -11,4 +11,7 @@ def chart():
 
 @app.route("/data")
 def data():
-    return jsonify(model.getSortedData(5))
+    bounds = model.getInitialBounds()
+    data = model.getSortedData(5)
+    data['bounds'] = bounds
+    return jsonify(data)
