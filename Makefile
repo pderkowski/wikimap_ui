@@ -1,30 +1,25 @@
-PROGDIR = app/model/zoom
-PROGSOURCES = $(PROGDIR)/bounds.cpp $(PROGDIR)/node.cpp $(PROGDIR)/partitiontree.cpp $(PROGDIR)/zoom.cpp
-WRAPSOURCES = $(PROGDIR)/zoomwrapper.cpp
+ZOOMDIR = app/model/zoom
+ZOOMSOURCES = $(ZOOMDIR)/bounds.cpp $(ZOOMDIR)/node.cpp $(ZOOMDIR)/partitiontree.cpp $(ZOOMDIR)/zoom.cpp
+WRAPSOURCES = $(ZOOMDIR)/zoomwrapper.cpp
 
-MODELDIR = app/model
-
-TESTDIR = test
-TESTSOURCES = $(wildcard test/*.cpp)
+TESTDIR = $(ZOOMDIR)/test
+TESTSOURCES = $(wildcard $(TESTDIR)/*.cpp)
 
 TESTOBJECTS = $(patsubst %.cpp, %.o, $(TESTSOURCES))
-PROGOBJECTS = $(patsubst %.cpp, %.o, $(PROGSOURCES))
+ZOOMOBJECTS = $(patsubst %.cpp, %.o, $(ZOOMSOURCES))
 WRAPOBJECTS = $(patsubst %.cpp, %.o, $(WRAPSOURCES))
 
 CXX = g++
-CXXFLAGS  = -I$(PROGDIR) -std=c++11 -fPIC
+CXXFLAGS  = -I$(ZOOMDIR) -std=c++11 -fPIC
 
 PYTHON = /usr/include/python2.7
 
-BINDIR = bin
-LIBDIR = lib/python
+TESTBIN = $(TESTDIR)/bin/run_tests
+ZOOMLIB = $(ZOOMDIR)/libzoompy.so
 
-BIN = $(BINDIR)/run_tests
-LIB = $(LIBDIR)/libzoompy.so
+# export PYTHONPATH := $(realpath $(LIBDIR)):$(realpath $(MODELDIR)):$(PYTHONPATH)
 
-export PYTHONPATH := $(realpath $(LIBDIR)):$(realpath $(MODELDIR)):$(PYTHONPATH)
-
-.DEFAULT_GOAL := $(LIB)
+.DEFAULT_GOAL := $(ZOOMLIB)
 
 .PHONY: test clean
 
@@ -33,17 +28,17 @@ $(WRAPOBJECTS): CXXFLAGS += -I$(PYTHON)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
-$(BIN): $(PROGOBJECTS) $(TESTOBJECTS)
+$(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -o $(BIN) $^
+	$(CXX) $(CXXFLAGS) -o $(TESTBIN) $^
 
-$(LIB): $(PROGOBJECTS) $(WRAPOBJECTS)
+$(ZOOMLIB): $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $^ -shared -lboost_python -o $(LIB)
+	$(CXX) $^ -shared -lboost_python -o $(ZOOMLIB)
 
-test: $(BIN) $(LIB)
-	./$(BIN)
-	./$(TESTDIR)/test_python_bindings.py
+test: $(TESTBIN) $(ZOOMLIB)
+	./$(TESTBIN)
+	python -m unittest discover
 
 clean:
-	rm -f $(TESTOBJECTS) $(PROGOBJECTS) $(WRAPOBJECTS) $(BIN) $(LIB)
+	rm -f $(TESTOBJECTS) $(ZOOMOBJECTS) $(WRAPOBJECTS) $(TESTBIN) $(ZOOMLIB)

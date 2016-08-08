@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import zoom
 import unittest
+from app.model import zoom
 
 class TestPoint(unittest.TestCase):
     def test_constructor(self):
