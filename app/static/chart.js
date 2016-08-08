@@ -3,8 +3,8 @@ function fitBoundsToScreen(bounds) {
   var chartHeight = document.getElementById('chart').offsetHeight;
   var chartRatio = chartWidth / chartHeight;
 
-  var boundsWidth = bounds.bottomRight.x - bounds.topLeft.x;
-  var boundsHeight = bounds.bottomRight.y - bounds.topLeft.y;
+  var boundsWidth = bounds.xMax - bounds.xMin;
+  var boundsHeight = bounds.yMax - bounds.yMin;
   var boundsRatio = boundsWidth / boundsHeight;
 
   var boundsCopy = jQuery.extend(true, {}, bounds)
@@ -12,13 +12,13 @@ function fitBoundsToScreen(bounds) {
   if (boundsRatio > chartRatio) {
     var newBoundsHeight = boundsWidth / chartRatio;
     var margin = (newBoundsHeight - boundsHeight) / 2;
-    boundsCopy.topLeft.y -= margin;
-    boundsCopy.bottomRight.y += margin;
+    boundsCopy.yMin -= margin;
+    boundsCopy.yMax += margin;
   } else {
     var newBoundsWidth = boundsHeight * chartRatio;
     var margin = (newBoundsWidth - boundsWidth) / 2;
-    boundsCopy.topLeft.x -= margin;
-    boundsCopy.bottomRight.x += margin;
+    boundsCopy.xMin -= margin;
+    boundsCopy.xMax += margin;
   }
 
   return boundsCopy;
@@ -33,7 +33,6 @@ $(document).ready(function() {
       columns: [
         ['x'],
         ['y'],
-        ['titles']
       ],
     },
     axis: {
@@ -58,7 +57,6 @@ $(document).ready(function() {
       grouped: false,
       format: {
         title: function (x) { return 'Data ' + x; },
-        name: function (name, ratio, id, index) { return ': ' + $(document).data('chart.titles')[index]; },
         value: function (value, ratio, id, index) { return index + ': (' + $(document).data('chart.x')[index]+', ' + $(document).data('chart.y')[index]+')'; }
       }
     }
@@ -66,15 +64,13 @@ $(document).ready(function() {
 
   $.getJSON($SCRIPT_ROOT + 'data')
     .done(function(data) {
-      $(document).data('chart.x', data.x);
-      $(document).data('chart.y', data.y);
-      $(document).data('chart.titles', data.titles);
+      $(document).data('chart.x', data.points.x);
+      $(document).data('chart.y', data.points.y);
 
       chart.load({
         columns: [
           ['x'].concat($(document).data('chart.x')),
           ['y'].concat($(document).data('chart.y')),
-          ['titles'].concat($(document).data('chart.titles')),
         ]
       });
 
@@ -82,12 +78,12 @@ $(document).ready(function() {
 
       chart.axis.range({
         min: {
-          x: bounds.topLeft.x,
-          y: bounds.topLeft.y
+          x: bounds.xMin,
+          y: bounds.yMin
         },
         max: {
-          x: bounds.bottomRight.x,
-          y: bounds.bottomRight.y
+          x: bounds.xMax,
+          y: bounds.yMax
         }
       });
     });
