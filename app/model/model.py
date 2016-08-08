@@ -1,27 +1,26 @@
 import random
+from zoom import Zoom, Point
 
-class Point(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+class Data(object):
+    def __init__(self):
+        self.zoom = None
 
-    def toDict(self):
-        return { 'x': self.x, 'y': self.y }
+    def load(self, fileName):
+        points = []
+        with open(fileName, 'r') as file:
+            for line in file:
+                words = line.split()
+                x = float(words[0])
+                y = float(words[1])
+                points.append(Point(x, y))
 
-class Bounds(object):
-    def __init__(self, topLeft, bottomRight):
-        self.topLeft = topLeft
-        self.bottomRight = bottomRight
+        self.zoom = Zoom(points, 100)
 
-    def toDict(self):
-        return { 'topLeft': self.topLeft.toDict(), 'bottomRight': self.bottomRight.toDict() }
+    def getPointsSortedByX(self):
+        points = self.zoom.getPoints(zoom.getInitialBounds(), 0)
+        return sorted(points, key=lambda x: x[0])
 
-def getSortedData(pointsNo):
-    tuples = [(random.random(), random.random(), "a") for i in xrange(pointsNo)]
-    tuples = sorted(tuples, key=lambda x: x[0])
-    return { 'x': [t[0] for t in tuples], 'y': [t[1] for t in tuples], 'titles': [t[2] for t in tuples] }
+    def getInitialBounds(self):
+        return self.zoom.getInitialBounds()
 
-initialBounds = Bounds(Point(0.0, 0.0), Point(1.0, 1.0))
-
-def getInitialBounds():
-    return initialBounds.toDict()
+data = Data()

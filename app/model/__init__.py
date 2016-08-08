@@ -1,2 +1,2 @@
-from model import getSortedData
-from model import getInitialBounds
+from model import data
+import zoom
