@@ -17,10 +17,10 @@ class Data(object):
         self.zoom = Zoom(points, 100)
 
     def getPointsSortedByX(self):
-        points = self.zoom.getPoints(zoom.getInitialBounds(), 0)
-        return sorted(points, key=lambda x: x[0])
+        points = self.zoom.getPoints(self.zoom.getEnclosingBounds(), 0)
+        return sorted(points, key=lambda p: p.x)
 
-    def getInitialBounds(self):
-        return self.zoom.getInitialBounds()
+    def getEnclosingBounds(self):
+        return self.zoom.getEnclosingBounds()
 
 data = Data()

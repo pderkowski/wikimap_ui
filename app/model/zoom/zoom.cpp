@@ -41,3 +41,7 @@ std::vector<Point> Zoom::getPoints(const Bounds& bounds, int zoomLevel) const {
 
     return points;
 }
+
+Bounds Zoom::getEnclosingBounds() const {
+    return tree_.getBounds();
+}

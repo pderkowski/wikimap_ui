@@ -9,6 +9,7 @@ public:
     Zoom(const std::vector<Point>& points, int pointsPerTile);
 
     std::vector<Point> getPoints(const Bounds& bounds, int zoomLevel) const;
+    Bounds getEnclosingBounds() const;
 
 private:
     PartitionTree tree_;

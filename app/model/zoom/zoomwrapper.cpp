@@ -24,6 +24,10 @@ public:
         return zoom_->getPoints(bounds, zoomLevel);
     }
 
+    Bounds getEnclosingBounds() const {
+        return zoom_->getEnclosingBounds();
+    }
+
 private:
     std::shared_ptr<Zoom> zoom_;
 };
@@ -34,11 +38,14 @@ BOOST_PYTHON_MODULE(libzoompy) {
         .def(py::vector_indexing_suite<PointList>());
 
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
-        .def("getPoints", &ZoomWrapper::getPoints);
+        .def("getPoints", &ZoomWrapper::getPoints)
+        .def("getEnclosingBounds", &ZoomWrapper::getEnclosingBounds);
 
     py::class_<Point>("Point", py::init<double, double>())
         .def_readwrite("x", &Point::x)
         .def_readwrite("y", &Point::y);
 
-    py::class_<Bounds>("Bounds", py::init<const Point&, const Point&>());
+    py::class_<Bounds>("Bounds", py::init<const Point&, const Point&>())
+        .def("getTopLeftCorner", &Bounds::getTopLeftCorner)
+        .def("getBottomRightCorner", &Bounds::getBottomRightCorner);
 }

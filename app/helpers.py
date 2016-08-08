@@ -1,7 +1,9 @@
 from flask import jsonify
 
-def boundsToJSON(bounds):
-    return jsonify({ 'xMin': bounds.topLeft.x, 'yMin': bounds.topLeft.y, 'xMax': bounds.bottomRight.x, 'yMax': bounds.bottomRight.y })
+def unpackBounds(bounds):
+    tl = bounds.getTopLeftCorner()
+    br = bounds.getBottomRightCorner()
+    return { 'xMin': tl.x, 'yMin': tl.y, 'xMax': br.x, 'yMax': br.y }
 
-def pointsToJSON(points):
-    return jsonify({ 'x': [p[0] for p in points], 'y': [p[1] for p in points] })
+def unpackPoints(points):
+    return { 'x': [p.x for p in points], 'y': [p.y for p in points] }
