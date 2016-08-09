@@ -216,3 +216,30 @@ TEST_CASE("helpers::getBounds returns smallest bounds such that all points are c
         REQUIRE(std::all_of(points.begin(), points.end(), [&smaller] (const Point& p) { return smaller.contain(p); }) == false);
     }
 }
+
+TEST_CASE("Bounds::intersect return intersection of its arguments.", "[bounds]") {
+    Point p1(0.0, 0.0);
+    Point p2(1.0, 1.0);
+    Point p3(2.0, 2.0);
+    Point p4(3.0, 3.0);
+
+    SECTION("Overlapping bounds") {
+        Bounds b1(p1, p3);
+        Bounds b2(p2, p4);
+
+        auto intersection = b1.intersect(b2);
+
+        REQUIRE(intersection.getTopLeftCorner() == p2);
+        REQUIRE(intersection.getBottomRightCorner() == p3);
+    }
+
+    SECTION("Disjoint bounds") {
+        Bounds b1(p1, p2);
+        Bounds b2(p2, p3);
+
+        auto intersection = b1.intersect(b2);
+
+        REQUIRE(intersection.getTopLeftCorner() == intersection.getBottomRightCorner());
+        REQUIRE(intersection.getTopLeftCorner() == p2);
+    }
+}

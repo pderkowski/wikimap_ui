@@ -2,6 +2,7 @@
 #include <cassert>
 #include <limits>
 #include <cmath>
+#include <algorithm>
 
 Point::Point(double x, double y)
 : x(x), y(y)
@@ -71,6 +72,13 @@ Bounds Bounds::getBottomLeftQuadrant() const {
 
 Point Bounds::getMidpoint() const {
     return Point((topLeft_.x + bottomRight_.x) / 2, (topLeft_.y + bottomRight_.y) / 2);
+}
+
+Bounds Bounds::intersect(const Bounds& other) const {
+    auto tl = Point(std::max(topLeft_.x, other.topLeft_.x), std::max(topLeft_.y, other.topLeft_.y));
+    auto br = Point(std::min(bottomRight_.x, other.bottomRight_.x), std::min(bottomRight_.y, other.bottomRight_.y));
+
+    return Bounds(tl, br);
 }
 
 bool operator == (const Bounds& lhs, const Bounds& rhs) {

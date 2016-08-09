@@ -12,9 +12,9 @@ Zoom::Zoom(const std::vector<Point>& points, int pointsPerTile)
 }
 
 std::vector<Point> Zoom::getPoints(const Bounds& bounds, int zoomLevel) const {
-    assert(tree_.getBounds().contain(bounds));
+    auto overlapping = getOverlappingBounds(bounds);
 
-    auto closedBounds = helpers::getClosedBounds(bounds);
+    auto closedBounds = helpers::getClosedBounds(overlapping);
 
     auto topLeft = closedBounds.getTopLeftCorner();
     auto bottomRight = closedBounds.getBottomRightCorner();
@@ -44,4 +44,10 @@ std::vector<Point> Zoom::getPoints(const Bounds& bounds, int zoomLevel) const {
 
 Bounds Zoom::getEnclosingBounds() const {
     return tree_.getBounds();
+}
+
+Bounds Zoom::getOverlappingBounds(const Bounds& bounds) const {
+    auto overlapping = getEnclosingBounds().intersect(bounds);
+    assert(tree_.getBounds().contain(overlapping));
+    return overlapping;
 }

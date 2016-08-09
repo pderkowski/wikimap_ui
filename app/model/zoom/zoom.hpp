@@ -12,5 +12,7 @@ public:
     Bounds getEnclosingBounds() const;
 
 private:
+    Bounds getOverlappingBounds(const Bounds& bounds) const;
+
     PartitionTree tree_;
 };

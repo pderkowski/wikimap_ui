@@ -32,6 +32,8 @@ public:
 
     Point getMidpoint() const;
 
+    Bounds intersect(const Bounds& other) const;
+
 private:
     Point topLeft_;
     Point bottomRight_;
