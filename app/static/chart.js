@@ -24,7 +24,52 @@ function fitBoundsToScreen(bounds) {
   return boundsCopy;
 }
 
-$(document).ready(function() {
+function loadBounds() {
+  var chart = $(document).data('chart');
+
+  return $.getJSON($SCRIPT_ROOT + 'bounds')
+    .done(function(bounds) {
+      var fittedBounds = fitBoundsToScreen(bounds);
+
+      $(document).data('bounds', fittedBounds);
+
+      chart.axis.range({
+        min: {
+          x: fittedBounds.xMin,
+          y: fittedBounds.yMin
+        },
+        max: {
+          x: fittedBounds.xMax,
+          y: fittedBounds.yMax
+        }
+      });
+    });
+}
+
+function loadPoints() {
+  var chart = $(document).data('chart');
+
+  var xMin = $(document).data('bounds').xMin;
+  var yMin = $(document).data('bounds').yMin;
+  var xMax = $(document).data('bounds').xMax;
+  var yMax = $(document).data('bounds').yMax;
+
+  return $.getJSON($SCRIPT_ROOT + 'points!'+xMin+'!'+yMin+'!'+xMax+'!'+yMax)
+    .done(function(points) {
+
+
+      $(document).data('points', points);
+
+      chart.load({
+        columns: [
+          ['x'].concat(points.x),
+          ['y'].concat(points.y),
+        ]
+      });
+    });
+}
+
+function initChart() {
   var chart = c3.generate({
     bindto: '#chart',
     data: {
@@ -57,35 +102,18 @@ $(document).ready(function() {
       grouped: false,
       format: {
         title: function (x) { return 'Data ' + x; },
-        value: function (value, ratio, id, index) { return index + ': (' + $(document).data('chart.x')[index]+', ' + $(document).data('chart.y')[index]+')'; }
+        value: function (value, ratio, id, index) { return index + ': (' + $(document).data('points').x[index]+', ' + $(document).data('points').y[index]+')'; }
       }
     }
   });
 
-  $.getJSON($SCRIPT_ROOT + 'data')
-    .done(function(data) {
-      $(document).data('chart.x', data.points.x);
-      $(document).data('chart.y', data.points.y);
+  $(document).data('chart', chart);
+}
 
-      chart.load({
-        columns: [
-          ['x'].concat($(document).data('chart.x')),
-          ['y'].concat($(document).data('chart.y')),
-        ]
-      });
+$(document).ready(function() {
+  initChart();
 
-      var bounds = fitBoundsToScreen(data.bounds);
-
-      chart.axis.range({
-        min: {
-          x: bounds.xMin,
-          y: bounds.yMin
-        },
-        max: {
-          x: bounds.xMax,
-          y: bounds.yMax
-        }
-      });
-    });
+  loadBounds()
+    .then(loadPoints);
 });
 

@@ -11,12 +11,17 @@ def renderChart():
         request.script_root = url_for('routes.renderChart', _external=True)
     return render_template('chart.html')
 
-@bp.route("/data")
-def getData():
-    points = data.getPointsSortedByX()
+@bp.route("/bounds")
+def getBounds():
     bounds = data.getEnclosingBounds()
-    json = jsonify({ 'bounds': helpers.unpackBounds(bounds), 'points': helpers.unpackPoints(points) })
+    unpacked = helpers.unpackBounds(bounds)
+    return jsonify(unpacked)
 
-    current_app.logger.debug(json)
-
+@bp.route("/points!<float:xMin>!<float:yMin>!<float:xMax>!<float:yMax>")
+def getPoints(xMin, yMin, xMax, yMax):
+    bounds = helpers.packBounds(xMin, yMin, xMax, yMax)
+    points = data.getPointsSortedByX(bounds)
+    unpacked = helpers.unpackPoints(points)
+    json = jsonify(unpacked)
+    current_app.logger.debug('Returning {} points.'.format(len(points)))
     return json

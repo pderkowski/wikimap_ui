@@ -1,2 +1,2 @@
 from model import data
-import zoom
+from zoom import Point, Bounds

@@ -16,8 +16,8 @@ class Data(object):
 
         self.zoom = Zoom(points, 100)
 
-    def getPointsSortedByX(self):
-        points = self.zoom.getPoints(self.zoom.getEnclosingBounds(), 0)
+    def getPointsSortedByX(self, bounds):
+        points = self.zoom.getPoints(bounds, 0)
         return sorted(points, key=lambda p: p.x)
 
     def getEnclosingBounds(self):
