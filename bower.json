@@ -1,0 +1,23 @@
+{
+  "name": "wikimap_ui",
+  "description": "Simple browser for the data produced by the Wikimap project.",
+  "main": "run.py",
+  "authors": [
+    "Piotr Derkowski"
+  ],
+  "license": "UNLICENSED",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/static/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.0",
+    "d3": "^4.2.1"
+  }
+}

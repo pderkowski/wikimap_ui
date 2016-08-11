@@ -1,0 +1,19 @@
+{
+  "name": "wikimap_ui",
+  "version": "0.0.0",
+  "description": "Simple browser for the data produced by the Wikimap project.",
+  "main": "run.py",
+  "scripts": {
+    "test": "make test",
+    "postinstall" : "bower install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.com:piotder/wikimap_ui.git"
+  },
+  "author": "Piotr Derkowski",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bower": ""
+  }
+}

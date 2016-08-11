@@ -42,10 +42,10 @@ $(document).ready(function() {
       width = document.getElementById('container').offsetWidth - margin.left - margin.right,
       height = document.getElementById('container').offsetHeight - margin.top - margin.bottom;
 
-  var x = d3.scale.linear()
+  var x = d3.scaleLinear()
       .range([0, width]);
 
-  var y = d3.scale.linear()
+  var y = d3.scaleLinear()
       .range([height, 0]);
 
   var svg = d3.select("#container").append("svg")
