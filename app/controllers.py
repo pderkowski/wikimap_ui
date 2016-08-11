@@ -25,3 +25,4 @@ def getPoints(xMin, yMin, xMax, yMax):
     json = jsonify(unpacked)
     current_app.logger.debug('Returning {} points.'.format(len(points)))
     return json
+

@@ -7,7 +7,7 @@ def unpackBounds(bounds):
     return { 'xMin': tl.x, 'yMin': tl.y, 'xMax': br.x, 'yMax': br.y }
 
 def unpackPoints(points):
-    return { 'x': [p.x for p in points], 'y': [p.y for p in points] }
+    return [{ 'x': p.x, 'y': p.y } for p in points]
 
 def packBounds(xMin, yMin, xMax, yMax):
     tl = Point(xMin, yMin)
