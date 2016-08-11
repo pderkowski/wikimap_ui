@@ -27,35 +27,54 @@ function setPoints(svg, x, y) {
       p.y = +p.y;
     });
 
-    svg.selectAll(".dot")
-        .data(points)
-      .enter().append("circle")
+    return svg.selectAll(".dot")
+      .data(points)
+      .enter()
+      .append("circle")
         .attr("class", "dot")
-        .attr("r", 3.5)
+        .attr("r", 4)
         .attr("cx", function(p) { return x(p.x); })
         .attr("cy", function(p) { return y(p.y); });
   }
 }
 
+function setTip(tip) {
+  return function (dots) {
+    dots.on("mouseover", tip.show)
+      .on("mouseout", tip.hide);
+    }
+}
+
 $(document).ready(function() {
   var margin = {top: 20, right: 20, bottom: 30, left: 40},
-      width = document.getElementById('container').offsetWidth - margin.left - margin.right,
-      height = document.getElementById('container').offsetHeight - margin.top - margin.bottom;
+    width = document.getElementById('container').offsetWidth - margin.left - margin.right,
+    height = document.getElementById('container').offsetHeight - margin.top - margin.bottom;
 
   var x = d3.scaleLinear()
-      .range([0, width]);
+    .range([0, width]);
 
   var y = d3.scaleLinear()
-      .range([height, 0]);
+    .range([height, 0]);
 
-  var svg = d3.select("#container").append("svg")
+  var svg = d3.select("#container")
+    .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+  var tip = d3.tip()
+    .attr("class", "d3-tip")
+    .offset([-10, 0])
+    .html(function(p) {
+      return "x: " + p.x + " y: " + p.y;
+    });
+
+  svg.call(tip);
+
   loadBounds()
     .then(setBounds(x, y))
     .then(loadPoints)
-    .then(setPoints(svg, x, y));
+    .then(setPoints(svg, x, y))
+    .then(setTip(tip));
 });
