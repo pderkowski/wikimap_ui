@@ -2,10 +2,44 @@ function loadBounds() {
   return $.getJSON($SCRIPT_ROOT + 'bounds');
 }
 
-function setBounds(x, y) {
+function setScales(svg, g, x, y) {
   return function (bounds) {
-    x.domain([ bounds.xMin, bounds.xMax ]).nice();
-    y.domain([ bounds.yMin, bounds.yMax ]).nice();
+    var xm = bounds.xMin;
+    var ym = bounds.yMin;
+    var XM = bounds.xMax;
+    var YM = bounds.yMax;
+
+    var boundsWidth = XM - xm;
+    var boundsHeight = YM - ym;
+
+    if (boundsWidth > boundsHeight) {
+      var d = boundsWidth - boundsHeight;
+      ym -= (d / 2);
+      YM += (d / 2);
+    } else {
+      var d = boundsHeight - boundsWidth;
+      xm -= (d / 2);
+      XM += (d / 2);
+    }
+
+    var margin = { top: 30, right: 30, bottom: 30, left: 30 };
+
+    var displayWidth = document.getElementById('container').offsetWidth;
+    var displayHeight = document.getElementById('container').offsetHeight;
+
+    var displaySize = Math.min(displayWidth, displayHeight);
+
+    var activeAreaSize = Math.min(displayWidth - margin.left - margin.right, displayHeight - margin.top - margin.bottom);
+
+    x.domain([ xm, XM ])
+      .range([0, activeAreaSize]);
+
+    y.domain([ ym, YM ])
+      .range([activeAreaSize, 0]);
+
+    svg.attr("viewBox", "0 0 "+displaySize+" "+displaySize);
+
+    g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     return bounds;
   }
@@ -20,21 +54,21 @@ function loadPoints(bounds) {
   return $.getJSON($SCRIPT_ROOT + 'points!'+xMin+'!'+yMin+'!'+xMax+'!'+yMax);
 }
 
-function setPoints(svg, x, y) {
+function setPoints(g, x, y) {
   return function (points) {
     points.forEach(function(p) {
       p.x = +p.x;
       p.y = +p.y;
     });
 
-    return svg.selectAll(".dot")
+    return g.selectAll(".dot")
       .data(points)
       .enter()
       .append("circle")
-        .attr("class", "dot")
-        .attr("r", 4)
-        .attr("cx", function(p) { return x(p.x); })
-        .attr("cy", function(p) { return y(p.y); });
+      .attr("class", "dot")
+      .attr("r", 3.5)
+      .attr("cx", function(p) { return x(p.x); })
+      .attr("cy", function(p) { return y(p.y); });
   }
 }
 
@@ -46,22 +80,17 @@ function setTip(tip) {
 }
 
 $(document).ready(function() {
-  var margin = {top: 20, right: 20, bottom: 30, left: 40},
-    width = document.getElementById('container').offsetWidth - margin.left - margin.right,
-    height = document.getElementById('container').offsetHeight - margin.top - margin.bottom;
+  var x = d3.scaleLinear();
+  var y = d3.scaleLinear();
 
-  var x = d3.scaleLinear()
-    .range([0, width]);
-
-  var y = d3.scaleLinear()
-    .range([height, 0]);
-
-  var svg = d3.select("#container")
+  var svg = d3.select("div#container")
+    .append("div")
+    .classed("svg-container", true) //container class to make it responsive
     .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .classed("svg-content-responsive", true);
+
+  var g = svg.append("g");
 
   var tip = d3.tip()
     .attr("class", "d3-tip")
@@ -73,8 +102,8 @@ $(document).ready(function() {
   svg.call(tip);
 
   loadBounds()
-    .then(setBounds(x, y))
+    .then(setScales(svg, g, x, y))
     .then(loadPoints)
-    .then(setPoints(svg, x, y))
+    .then(setPoints(g, x, y))
     .then(setTip(tip));
 });
