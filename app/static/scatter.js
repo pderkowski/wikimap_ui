@@ -120,14 +120,17 @@ $(document).ready(function() {
 
   var zoom = d3.zoom()
     .scaleExtent([1.0, Infinity])
-    .translateExtent([[-0.5 * minDim, -0.5 * minDim],[0.5 * minDim, 0.5 * minDim]])
+    .translateExtent([[-minDim, -minDim],[minDim, minDim]])
     .on("zoom", function () {
       svgWithMarginAndZoom.attr("transform", d3.event.transform);
 
-      // do not scale dots
-      svgWithMarginAndZoom.selectAll(".dot")
-        .attr("r", r/d3.event.transform.k)
-        .attr("stroke-width", strokeWidth/d3.event.transform.k);
+      var scale = d3.event.transform.k;
+      if (scale) {
+        // do not scale dots
+        svgWithMarginAndZoom.selectAll(".dot")
+          .attr("r", r / scale)
+          .attr("stroke-width", strokeWidth / scale);
+      }
     });
 
   svg.call(zoom);
