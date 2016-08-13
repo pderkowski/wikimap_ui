@@ -114,8 +114,11 @@ $(document).ready(function() {
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     .append("g");
 
+  var minDim = Math.min.apply(Math, getUsableSize(margin));
+
   var zoom = d3.zoom()
     .scaleExtent([1.0, Infinity])
+    .translateExtent([[-0.5 * minDim, -0.5 * minDim],[0.5 * minDim, 0.5 * minDim]])
     .on("zoom", function () {
       svgWithMarginAndZoom.attr("transform", d3.event.transform);
     });
