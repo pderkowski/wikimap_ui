@@ -1,8 +1,24 @@
+function getDisplaySize() {
+  var displayWidth = document.getElementById('container').offsetWidth;
+  var displayHeight = document.getElementById('container').offsetHeight;
+  return [+displayWidth, +displayHeight];
+}
+
+function getUsableSize(margin) {
+  var displaySize = getDisplaySize();
+  return [displaySize[0] - margin.left - margin.right, displaySize[1] - margin.top - margin.bottom];
+}
+
 function loadBounds() {
   return $.getJSON($SCRIPT_ROOT + 'bounds');
 }
 
-function setScales(svg, g, x, y) {
+function setViewBoxSize(svg) {
+    var minDim = Math.min.apply(Math, getDisplaySize());
+    svg.attr("viewBox", "0 0 "+minDim+" "+minDim);
+}
+
+function setScales(margin, scales) {
   return function (bounds) {
     var xm = bounds.xMin;
     var ym = bounds.yMin;
@@ -22,24 +38,13 @@ function setScales(svg, g, x, y) {
       XM += (d / 2);
     }
 
-    var margin = { top: 30, right: 30, bottom: 30, left: 30 };
+    var minDim = Math.min.apply(Math, getUsableSize(margin));
 
-    var displayWidth = document.getElementById('container').offsetWidth;
-    var displayHeight = document.getElementById('container').offsetHeight;
+    scales.x.domain([ xm, XM ])
+      .range([0, minDim]);
 
-    var displaySize = Math.min(displayWidth, displayHeight);
-
-    var activeAreaSize = Math.min(displayWidth - margin.left - margin.right, displayHeight - margin.top - margin.bottom);
-
-    x.domain([ xm, XM ])
-      .range([0, activeAreaSize]);
-
-    y.domain([ ym, YM ])
-      .range([activeAreaSize, 0]);
-
-    svg.attr("viewBox", "0 0 "+displaySize+" "+displaySize);
-
-    g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    scales.y.domain([ ym, YM ])
+      .range([minDim, 0]);
 
     return bounds;
   }
@@ -54,7 +59,7 @@ function loadPoints(bounds) {
   return $.getJSON($SCRIPT_ROOT + 'points!'+xMin+'!'+yMin+'!'+xMax+'!'+yMax);
 }
 
-function setPoints(g, x, y) {
+function setPoints(g, scales) {
   return function (points) {
     points.forEach(function(p) {
       p.x = +p.x;
@@ -67,21 +72,32 @@ function setPoints(g, x, y) {
       .append("circle")
       .attr("class", "dot")
       .attr("r", 3.5)
-      .attr("cx", function(p) { return x(p.x); })
-      .attr("cy", function(p) { return y(p.y); });
+      .attr("cx", function(p) { return scales.x(p.x); })
+      .attr("cy", function(p) { return scales.y(p.y); });
   }
 }
 
-function setTip(tip) {
+function setTip(svg) {
   return function (dots) {
+    var tip = d3.tip()
+      .attr("class", "d3-tip")
+      .offset([-10, 0])
+      .html(function(p) {
+        return "x: " + p.x + " y: " + p.y;
+      });
+
+    svg.call(tip);
+
     dots.on("mouseover", tip.show)
       .on("mouseout", tip.hide);
     }
 }
 
 $(document).ready(function() {
-  var x = d3.scaleLinear();
-  var y = d3.scaleLinear();
+  var scales = {
+    "x": d3.scaleLinear(),
+    "y": d3.scaleLinear()
+  }
 
   var svg = d3.select("div#container")
     .append("div")
@@ -90,20 +106,25 @@ $(document).ready(function() {
     .attr("preserveAspectRatio", "xMidYMid meet")
     .classed("svg-content-responsive", true);
 
-  var g = svg.append("g");
+  setViewBoxSize(svg);
 
-  var tip = d3.tip()
-    .attr("class", "d3-tip")
-    .offset([-10, 0])
-    .html(function(p) {
-      return "x: " + p.x + " y: " + p.y;
+  var margin = { top: 30, right: 30, bottom: 30, left: 30 };
+
+  var svgWithMarginAndZoom = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .append("g");
+
+  var zoom = d3.zoom()
+    .scaleExtent([1.0, Infinity])
+    .on("zoom", function () {
+      svgWithMarginAndZoom.attr("transform", d3.event.transform);
     });
 
-  svg.call(tip);
+  svg.call(zoom);
 
   loadBounds()
-    .then(setScales(svg, g, x, y))
+    .then(setScales(margin, scales))
     .then(loadPoints)
-    .then(setPoints(g, x, y))
-    .then(setTip(tip));
+    .then(setPoints(svgWithMarginAndZoom, scales))
+    .then(setTip(svg));
 });
