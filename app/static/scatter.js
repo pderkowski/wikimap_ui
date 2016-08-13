@@ -19,13 +19,13 @@ $(document).ready(function() {
         XM += (d / 2);
       }
 
-      var minDim = Math.min.apply(Math, getUsableSize());
+      var minUsableDim = Math.min.apply(Math, getUsableSize());
 
       x.domain([ xm, XM ])
-        .range([0, minDim]);
+        .range([0, minUsableDim]);
 
       y.domain([ ym, YM ])
-        .range([minDim, 0]);
+        .range([minUsableDim, 0]);
 
       return bounds;
     }
@@ -62,7 +62,7 @@ $(document).ready(function() {
         p.y = +p.y;
       });
 
-      return svgWithMarginAndZoom.selectAll(".dot")
+      return svgWithMargin.selectAll(".dot")
         .data(points)
         .enter()
         .append("circle")
@@ -90,48 +90,37 @@ $(document).ready(function() {
       }
   }
 
-  function setViewBoxSize() {
-      var minDim = Math.min.apply(Math, getDisplaySize());
-      svg.attr("viewBox", "0 0 "+minDim+" "+minDim);
+  function zoomed() {
+    var scale = d3.event.transform.k;
+    svgWithMargin.selectAll(".dot")
+      .attr("transform", d3.event.transform)
+      .attr("r", r / scale) // do not scale dots
+      .attr("stroke-width", strokeWidth / scale);
   }
+
+  var margin = { top: 30, right: 30, bottom: 30, left: 30 };
+  var r = 3.5;
+  var strokeWidth = 1;
+  var minDisplayDim = Math.min.apply(Math, getDisplaySize());
 
   var x = d3.scaleLinear();
   var y = d3.scaleLinear();
-
-  var margin = { top: 30, right: 30, bottom: 30, left: 30 };
-
-  var r = 3.5;
-  var strokeWidth = 1;
 
   var svg = d3.select("div#container")
     .append("div")
     .classed("svg-container", true) //container class to make it responsive
     .append("svg")
     .attr("preserveAspectRatio", "xMidYMid meet")
-    .classed("svg-content-responsive", true);
+    .classed("svg-content-responsive", true)
+    .attr("viewBox", "0 0 "+minDisplayDim+" "+minDisplayDim);
 
-  setViewBoxSize();
-
-  var svgWithMarginAndZoom = svg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-    .append("g");
-
-  var minDim = Math.min.apply(Math, getUsableSize());
+  var svgWithMargin = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   var zoom = d3.zoom()
     .scaleExtent([1.0, Infinity])
-    .translateExtent([[-minDim, -minDim],[minDim, minDim]])
-    .on("zoom", function () {
-      svgWithMarginAndZoom.attr("transform", d3.event.transform);
-
-      var scale = d3.event.transform.k;
-      if (scale) {
-        // do not scale dots
-        svgWithMarginAndZoom.selectAll(".dot")
-          .attr("r", r / scale)
-          .attr("stroke-width", strokeWidth / scale);
-      }
-    });
+    .translateExtent([[-minDisplayDim, -minDisplayDim],[minDisplayDim, minDisplayDim]])
+    .on("zoom", zoomed);
 
   svg.call(zoom);
 
