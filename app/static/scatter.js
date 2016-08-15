@@ -1,33 +1,64 @@
+var CoordsConverter = function () {
+  var that = this;
+
+  this.invert = function (point) {
+    return that._transitionTransform.invert(that._zoomTransform.invert(point));
+  };
+
+  this.apply = function (point) {
+    return that._zoomTransform.apply(that._transitionTransform.apply(point));
+  };
+
+  this.setZoomTransform = function (transform) {
+    that._zoomTransform = transform;
+  };
+
+  this.setViewportSize = function (size) {
+    that._viewportSize = size;
+
+    if (that._domain) {
+      that._updateTransitionTransform();
+    }
+  };
+
+  this.setDomain = function (bounds) {
+    that._domain = bounds;
+
+    if (that._viewportSize) {
+      that._updateTransitionTransform();
+    }
+  };
+
+  this._updateTransitionTransform = function () {
+    var xm = that._domain.xMin;
+    var ym = that._domain.yMin;
+    var XM = that._domain.xMax;
+    var YM = that._domain.yMax;
+
+    var boundsWidth = XM - xm;
+    var boundsHeight = YM - ym;
+
+    var viewportWidth = that._viewportSize[0];
+    var viewportHeight = that._viewportSize[1];
+
+    var scale = 0.9 * Math.min(viewportWidth / boundsWidth, viewportHeight / boundsHeight);
+
+    var xMid = (xm + XM) / 2;
+    var yMid = (ym + YM) / 2;
+    var vxMid = viewportWidth / 2;
+    var vyMid = viewportHeight / 2;
+
+    var xTranslation = vxMid - scale * xMid;
+    var yTranslation = vyMid - scale * yMid;
+
+    that._transitionTransform = d3.zoomIdentity.translate(xTranslation, yTranslation).scale(scale);
+  };
+}
+
 $(document).ready(function() {
   function setScales() {
     return function (bounds) {
-      var xm = bounds.xMin;
-      var ym = bounds.yMin;
-      var XM = bounds.xMax;
-      var YM = bounds.yMax;
-
-      var boundsWidth = XM - xm;
-      var boundsHeight = YM - ym;
-
-      if (boundsWidth > boundsHeight) {
-        var d = boundsWidth - boundsHeight;
-        ym -= (d / 2);
-        YM += (d / 2);
-      } else {
-        var d = boundsHeight - boundsWidth;
-        xm -= (d / 2);
-        XM += (d / 2);
-      }
-
-      var minUsableDim = Math.min.apply(Math, getUsableSize());
-
-      x.domain([ xm, XM ])
-        .range([0, minUsableDim]);
-
-      y.domain([ ym, YM ])
-        .range([minUsableDim, 0]);
-
-      return bounds;
+      coords.setDomain(bounds);
     }
   }
 
@@ -46,13 +77,11 @@ $(document).ready(function() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
 
-  function loadPoints(bounds) {
-    var xMin = bounds.xMin;
-    var yMin = bounds.yMin;
-    var xMax = bounds.xMax;
-    var yMax = bounds.yMax;
+  function loadPoints() {
+    var topLeft = coords.invert([0, 0]);
+    var bottomRight = coords.invert(getUsableSize());
 
-    return $.getJSON($SCRIPT_ROOT + 'points!'+xMin+'!'+yMin+'!'+xMax+'!'+yMax);
+    return $.getJSON($SCRIPT_ROOT + 'points!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1]);
   }
 
   function setPoints() {
@@ -68,9 +97,8 @@ $(document).ready(function() {
         .append("circle")
         .attr("class", "dot")
         .attr("r", r)
-        .attr("stroke-width", strokeWidth)
-        .attr("cx", function(p) { return x(p.x); })
-        .attr("cy", function(p) { return y(p.y); });
+        .attr("cx", function(p) { return coords.apply([p.x, p.y])[0]; })
+        .attr("cy", function(p) { return coords.apply([p.x, p.y])[1]; });
     }
   }
 
@@ -80,7 +108,7 @@ $(document).ready(function() {
         .attr("class", "d3-tip")
         .offset([-10, 0])
         .html(function(p) {
-          return "x: " + p.x + " y: " + p.y;
+          return "x: "+p.x+" y: "+p.y;
         });
 
       svg.call(tip);
@@ -91,35 +119,44 @@ $(document).ready(function() {
   }
 
   function zoomed() {
-    var scale = d3.event.transform.k;
+    coords.setZoomTransform(d3.event.transform);
+
     svgWithMargin.selectAll(".dot")
-      .attr("transform", d3.event.transform)
-      .attr("r", r / scale) // do not scale dots
-      .attr("stroke-width", strokeWidth / scale);
+      .attr("cx", function(p) { return coords.apply([p.x, p.y])[0]; })
+      .attr("cy", function(p) { return coords.apply([p.x, p.y])[1]; });
   }
 
-  var margin = { top: 30, right: 30, bottom: 30, left: 30 };
+  var margin = { top: 20, right: 20, bottom: 20, left: 20 };
   var r = 3.5;
-  var strokeWidth = 1;
-  var minDisplayDim = Math.min.apply(Math, getDisplaySize());
 
-  var x = d3.scaleLinear();
-  var y = d3.scaleLinear();
+  var coords = new CoordsConverter();
+  coords.setViewportSize(getUsableSize());
+  coords.setZoomTransform(d3.zoomIdentity);
 
   var svg = d3.select("div#container")
-    .append("div")
-    .classed("svg-container", true) //container class to make it responsive
     .append("svg")
-    .attr("preserveAspectRatio", "xMidYMid meet")
-    .classed("svg-content-responsive", true)
-    .attr("viewBox", "0 0 "+minDisplayDim+" "+minDisplayDim);
+    .classed("svg-content", true);
+
+  svg.append("clipPath")
+    .attr("id", "margin-clip")
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", getUsableSize()[0])
+    .attr("height", getUsableSize()[1]);
+
+  svg.append("rect")
+    .attr("x", margin.left)
+    .attr("y", margin.top)
+    .attr("width", getUsableSize()[0])
+    .attr("height", getUsableSize()[1]);
 
   var svgWithMargin = svg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .attr("clip-path", "url(#margin-clip)");
 
   var zoom = d3.zoom()
-    .scaleExtent([1.0, Infinity])
-    .translateExtent([[-minDisplayDim, -minDisplayDim],[minDisplayDim, minDisplayDim]])
+    .scaleExtent([1, Infinity])
     .on("zoom", zoomed);
 
   svg.call(zoom);
