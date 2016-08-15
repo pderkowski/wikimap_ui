@@ -118,12 +118,27 @@ $(document).ready(function() {
       }
   }
 
-  function zoomed() {
-    coords.setZoomTransform(d3.event.transform);
-
+  function redrawPoints() {
     svgWithMargin.selectAll(".dot")
       .attr("cx", function(p) { return coords.apply([p.x, p.y])[0]; })
       .attr("cy", function(p) { return coords.apply([p.x, p.y])[1]; });
+  }
+
+  function redrawRects() {
+    d3.selectAll("rect")
+      .attr("width", getUsableSize()[0])
+      .attr("height", getUsableSize()[1]);
+  }
+
+  function zoomed() {
+    coords.setZoomTransform(d3.event.transform);
+    redrawPoints();
+  }
+
+  function resized(container) {
+    coords.setViewportSize(getUsableSize());
+    redrawPoints();
+    redrawRects();
   }
 
   var margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -160,6 +175,9 @@ $(document).ready(function() {
     .on("zoom", zoomed);
 
   svg.call(zoom);
+
+  var erd = elementResizeDetectorMaker({ strategy: "scroll" });
+  erd.listenTo(document.getElementById("container"), resized);
 
   loadBounds()
     .then(setScales())
