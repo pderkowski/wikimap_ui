@@ -28,6 +28,13 @@ PartitionTree::PartitionTree(const Bounds& bounds, int nodeCapacity)
 : root_(new Node(bounds, nodeCapacity))
 { }
 
+PartitionTree::PartitionTree(const std::vector<Point>& points, int nodeCapacity)
+: root_(new Node(helpers::getBounds(points), nodeCapacity)) {
+    for (const auto& p : points) {
+        insert(p);
+    }
+}
+
 PartitionTree::~PartitionTree() {
     delete root_;
 }

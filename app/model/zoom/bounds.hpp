@@ -8,9 +8,9 @@ struct Point {
 
     double x;
     double y;
-};
 
-bool operator == (const Point& lhs, const Point& rhs);
+    bool operator == (const Point& other) const { return x == other.x && y == other.y; }
+};
 
 class Bounds {
 public:

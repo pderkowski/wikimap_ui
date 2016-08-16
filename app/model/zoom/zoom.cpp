@@ -4,12 +4,8 @@
 #include <cassert>
 
 Zoom::Zoom(const std::vector<Point>& points, int pointsPerTile)
-: tree_(helpers::getBounds(points), pointsPerTile)
-{
-    for (auto it = points.begin(); it != points.end(); ++it) {
-        tree_.insert(*it);
-    }
-}
+: tree_(points, pointsPerTile), grid_(tree_.getBounds(), tree_.getDepth())
+{ }
 
 std::vector<Point> Zoom::getPoints(const Bounds& bounds, int zoomLevel) const {
     auto overlapping = getOverlappingBounds(bounds);
@@ -50,4 +46,11 @@ Bounds Zoom::getOverlappingBounds(const Bounds& bounds) const {
     auto overlapping = getEnclosingBounds().intersect(bounds);
     assert(tree_.getBounds().contain(overlapping));
     return overlapping;
+}
+
+Axes Zoom::getGrid(const Bounds& bounds, int zoomLevel) const {
+    auto tl = bounds.getTopLeftCorner();
+    auto br = bounds.getBottomRightCorner();
+
+    return Axes{ grid_.getXAxis(tl.x, br.x, zoomLevel), grid_.getYAxis(tl.y, br.y, zoomLevel) };
 }

@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 import unittest
-from app.model import zoom
+from app.model.zoom import Point, Bounds, Zoom
+
+def contains(containing, contained):
+    return all(p in containing for p in contained)
+
+def equals(pointList1, pointList2):
+    return contains(pointList1, pointList2) and contains(pointList2, pointList1)
 
 class TestPoint(unittest.TestCase):
     def test_constructor(self):
-        point = zoom.Point(1.0, 1.0)
-        self.assertIs(type(point), zoom.Point)
+        point = Point(1.0, 1.0)
+        self.assertIs(type(point), Point)
 
     def test_accessors(self):
-        point = zoom.Point(1.0, 1.0)
+        point = Point(1.0, 1.0)
         self.assertEqual(point.x, 1.0)
         self.assertEqual(point.y, 1.0)
 
@@ -20,15 +26,36 @@ class TestPoint(unittest.TestCase):
 
 class TestBounds(unittest.TestCase):
     def test_constructor(self):
-        bounds = zoom.Bounds(zoom.Point(1, 1), zoom.Point(1, 1))
-        self.assertIs(type(bounds), zoom.Bounds)
+        bounds = Bounds(Point(1, 1), Point(1, 1))
+        self.assertIs(type(bounds), Bounds)
 
 class TestZoom(unittest.TestCase):
     def test_constructor(self):
-        points = [zoom.Point(0, 0), zoom.Point(1, 0), zoom.Point(1, 1), zoom.Point(0, 1)]
-        z = zoom.Zoom(points, 100)
-        self.assertIs(type(z), zoom.Zoom)
+        points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
+        z = Zoom(points, 100)
+        self.assertIs(type(z), Zoom)
 
+    def test_getPoints(self):
+        points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
+        z = Zoom(points, 100)
+
+        bounds = Bounds(Point(-0.5, -0.5), Point(1.5, 1.5))
+
+        points2 = z.getPoints(bounds, 0)
+        self.assertTrue(equals(points, points2))
+
+    def test_getGrid(self):
+        points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
+        z = Zoom(points, 100)
+
+        bounds = Bounds(Point(-0.5, -0.5), Point(1.5, 1.5))
+
+        axes = z.getGrid(bounds, 0)
+
+        self.assertEqual(len(axes.x), 4)
+        self.assertEqual(len(axes.y), 4)
+
+        # .def("getGrid", &ZoomWrapper::getGrid);
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <array>
+#include <vector>
 #include "bounds.hpp"
 #include "node.hpp"
 
@@ -37,6 +38,7 @@ bool operator == (const Bucket& lhs, const Bucket& rhs);
 class PartitionTree {
 public:
     PartitionTree(const Bounds& bounds, int bucketCapacity);
+    PartitionTree(const std::vector<Point>& points, int bucketCapacity);
 
     PartitionTree(const PartitionTree& other) = delete;
     PartitionTree& operator = (const PartitionTree& other) = delete;
@@ -51,6 +53,8 @@ public:
     Bucket getBucket(const BucketCoords& coords) const;
 
     Bounds getBounds() const { return root_->getBounds(); }
+
+    int getDepth() const { return root_->getDepth(); }
 
 private:
     Point bucketCoordsToPoint(const BucketCoords& coords) const;
