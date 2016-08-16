@@ -104,3 +104,18 @@ TEST_CASE("Insertion to a node that is not a leaf and full, inserts the point in
 
     REQUIRE((topRight->getPoints().size() == 1 && topRight->getPoints()[0] == p3) == true);
 }
+
+TEST_CASE("Node::getDepth returns a correct depth of the tree rooted in this node.", "[node]") {
+    Node node(Bounds(Point(0, 0), Point(4, 4)), 1);
+
+    REQUIRE(node.getDepth() == 0);
+
+    node.insert(Point(1, 1));
+    node.insert(Point(3, 3));
+
+    REQUIRE(node.getDepth() == 1);
+
+    node.insert(Point(0, 0));
+
+    REQUIRE(node.getDepth() == 2);
+}

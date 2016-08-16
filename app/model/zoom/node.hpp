@@ -20,6 +20,8 @@ public:
     std::vector<Point> getPoints() const { return points_; }
     Bounds getBounds() const { return bounds_; }
 
+    int getDepth() const;
+
     bool isLeaf() const;
     bool contains(const Point& p) const;
 

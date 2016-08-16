@@ -1,6 +1,7 @@
 #include "node.hpp"
 #include <cassert>
 #include <algorithm>
+#include <iterator>
 
 Node::Node(const Bounds& bounds, int capacity)
 : children_(), bounds_(bounds), points_(), capacity_(capacity)
@@ -44,6 +45,19 @@ const Node* Node::getChildContainingPoint(const Point& p) const {
 
 Node* Node::getChildContainingPoint(const Point& p) {
     return const_cast<Node*>(static_cast<const Node*>(this)->getChildContainingPoint(p));
+}
+
+int Node::getDepth() const {
+    if (isLeaf()) {
+        return 0;
+    } else {
+        std::vector<int> depths;
+        for (auto child : children_) {
+            depths.push_back(child->getDepth());
+        }
+        assert(depths.size() == 4);
+        return 1 + *std::max_element(depths.begin(), depths.end());
+    }
 }
 
 void Node::split() {
