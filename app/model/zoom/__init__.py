@@ -1,3 +1,1 @@
-from libzoompy import Point
-from libzoompy import Bounds
-from libzoompy import Zoom
+from libzoompy import Point, Range, Zoom

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import unittest
-from app.model.zoom import Point, Bounds, Zoom
+from app.model.zoom import Point, Range, Zoom
 
 def contains(containing, contained):
     return all(p in containing for p in contained)
@@ -24,11 +24,6 @@ class TestPoint(unittest.TestCase):
         self.assertEqual(point.x, 2.0)
         self.assertEqual(point.y, 2.0)
 
-class TestBounds(unittest.TestCase):
-    def test_constructor(self):
-        bounds = Bounds(Point(1, 1), Point(1, 1))
-        self.assertIs(type(bounds), Bounds)
-
 class TestZoom(unittest.TestCase):
     def test_constructor(self):
         points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
@@ -39,18 +34,18 @@ class TestZoom(unittest.TestCase):
         points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
         z = Zoom(points, 100)
 
-        bounds = Bounds(Point(-0.5, -0.5), Point(1.5, 1.5))
+        range_ = Range(Point(-0.5, -0.5), Point(1.5, 1.5))
 
-        points2 = z.getPoints(bounds, 0)
+        points2 = z.getPoints(range_, 0)
         self.assertTrue(equals(points, points2))
 
     def test_getGrid(self):
         points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
         z = Zoom(points, 100)
 
-        bounds = Bounds(Point(-0.5, -0.5), Point(1.5, 1.5))
+        range_ = Range(Point(-0.5, -0.5), Point(1.5, 1.5))
 
-        axes = z.getGrid(bounds, 0)
+        axes = z.getGrid(range_, 0)
 
         self.assertEqual(len(axes.x), 4)
         self.assertEqual(len(axes.y), 4)

@@ -26,6 +26,10 @@ private:
     std::vector<Axis> yAxes_;
 };
 
+struct Axes {
+    Grid::Axis x;
+    Grid::Axis y;
+};
 
 namespace helpers {
 

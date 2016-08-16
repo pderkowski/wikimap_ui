@@ -2,18 +2,11 @@
 
 #include <array>
 #include <vector>
-
-struct Point {
-    Point(double x, double y);
-
-    double x;
-    double y;
-
-    bool operator == (const Point& other) const { return x == other.x && y == other.y; }
-};
+#include "point.hpp"
 
 class Bounds {
 public:
+    Bounds(const Range& range); //implicit
     Bounds(const Point& topLeft, const Point& bottomRight);
 
     bool contain(const Point& p) const;
@@ -33,6 +26,8 @@ public:
     Point getMidpoint() const;
 
     Bounds intersect(const Bounds& other) const;
+
+    operator Range() const;
 
 private:
     Point topLeft_;

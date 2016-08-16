@@ -7,8 +7,8 @@ Zoom::Zoom(const std::vector<Point>& points, int pointsPerTile)
 : tree_(points, pointsPerTile), grid_(tree_.getBounds(), tree_.getDepth())
 { }
 
-std::vector<Point> Zoom::getPoints(const Bounds& bounds, int zoomLevel) const {
-    auto overlapping = getOverlappingBounds(bounds);
+std::vector<Point> Zoom::getPoints(const Range& range, int zoomLevel) const {
+    auto overlapping = getOverlappingBounds(Bounds(range));
 
     auto closedBounds = helpers::getClosedBounds(overlapping);
 
@@ -48,9 +48,9 @@ Bounds Zoom::getOverlappingBounds(const Bounds& bounds) const {
     return overlapping;
 }
 
-Axes Zoom::getGrid(const Bounds& bounds, int zoomLevel) const {
-    auto tl = bounds.getTopLeftCorner();
-    auto br = bounds.getBottomRightCorner();
+Axes Zoom::getGrid(const Range& range, int zoomLevel) const {
+    auto tl = range.topLeft;
+    auto br = range.bottomRight;
 
     return Axes{ grid_.getXAxis(tl.x, br.x, zoomLevel), grid_.getYAxis(tl.y, br.y, zoomLevel) };
 }

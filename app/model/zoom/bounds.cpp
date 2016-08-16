@@ -4,8 +4,8 @@
 #include <cmath>
 #include <algorithm>
 
-Point::Point(double x, double y)
-: x(x), y(y)
+Bounds::Bounds(const Range& range)
+: Bounds(range.topLeft, range.bottomRight)
 { }
 
 Bounds::Bounds(const Point& topLeft, const Point& bottomRight)
@@ -80,6 +80,11 @@ Bounds Bounds::intersect(const Bounds& other) const {
 bool operator == (const Bounds& lhs, const Bounds& rhs) {
     return lhs.topLeft_ == rhs.topLeft_ && lhs.bottomRight_ == rhs.bottomRight_;
 }
+
+Bounds::operator Range() const {
+    return Range(topLeft_, bottomRight_);
+}
+
 
 namespace helpers {
 
