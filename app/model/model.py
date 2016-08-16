@@ -16,14 +16,10 @@ class Data(object):
 
         self.zoom = Zoom(points, 100)
 
-    def getPointsSortedByX(self, bounds):
-        points = self.zoom.getPoints(bounds, 0)
-        return sorted(points, key=lambda p: p.x)
+    def getPoints(self, range):
+        return self.zoom.getPoints(range, 0)
 
-    def getEnclosingBounds(self):
-        return self.zoom.getEnclosingBounds()
-
-    def getGrid(self, bounds, zoomLevel):
-        return self.zoom.getGrid(bounds, zoomLevel)
+    def getGrid(self, range, zoomLevel):
+        return self.zoom.getGrid(range, zoomLevel)
 
 data = Data()
