@@ -34,9 +34,7 @@ class TestZoom(unittest.TestCase):
         points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
         z = Zoom(points, 100)
 
-        range_ = Range(Point(-0.5, -0.5), Point(1.5, 1.5))
-
-        points2 = z.getPoints(range_, 0)
+        points2 = z.getPoints(0, 0, 0)
         self.assertTrue(equals(points, points2))
 
     def test_getGrid(self):

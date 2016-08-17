@@ -14,13 +14,11 @@ public:
 public:
     Zoom(const Points& points, int pointsPerTile);
 
-    Points getPoints(const Range& range, int zoomLevel) const;
+    Points getPoints(int xIndex, int yIndex, int zoomLevel) const;
     Axes getGrid(const Range& range, int zoomLevel) const;
     Range getBounds() const { return tree_.getBounds(); }
 
 private:
-    Bounds getEnclosingBounds() const;
-    Bounds getOverlappingBounds(const Bounds& bounds) const;
 
     PartitionTree tree_;
     Grid grid_;

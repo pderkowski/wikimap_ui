@@ -1,6 +1,10 @@
 // var GridCache = function () {
 //   var that = this;
 
+//   this.store = function (axes, level) {
+
+//   }
+
 //   this.getGrid = function (topLeft, bottomRight, zoomLevel) {
 //     return $.getJSON($SCRIPT_ROOT + 'grid!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1]+'!'+zoomLevel);
 //   };
@@ -11,6 +15,41 @@
 
 
 // };
+
+var TileIndexer = function () {
+  var that = this;
+
+  this.getTileRange = function (pointRange, level) {
+    var tl = pointRange[0];
+    var br = pointRange[1];
+
+    var tlXIndex = Math.max(Math.round(that._xFloatIndex(tl[0], level) - 1), 0);
+    var tlYIndex = Math.max(Math.round(that._yFloatIndex(tl[1], level) - 1), 0);
+
+    var brXIndex = Math.min(Math.round(that._xFloatIndex(br[0], level) + 1), that._maxIndex(level));
+    var brYIndex = Math.min(Math.round(that._yFloatIndex(br[1], level) + 1), that._maxIndex(level));
+
+    return [[tlXIndex, tlYIndex], [brXIndex, brYIndex]];
+  };
+
+  this.setBounds = function (bounds) {
+    that._bounds = bounds;
+  };
+
+  this._xFloatIndex = function (x, level) {
+    var factor = (x - that._bounds.xMin) / (that._bounds.xMax - that._bounds.xMin);
+    return factor * (that._maxIndex(level) + 1);
+  };
+
+  this._yFloatIndex = function (y, level) {
+    var factor = (y - that._bounds.yMin) / (that._bounds.yMax - that._bounds.yMin);
+    return factor * (that._maxIndex(level) + 1);
+  };
+
+  this._maxIndex = function (level) {
+    return Math.pow(2, level) - 1;
+  };
+}
 
 var CoordsConverter = function () {
   var that = this;
@@ -72,7 +111,8 @@ var CoordsConverter = function () {
 $(document).ready(function() {
   function setScales() {
     return function (bounds) {
-      coords.setDomain(bounds);
+      converter.setDomain(bounds);
+      indexer.setBounds(bounds);
     }
   }
 
@@ -92,9 +132,7 @@ $(document).ready(function() {
   }
 
   function getPointsRequestString() {
-    var topLeft = coords.invert([0, 0]);
-    var bottomRight = coords.invert(getUsableSize());
-    return 'points!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1];
+    return 'points!0!0!0';
   }
 
   function loadPoints() {
@@ -114,8 +152,8 @@ $(document).ready(function() {
         .append("circle")
         .attr("class", "dot")
         .attr("r", r)
-        .attr("cx", function(p) { return coords.apply([p.x, p.y])[0]; })
-        .attr("cy", function(p) { return coords.apply([p.x, p.y])[1]; });
+        .attr("cx", function(p) { return converter.apply([p.x, p.y])[0]; })
+        .attr("cy", function(p) { return converter.apply([p.x, p.y])[1]; });
     }
   }
 
@@ -137,8 +175,8 @@ $(document).ready(function() {
 
   function redrawPoints() {
     svgWithMargin.selectAll(".dot")
-      .attr("cx", function(p) { return coords.apply([p.x, p.y])[0]; })
-      .attr("cy", function(p) { return coords.apply([p.x, p.y])[1]; });
+      .attr("cx", function(p) { return converter.apply([p.x, p.y])[0]; })
+      .attr("cy", function(p) { return converter.apply([p.x, p.y])[1]; });
   }
 
   function redrawRects() {
@@ -148,30 +186,55 @@ $(document).ready(function() {
   }
 
   function zoomed() {
-    coords.setZoomTransform(d3.event.transform);
+    converter.setZoomTransform(d3.event.transform);
     redrawPoints();
 
-    console.log(getPointsRequestString());
-    console.log(d3.event.transform.k);
+    var tl = converter.invert([0, 0]);
+    var br = converter.invert(getUsableSize());
+    var level = getZoomLevel(d3.event.transform.k);
+    var range = indexer.getTileRange([tl, br], level);
+    requestTileRange(range, level);
+    // console.log('['+range[0][0]+','+range[0][1]+'],['+range[1][0]+','+range[1][1]+']');
   }
 
   function resized(container) {
-    coords.setViewportSize(getUsableSize());
+    converter.setViewportSize(getUsableSize());
     redrawPoints();
     redrawRects();
   }
 
-  function getZoomLevel(zoomTransform) {
-    return Math.max(0, Math.floor(Math.log2(zoomTransform.k)));
+  function getZoomLevel(scale) {
+    return Math.max(0, Math.floor(Math.log2(scale)));
   }
+
+  function requestTileRange(range, level) {
+    for (var i = range[0][0]; i < range[1][0]; i++) {
+      for (var j = range[0][1]; j < range[1][1]; j++) {
+        requestTile(i, j, level);
+      }
+    }
+  }
+
+  function requestTile(x, y, level) {
+    console.log('Tile ('+x+','+y+'): fetching points.');
+    $.getJSON($SCRIPT_ROOT+'points!'+x+'!'+y+'!'+level)
+      .done(function (points) {
+        console.log('Tile ('+x+','+y+'): fetched '+points.length+' points.');
+      });
+  }
+
+
+
+
 
   var margin = { top: 15, right: 15, bottom: 15, left: 15 };
   var r = 3.5;
 
-  var coords = new CoordsConverter();
-  coords.setViewportSize(getUsableSize());
-  coords.setZoomTransform(d3.zoomIdentity);
+  var converter = new CoordsConverter();
+  converter.setViewportSize(getUsableSize());
+  converter.setZoomTransform(d3.zoomIdentity);
 
+  var indexer = new TileIndexer();
 
   var svg = d3.select(".svg-content");
 

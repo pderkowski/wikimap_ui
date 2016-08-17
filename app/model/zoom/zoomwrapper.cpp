@@ -21,8 +21,8 @@ public:
     : zoom_(std::make_shared<Zoom>(to_std_vector<Point>(points), pointsPerTile))
     { }
 
-    Points getPoints(const Range& range, int zoomLevel) const {
-        return zoom_->getPoints(range, zoomLevel);
+    Points getPoints(int xIndex, int yIndex, int zoomLevel) const {
+        return zoom_->getPoints(xIndex, yIndex, zoomLevel);
     }
 
     Axes getGrid(const Range& range, int zoomLevel) const {

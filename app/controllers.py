@@ -16,10 +16,9 @@ def getBounds():
     range_ = data.getBounds()
     return jsonify(helpers.unpackRange(range_))
 
-@bp.route("/points!<float:xMin>!<float:yMin>!<float:xMax>!<float:yMax>")
-def getPoints(xMin, yMin, xMax, yMax):
-    range_ = helpers.packRange(xMin, yMin, xMax, yMax)
-    points = data.getPoints(range_)
+@bp.route("/points!<int:xIndex>!<int:yIndex>!<int:level>")
+def getPoints(xIndex, yIndex, level):
+    points = data.getPoints(xIndex, yIndex, level)
     unpacked = helpers.unpackPoints(points)
     json = jsonify(unpacked)
     current_app.logger.debug('Returning {} points.'.format(len(points)))

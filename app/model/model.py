@@ -16,8 +16,8 @@ class Data(object):
 
         self.zoom = Zoom(points, 100)
 
-    def getPoints(self, range):
-        return self.zoom.getPoints(range, 0)
+    def getPoints(self, xIndex, yIndex, level):
+        return self.zoom.getPoints(xIndex, yIndex, level)
 
     def getGrid(self, range, zoomLevel):
         return self.zoom.getGrid(range, zoomLevel)
