@@ -1,3 +1,17 @@
+// var GridCache = function () {
+//   var that = this;
+
+//   this.getGrid = function (topLeft, bottomRight, zoomLevel) {
+//     return $.getJSON($SCRIPT_ROOT + 'grid!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1]+'!'+zoomLevel);
+//   };
+// };
+
+// var PointsCache = function () {
+//   var that = this;
+
+
+// };
+
 var CoordsConverter = function () {
   var that = this;
 
@@ -77,11 +91,14 @@ $(document).ready(function() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
 
-  function loadPoints() {
+  function getPointsRequestString() {
     var topLeft = coords.invert([0, 0]);
     var bottomRight = coords.invert(getUsableSize());
+    return 'points!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1];
+  }
 
-    return $.getJSON($SCRIPT_ROOT + 'points!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1]);
+  function loadPoints() {
+    return $.getJSON($SCRIPT_ROOT + getPointsRequestString());
   }
 
   function setPoints() {
@@ -133,6 +150,9 @@ $(document).ready(function() {
   function zoomed() {
     coords.setZoomTransform(d3.event.transform);
     redrawPoints();
+
+    console.log(getPointsRequestString());
+    console.log(d3.event.transform.k);
   }
 
   function resized(container) {
@@ -141,16 +161,19 @@ $(document).ready(function() {
     redrawRects();
   }
 
-  var margin = { top: 20, right: 20, bottom: 20, left: 20 };
+  function getZoomLevel(zoomTransform) {
+    return Math.max(0, Math.floor(Math.log2(zoomTransform.k)));
+  }
+
+  var margin = { top: 15, right: 15, bottom: 15, left: 15 };
   var r = 3.5;
 
   var coords = new CoordsConverter();
   coords.setViewportSize(getUsableSize());
   coords.setZoomTransform(d3.zoomIdentity);
 
-  var svg = d3.select("div#container")
-    .append("svg")
-    .classed("svg-content", true);
+
+  var svg = d3.select(".svg-content");
 
   svg.append("clipPath")
     .attr("id", "margin-clip")

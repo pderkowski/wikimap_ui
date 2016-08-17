@@ -13,16 +13,22 @@ def renderChart():
 
 @bp.route("/bounds")
 def getBounds():
-    bounds = data.getEnclosingBounds()
-    unpacked = helpers.unpackBounds(bounds)
-    return jsonify(unpacked)
+    range_ = data.getBounds()
+    return jsonify(helpers.unpackRange(range_))
 
 @bp.route("/points!<float:xMin>!<float:yMin>!<float:xMax>!<float:yMax>")
 def getPoints(xMin, yMin, xMax, yMax):
-    bounds = helpers.packBounds(xMin, yMin, xMax, yMax)
-    points = data.getPointsSortedByX(bounds)
+    range_ = helpers.packRange(xMin, yMin, xMax, yMax)
+    points = data.getPoints(range_)
     unpacked = helpers.unpackPoints(points)
     json = jsonify(unpacked)
     current_app.logger.debug('Returning {} points.'.format(len(points)))
     return json
 
+@bp.route("/grid!<float:xMin>!<float:yMin>!<float:xMax>!<float:yMax>!<int:zoomLevel>")
+def getGrid(xMin, yMin, xMax, yMax, zoomLevel):
+    range_ = helpers.packRange(xMin, yMin, xMax, yMax)
+    axes = data.getGrid(range_, zoomLevel)
+    json = jsonify(helpers.unpackAxes(axes))
+    current_app.logger.debug('Returning axes: {}x{}.'.format(len(axes.x), len(axes.y)))
+    return json

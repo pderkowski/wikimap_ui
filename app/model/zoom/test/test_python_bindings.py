@@ -50,7 +50,6 @@ class TestZoom(unittest.TestCase):
         self.assertEqual(len(axes.x), 4)
         self.assertEqual(len(axes.y), 4)
 
-        # .def("getGrid", &ZoomWrapper::getGrid);
 
 if __name__ == '__main__':
     unittest.main()

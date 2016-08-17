@@ -1,5 +1,5 @@
 import random
-from zoom import Zoom, Range
+from zoom import Zoom, Range, Point
 
 class Data(object):
     def __init__(self):
@@ -21,5 +21,8 @@ class Data(object):
 
     def getGrid(self, range, zoomLevel):
         return self.zoom.getGrid(range, zoomLevel)
+
+    def getBounds(self):
+        return self.zoom.getBounds()
 
 data = Data()

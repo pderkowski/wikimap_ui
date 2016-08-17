@@ -29,6 +29,10 @@ public:
         return zoom_->getGrid(range, zoomLevel);
     }
 
+    Range getBounds() const {
+        return zoom_->getBounds();
+    }
+
 private:
     std::shared_ptr<Zoom> zoom_;
 };
@@ -40,6 +44,7 @@ BOOST_PYTHON_MODULE(libzoompy) {
 
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getPoints", &ZoomWrapper::getPoints)
+        .def("getBounds", &ZoomWrapper::getBounds)
         .def("getGrid", &ZoomWrapper::getGrid);
 
     py::class_<Point>("Point", py::init<double, double>())

@@ -16,6 +16,7 @@ public:
 
     Points getPoints(const Range& range, int zoomLevel) const;
     Axes getGrid(const Range& range, int zoomLevel) const;
+    Range getBounds() const { return tree_.getBounds(); }
 
 private:
     Bounds getEnclosingBounds() const;
