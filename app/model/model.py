@@ -19,9 +19,6 @@ class Data(object):
     def getPoints(self, xIndex, yIndex, level):
         return self.zoom.getPoints(xIndex, yIndex, level)
 
-    def getGrid(self, range, zoomLevel):
-        return self.zoom.getGrid(range, zoomLevel)
-
     def getBounds(self):
         return self.zoom.getBounds()
 

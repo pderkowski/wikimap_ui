@@ -7,8 +7,6 @@
 
 namespace py = boost::python;
 
-typedef Grid::Axis Axis;
-
 template<typename T>
 inline
 std::vector<T> to_std_vector(const py::list& iterable) {
@@ -23,10 +21,6 @@ public:
 
     Points getPoints(int xIndex, int yIndex, int zoomLevel) const {
         return zoom_->getPoints(xIndex, yIndex, zoomLevel);
-    }
-
-    Axes getGrid(const Range& range, int zoomLevel) const {
-        return zoom_->getGrid(range, zoomLevel);
     }
 
     Range getBounds() const {
@@ -44,20 +38,12 @@ BOOST_PYTHON_MODULE(libzoompy) {
 
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getPoints", &ZoomWrapper::getPoints)
-        .def("getBounds", &ZoomWrapper::getBounds)
-        .def("getGrid", &ZoomWrapper::getGrid);
+        .def("getBounds", &ZoomWrapper::getBounds);
 
     py::class_<Point>("Point", py::init<double, double>())
         .def_readwrite("x", &Point::x)
         .def_readwrite("y", &Point::y)
         .def("__eq__", &Point::operator ==);
-
-    py::class_<Axis>("Axis")
-        .def(py::vector_indexing_suite<Axis>());
-
-    py::class_<Axes>("Axes")
-        .def_readwrite("x", &Axes::x)
-        .def_readwrite("y", &Axes::y);
 
     py::class_<Range>("Range", py::init<const Point&, const Point&>())
         .def_readwrite("topLeft", &Range::topLeft)

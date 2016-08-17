@@ -1,21 +1,3 @@
-// var GridCache = function () {
-//   var that = this;
-
-//   this.store = function (axes, level) {
-
-//   }
-
-//   this.getGrid = function (topLeft, bottomRight, zoomLevel) {
-//     return $.getJSON($SCRIPT_ROOT + 'grid!'+topLeft[0]+'!'+topLeft[1]+'!'+bottomRight[0]+'!'+bottomRight[1]+'!'+zoomLevel);
-//   };
-// };
-
-// var PointsCache = function () {
-//   var that = this;
-
-
-// };
-
 var TileIndexer = function () {
   var that = this;
 

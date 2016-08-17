@@ -13,6 +13,3 @@ def packRange(xMin, yMin, xMax, yMax):
     tl = Point(xMin, yMin)
     br = Point(xMax, yMax)
     return Range(tl, br)
-
-def unpackAxes(axes):
-    return { 'x': axes.x, 'y': axes.y }
