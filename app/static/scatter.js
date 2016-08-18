@@ -1,3 +1,136 @@
+var TileDrawer = function (svg, cache, converter) {
+  var that = this;
+
+  var drawnTiles = {};
+  var pendingTiles = {};
+  var requiredTiles = {};
+
+  this.draw = function (range, level) {
+    var requestedTiles = embed(range, level);
+
+    resetRequiredTiles(requestedTiles);
+
+    var drawingActions = drawTiles(requestedTiles);
+
+    $.when(drawingActions)
+      .done(function () {
+        removeStaleTiles();
+      });
+  };
+
+  function drawTiles (tiles) {
+    var drawingActions = [];
+
+    tiles.forEach(function (tile) {
+      if (!(tile in pendingTiles) && !(tile in drawnTiles)) {
+        pendingTiles[tile] = true;
+        var action = drawTile(tile)
+          .done(function (drawn) {
+            drawnTiles[tile] = drawn;
+            delete pendingTiles[tile];
+          });
+
+        drawingActions.push(action);
+      }
+    });
+
+    return drawingActions;
+  };
+
+  function drawTile (tile) {
+    return cache.get(tile[0], tile[1], tile[2])
+      .then(function (points) {
+        return doDraw(tile, points);
+      });
+  };
+
+  function doDraw (tile, points) {
+    var r = 3.5;
+    var strokeWidth = 1;
+    var g = svg.append("g")
+      .attr("id", tile);
+
+    g.selectAll(".dot")
+      .data(points)
+      .enter()
+      .append("circle")
+      .attr("class", "dot")
+      .attr("r", r)
+      .attr("stroke-width", strokeWidth)
+      .attr("cx", function(p) { return converter.apply([+p.x, +p.y])[0]; })
+      .attr("cy", function(p) { return converter.apply([+p.x, +p.y])[1]; });
+
+    return g;
+  };
+
+  function embed (range, level) {
+    var embedded = [];
+
+    for (var i = range[0][0]; i <= range[1][0]; i++) {
+      for (var j = range[0][1]; j <= range[1][1]; j++) {
+        embedded.push([i, j, level]);
+      }
+    }
+
+    return embedded;
+  };
+
+  function resetRequiredTiles (requestedTiles) {
+    requiredTiles = {};
+    requestedTiles.forEach(function (tile) {
+      requiredTiles[tile] = true;
+    });
+  };
+
+  // this method needs to be fixed - it should not be able to remove tiles touched by ANY newer request (not only the newest one) (need LRU for tiles for that)
+  function removeStaleTiles () {
+    for (var tile in drawnTiles) {
+      if (drawnTiles.hasOwnProperty(tile) && !(tile in requiredTiles)) {
+        removeTile(tile);
+      }
+    }
+  };
+
+  function removeTile (tile) {
+    if (tile in drawnTiles) {
+      drawnTiles[tile]
+        .remove();
+
+      delete drawnTiles[tile];
+    }
+  };
+};
+
+var TileCache = function () {
+  var that = this;
+
+  var cache = new LRUCache(1000, Number.MAX_SAFE_INTEGER); // don't expire cache
+
+  this.get = function (xIndex, yIndex, level) {
+    var key = [xIndex, yIndex, level];
+    var item = cache.get(key);
+
+    if (item) {
+      return item; // it's a promise
+    } else {
+      var request = new $.Deferred(); // create a promise and place it in cache
+
+      cache.set(key, request.promise());
+
+      loadPoints(xIndex, yIndex, level)
+        .done(function (points) {
+          request.resolve(points);
+        });
+
+      return request.promise();
+    }
+  };
+
+  function loadPoints(xIndex, yIndex, level) {
+    return $.getJSON($SCRIPT_ROOT + 'points!'+xIndex+'!'+yIndex+'!'+level);
+  }
+};
+
 var TileIndexer = function () {
   var that = this;
 
@@ -31,7 +164,7 @@ var TileIndexer = function () {
   this._maxIndex = function (level) {
     return Math.pow(2, level) - 1;
   };
-}
+};
 
 var CoordsConverter = function () {
   var that = this;
@@ -113,47 +246,21 @@ $(document).ready(function() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
 
-  function getPointsRequestString() {
-    return 'points!0!0!0';
-  }
+  // function setTip() {
+  //   return function (dots) {
+  //     var tip = d3.tip()
+  //       .attr("class", "d3-tip")
+  //       .offset([-10, 0])
+  //       .html(function(p) {
+  //         return "x: "+p.x+" y: "+p.y;
+  //       });
 
-  function loadPoints() {
-    return $.getJSON($SCRIPT_ROOT + getPointsRequestString());
-  }
+  //     svg.call(tip);
 
-  function setPoints() {
-    return function (points) {
-      points.forEach(function(p) {
-        p.x = +p.x;
-        p.y = +p.y;
-      });
-
-      return svgWithMargin.selectAll(".dot")
-        .data(points)
-        .enter()
-        .append("circle")
-        .attr("class", "dot")
-        .attr("r", r)
-        .attr("cx", function(p) { return converter.apply([p.x, p.y])[0]; })
-        .attr("cy", function(p) { return converter.apply([p.x, p.y])[1]; });
-    }
-  }
-
-  function setTip() {
-    return function (dots) {
-      var tip = d3.tip()
-        .attr("class", "d3-tip")
-        .offset([-10, 0])
-        .html(function(p) {
-          return "x: "+p.x+" y: "+p.y;
-        });
-
-      svg.call(tip);
-
-      dots.on("mouseover", tip.show)
-        .on("mouseout", tip.hide);
-      }
-  }
+  //     dots.on("mouseover", tip.show)
+  //       .on("mouseout", tip.hide);
+  //     }
+  // }
 
   function redrawPoints() {
     svgWithMargin.selectAll(".dot")
@@ -175,7 +282,7 @@ $(document).ready(function() {
     var br = converter.invert(getUsableSize());
     var level = getZoomLevel(d3.event.transform.k);
     var range = indexer.getTileRange([tl, br], level);
-    requestTileRange(range, level);
+    drawer.draw(range, level);
     // console.log('['+range[0][0]+','+range[0][1]+'],['+range[1][0]+','+range[1][1]+']');
   }
 
@@ -189,34 +296,15 @@ $(document).ready(function() {
     return Math.max(0, Math.floor(Math.log2(scale)));
   }
 
-  function requestTileRange(range, level) {
-    for (var i = range[0][0]; i < range[1][0]; i++) {
-      for (var j = range[0][1]; j < range[1][1]; j++) {
-        requestTile(i, j, level);
-      }
-    }
-  }
-
-  function requestTile(x, y, level) {
-    console.log('Tile ('+x+','+y+'): fetching points.');
-    $.getJSON($SCRIPT_ROOT+'points!'+x+'!'+y+'!'+level)
-      .done(function (points) {
-        console.log('Tile ('+x+','+y+'): fetched '+points.length+' points.');
-      });
-  }
-
-
-
-
 
   var margin = { top: 15, right: 15, bottom: 15, left: 15 };
-  var r = 3.5;
 
   var converter = new CoordsConverter();
   converter.setViewportSize(getUsableSize());
   converter.setZoomTransform(d3.zoomIdentity);
 
   var indexer = new TileIndexer();
+  var cache = new TileCache();
 
   var svg = d3.select(".svg-content");
 
@@ -247,9 +335,11 @@ $(document).ready(function() {
   var erd = elementResizeDetectorMaker({ strategy: "scroll" });
   erd.listenTo(document.getElementById("container"), resized);
 
+
+  var drawer = new TileDrawer(svgWithMargin, cache, converter);
+
   loadBounds()
     .then(setScales())
-    .then(loadPoints)
-    .then(setPoints())
-    .then(setTip());
+    .then(drawer.draw([[0, 0], [0, 0]], 0));
+    // .then(setTip());
 });
