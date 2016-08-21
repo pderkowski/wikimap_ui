@@ -47,16 +47,24 @@ Node* Node::getChildContainingPoint(const Point& p) {
     return const_cast<Node*>(static_cast<const Node*>(this)->getChildContainingPoint(p));
 }
 
-int Node::getDepth() const {
+int Node::getMaxDepth() const {
     if (isLeaf()) {
         return 0;
     } else {
         std::vector<int> depths;
         for (auto child : children_) {
-            depths.push_back(child->getDepth());
+            depths.push_back(child->getMaxDepth());
         }
         assert(depths.size() == 4);
         return 1 + *std::max_element(depths.begin(), depths.end());
+    }
+}
+
+int Node::getDepthAtPoint(const Point& p) const {
+    if (isLeaf()) {
+        return 0;
+    } else {
+        return 1 + getChildContainingPoint(p)->getDepthAtPoint(p);
     }
 }
 

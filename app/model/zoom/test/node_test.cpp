@@ -105,17 +105,37 @@ TEST_CASE("Insertion to a node that is not a leaf and full, inserts the point in
     REQUIRE((topRight->getPoints().size() == 1 && topRight->getPoints()[0] == p3) == true);
 }
 
-TEST_CASE("Node::getDepth returns a correct depth of the tree rooted in this node.", "[node]") {
+TEST_CASE("Node::getMaxDepth returns a correct depth of the tree rooted in this node.", "[node]") {
     Node node(Bounds(Point(0, 0), Point(4, 4)), 1);
 
-    REQUIRE(node.getDepth() == 0);
+    REQUIRE(node.getMaxDepth() == 0);
 
     node.insert(Point(1, 1));
     node.insert(Point(3, 3));
 
-    REQUIRE(node.getDepth() == 1);
+    REQUIRE(node.getMaxDepth() == 1);
 
     node.insert(Point(0, 0));
 
-    REQUIRE(node.getDepth() == 2);
+    REQUIRE(node.getMaxDepth() == 2);
+}
+
+TEST_CASE("Node::getDepthAtPoint returns correct depths at given points.", "[node]") {
+    Node node(Bounds(Point(0, 0), Point(4, 4)), 1);
+
+    Point testPoint1(0.0, 0.0);
+    Point testPoint2(2.0, 2.0);
+    Point testPoint3(3.0, 3.0);
+
+    REQUIRE(node.getDepthAtPoint(testPoint1)==0);
+    REQUIRE(node.getDepthAtPoint(testPoint2)==0);
+    REQUIRE(node.getDepthAtPoint(testPoint3)==0);
+
+    node.insert(Point(2.0, 2.0));
+    node.insert(Point(1.0, 1.0));
+    node.insert(Point(0.0, 0.0));
+
+    REQUIRE(node.getDepthAtPoint(testPoint1)==2);
+    REQUIRE(node.getDepthAtPoint(testPoint2)==1);
+    REQUIRE(node.getDepthAtPoint(testPoint3)==1);
 }

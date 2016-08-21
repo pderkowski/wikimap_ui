@@ -6,20 +6,6 @@
 #include "bounds.hpp"
 #include "node.hpp"
 
-class BucketCoords {
-public:
-    BucketCoords(int x, int y, int level);
-
-    int x() const { return x_; }
-    int y() const { return y_; }
-    int level() const { return level_; }
-
-private:
-    int x_;
-    int y_;
-    int level_;
-};
-
 class Bucket {
 public:
     explicit Bucket(const Node* node);
@@ -47,17 +33,14 @@ public:
 
     void insert(const Point& p);
 
-    BucketCoords getBucketCoords(const Point& p, int level) const;
-
     Bucket getBucket(const Point& p, int level) const;
-    Bucket getBucket(const BucketCoords& coords) const;
 
     Bounds getBounds() const { return root_->getBounds(); }
 
-    int getDepth() const { return root_->getDepth(); }
+    int getMaxDepth() const { return root_->getMaxDepth(); }
+    int getDepthAtPoint(const Point& p) const { return root_->getDepthAtPoint(p); }
 
 private:
-    Point bucketCoordsToPoint(const BucketCoords& coords) const;
 
     Node* root_;
 };

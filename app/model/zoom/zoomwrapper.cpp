@@ -4,6 +4,7 @@
 #include "zoom.hpp"
 #include "bounds.hpp"
 #include "point.hpp"
+#include "indexer.hpp"
 
 namespace py = boost::python;
 
@@ -19,8 +20,12 @@ public:
     : zoom_(std::make_shared<Zoom>(to_std_vector<Point>(points), pointsPerTile))
     { }
 
-    Points getPoints(int xIndex, int yIndex, int zoomLevel) const {
-        return zoom_->getPoints(xIndex, yIndex, zoomLevel);
+    Points getPoints(const Index& index) const {
+        return zoom_->getPoints(index);
+    }
+
+    Index getClosestAvailableIndex(const Index& index) const {
+        return zoom_->getClosestAvailableIndex(index);
     }
 
     Range getBounds() const {
@@ -38,6 +43,7 @@ BOOST_PYTHON_MODULE(libzoompy) {
 
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getPoints", &ZoomWrapper::getPoints)
+        .def("getClosestAvailableIndex", &ZoomWrapper::getClosestAvailableIndex)
         .def("getBounds", &ZoomWrapper::getBounds);
 
     py::class_<Point>("Point", py::init<double, double>())
@@ -48,4 +54,10 @@ BOOST_PYTHON_MODULE(libzoompy) {
     py::class_<Range>("Range", py::init<const Point&, const Point&>())
         .def_readwrite("topLeft", &Range::topLeft)
         .def_readwrite("bottomRight", &Range::bottomRight);
+
+    py::class_<Index>("Index", py::init<int, int, int>())
+        .def_readwrite("x", &Index::x)
+        .def_readwrite("y", &Index::y)
+        .def_readwrite("level", &Index::level)
+        .def("__eq__", &Index::operator ==);
 }

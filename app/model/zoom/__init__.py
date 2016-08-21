@@ -1,1 +1,1 @@
-from libzoompy import Point, Range, Zoom
+from libzoompy import Point, Range, Zoom, Index

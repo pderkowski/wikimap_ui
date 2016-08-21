@@ -1,5 +1,5 @@
 ZOOMDIR = app/model/zoom
-ZOOMSOURCES = $(ZOOMDIR)/bounds.cpp $(ZOOMDIR)/node.cpp $(ZOOMDIR)/partitiontree.cpp $(ZOOMDIR)/zoom.cpp
+ZOOMSOURCES = $(ZOOMDIR)/bounds.cpp $(ZOOMDIR)/node.cpp $(ZOOMDIR)/partitiontree.cpp $(ZOOMDIR)/zoom.cpp $(ZOOMDIR)/indexer.cpp
 WRAPSOURCES = $(ZOOMDIR)/zoomwrapper.cpp
 
 TESTDIR = $(ZOOMDIR)/test
