@@ -12,7 +12,8 @@ class Data(object):
                 words = line.split()
                 x = float(words[0])
                 y = float(words[1])
-                points.append(Point(x, y))
+                name = words[2]
+                points.append(Point(x, y, name))
 
         self.zoom = Zoom(points, 100)
 

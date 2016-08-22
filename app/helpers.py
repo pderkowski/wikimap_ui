@@ -7,7 +7,7 @@ def serializeRange(range_):
     return { 'xMin': tl.x, 'yMin': tl.y, 'xMax': br.x, 'yMax': br.y }
 
 def serializePoints(points):
-    return [{ 'x': p.x, 'y': p.y } for p in points]
+    return [{ 'x': p.x, 'y': p.y, 'name': p.name } for p in points]
 
 def deserializeRange(xMin, yMin, xMax, yMax):
     tl = Point(xMin, yMin)

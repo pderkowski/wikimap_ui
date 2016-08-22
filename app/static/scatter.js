@@ -9,7 +9,7 @@ var TileDrawer = function (svg, cache, converter) {
     .attr("class", "d3-tip")
     .offset([-10, 0])
     .html(function(p) {
-      return "x: "+p.x+" y: "+p.y;
+      return p.name;
     });
 
   svg.call(tip);

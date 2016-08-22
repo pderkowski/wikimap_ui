@@ -10,15 +10,18 @@ def equals(pointList1, pointList2):
 
 class TestPoint(unittest.TestCase):
     def test_accessors(self):
-        point = Point(1.0, 1.0)
+        point = Point(1.0, 1.0, "abc")
         self.assertEqual(point.x, 1.0)
         self.assertEqual(point.y, 1.0)
+        self.assertEqual(point.name, "abc")
 
         point.x = 2.0
         point.y = 2.0
+        point.name = "cba"
 
         self.assertEqual(point.x, 2.0)
         self.assertEqual(point.y, 2.0)
+        self.assertEqual(point.name, "cba")
 
     def test_equality(self):
         point = Point(1, 1)

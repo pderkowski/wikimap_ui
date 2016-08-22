@@ -42,8 +42,10 @@ BOOST_PYTHON_MODULE(libzoompy) {
         .def("getBounds", &ZoomWrapper::getBounds);
 
     py::class_<Point>("Point", py::init<double, double>())
+        .def(py::init<double, double, std::string>())
         .def_readwrite("x", &Point::x)
         .def_readwrite("y", &Point::y)
+        .def_readwrite("name", &Point::name)
         .def("__eq__", &Point::operator ==);
 
     py::class_<Range>("Range", py::init<const Point&, const Point&>())
