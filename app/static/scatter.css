@@ -32,9 +32,8 @@ div#container {
 }
 
 .dot {
-  stroke: #000;
+  stroke: none;
   fill-opacity: .5;
-  stroke-width: 1;
 }
 
 .d3-tip {

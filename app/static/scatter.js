@@ -5,6 +5,15 @@ var TileDrawer = function (svg, cache, converter) {
   var pendingTiles = {};
   var requiredTiles = {};
 
+  var tip = d3.tip()
+    .attr("class", "d3-tip")
+    .offset([-10, 0])
+    .html(function(p) {
+      return "x: "+p.x+" y: "+p.y;
+    });
+
+  svg.call(tip);
+
   this.draw = function (range, level) {
     var requestedTiles = embed(range, level);
 
@@ -53,7 +62,7 @@ var TileDrawer = function (svg, cache, converter) {
 
   function doDraw (tile, points) {
     var r = 3.5;
-    var strokeWidth = 1;
+
     var g = svg.append("g")
       .attr("id", tile)
       .attr("transform", that._zoomTransform);
@@ -64,9 +73,10 @@ var TileDrawer = function (svg, cache, converter) {
       .append("circle")
       .attr("class", "dot")
       .attr("r", r)
-      .attr("stroke-width", strokeWidth)
       .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; });
+      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+      .on("mouseover", tip.show)
+      .on("mouseout", tip.hide);
 
     return g;
   };
@@ -266,22 +276,6 @@ $(document).ready(function() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
 
-  // function setTip() {
-  //   return function (dots) {
-  //     var tip = d3.tip()
-  //       .attr("class", "d3-tip")
-  //       .offset([-10, 0])
-  //       .html(function(p) {
-  //         return "x: "+p.x+" y: "+p.y;
-  //       });
-
-  //     svg.call(tip);
-
-  //     dots.on("mouseover", tip.show)
-  //       .on("mouseout", tip.hide);
-  //     }
-  // }
-
   function redrawPoints() {
     svgWithMargin.selectAll(".dot")
       .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
@@ -355,11 +349,9 @@ $(document).ready(function() {
   var erd = elementResizeDetectorMaker({ strategy: "scroll" });
   erd.listenTo(document.getElementById("container"), resized);
 
-
   var drawer = new TileDrawer(svgWithMargin, cache, converter);
 
   loadBounds()
     .then(setScales())
     .then(drawer.draw([[0, 0], [0, 0]], 0));
-    // .then(setTip());
 });
