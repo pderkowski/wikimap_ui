@@ -12,10 +12,17 @@ var TileDrawer = function (svg, cache, converter) {
 
     var drawingActions = drawTiles(requestedTiles);
 
-    $.when(drawingActions)
+    $.when.apply($, drawingActions)
       .done(function () {
         removeStaleTiles();
       });
+  };
+
+  this.setZoomTransform = function (transform) {
+    that._zoomTransform = transform;
+
+    svg.selectAll("g")
+      .attr("transform", transform);
   };
 
   function drawTiles (tiles) {
@@ -48,7 +55,8 @@ var TileDrawer = function (svg, cache, converter) {
     var r = 3.5;
     var strokeWidth = 1;
     var g = svg.append("g")
-      .attr("id", tile);
+      .attr("id", tile)
+      .attr("transform", that._zoomTransform);
 
     g.selectAll(".dot")
       .data(points)
@@ -57,8 +65,8 @@ var TileDrawer = function (svg, cache, converter) {
       .attr("class", "dot")
       .attr("r", r)
       .attr("stroke-width", strokeWidth)
-      .attr("cx", function(p) { return converter.apply([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return converter.apply([+p.x, +p.y])[1]; });
+      .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; });
 
     return g;
   };
@@ -138,11 +146,11 @@ var TileIndexer = function () {
     var tl = pointRange[0];
     var br = pointRange[1];
 
-    var tlXIndex = Math.max(Math.round(that._xFloatIndex(tl[0], level) - 1), 0);
-    var tlYIndex = Math.max(Math.round(that._yFloatIndex(tl[1], level) - 1), 0);
+    var tlXIndex = Math.max(Math.floor(xFloatIndex(tl[0], level)), 0);
+    var tlYIndex = Math.max(Math.floor(yFloatIndex(tl[1], level)), 0);
 
-    var brXIndex = Math.min(Math.round(that._xFloatIndex(br[0], level) + 1), that._maxIndex(level));
-    var brYIndex = Math.min(Math.round(that._yFloatIndex(br[1], level) + 1), that._maxIndex(level));
+    var brXIndex = Math.min(Math.ceil(xFloatIndex(br[0], level)), maxIndex(level));
+    var brYIndex = Math.min(Math.ceil(yFloatIndex(br[1], level)), maxIndex(level));
 
     return [[tlXIndex, tlYIndex], [brXIndex, brYIndex]];
   };
@@ -151,17 +159,17 @@ var TileIndexer = function () {
     that._bounds = bounds;
   };
 
-  this._xFloatIndex = function (x, level) {
+  function xFloatIndex (x, level) {
     var factor = (x - that._bounds.xMin) / (that._bounds.xMax - that._bounds.xMin);
-    return factor * (that._maxIndex(level) + 1);
+    return factor * (maxIndex(level) + 1);
   };
 
-  this._yFloatIndex = function (y, level) {
+  function yFloatIndex (y, level) {
     var factor = (y - that._bounds.yMin) / (that._bounds.yMax - that._bounds.yMin);
-    return factor * (that._maxIndex(level) + 1);
+    return factor * (maxIndex(level) + 1);
   };
 
-  this._maxIndex = function (level) {
+  function maxIndex (level) {
     return Math.pow(2, level) - 1;
   };
 };
@@ -169,12 +177,24 @@ var TileIndexer = function () {
 var CoordsConverter = function () {
   var that = this;
 
-  this.invert = function (point) {
-    return that._transitionTransform.invert(that._zoomTransform.invert(point));
+  this.invertAll = function (point) {
+    return that.invertTransition(that.invertZoom(point));
   };
 
-  this.apply = function (point) {
-    return that._zoomTransform.apply(that._transitionTransform.apply(point));
+  this.invertTransition = function (point) {
+    return that._transitionTransform.invert(point);
+  };
+
+  this.invertZoom = function (point) {
+    return that._zoomTransform.invert(point);
+  };
+
+  this.applyTransition = function (point) {
+    return that._transitionTransform.apply(point);
+  };
+
+  this.applyZoom = function (point) {
+    return that._zoomTransform.apply(point);
   };
 
   this.setZoomTransform = function (transform) {
@@ -264,8 +284,8 @@ $(document).ready(function() {
 
   function redrawPoints() {
     svgWithMargin.selectAll(".dot")
-      .attr("cx", function(p) { return converter.apply([p.x, p.y])[0]; })
-      .attr("cy", function(p) { return converter.apply([p.x, p.y])[1]; });
+      .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
+      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
   }
 
   function redrawRects() {
@@ -276,10 +296,10 @@ $(document).ready(function() {
 
   function zoomed() {
     converter.setZoomTransform(d3.event.transform);
-    redrawPoints();
+    drawer.setZoomTransform(d3.event.transform);
 
-    var tl = converter.invert([0, 0]);
-    var br = converter.invert(getUsableSize());
+    var tl = converter.invertAll([0, 0]);
+    var br = converter.invertAll(getUsableSize());
     var level = getZoomLevel(d3.event.transform.k);
     var range = indexer.getTileRange([tl, br], level);
     drawer.draw(range, level);
