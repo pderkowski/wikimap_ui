@@ -1,5 +1,5 @@
 import random
-from zoom import Zoom, Range, Point
+from zoom import Zoom, Range, Point, Index
 
 class Data(object):
     def __init__(self):
@@ -16,8 +16,8 @@ class Data(object):
 
         self.zoom = Zoom(points, 100)
 
-    def getPoints(self, xIndex, yIndex, level):
-        return self.zoom.getPoints(xIndex, yIndex, level)
+    def getPoints(self, index):
+        return self.zoom.getPoints(index)
 
     def getBounds(self):
         return self.zoom.getBounds()

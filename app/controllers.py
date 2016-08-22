@@ -14,12 +14,12 @@ def renderChart():
 @bp.route("/bounds")
 def getBounds():
     range_ = data.getBounds()
-    return jsonify(helpers.unpackRange(range_))
+    return jsonify(helpers.serializeRange(range_))
 
-@bp.route("/points!<int:xIndex>!<int:yIndex>!<int:level>")
-def getPoints(xIndex, yIndex, level):
-    points = data.getPoints(xIndex, yIndex, level)
-    unpacked = helpers.unpackPoints(points)
-    json = jsonify(unpacked)
-    current_app.logger.debug('Returning {} points.'.format(len(points)))
-    return json
+@bp.route("/points!<int:xIndex>!<int:yIndex>!<int:zoomLevel>")
+def getPoints(xIndex, yIndex, zoomLevel):
+    requestedIndex = helpers.deserializeIndex(xIndex, yIndex, zoomLevel)
+    points = data.getPoints(requestedIndex)
+    current_app.logger.debug('Returning {} points for ({},{},{}).'.format(len(points), requestedIndex.x, requestedIndex.y, requestedIndex.level))
+    return jsonify(helpers.serializePoints(points))
+

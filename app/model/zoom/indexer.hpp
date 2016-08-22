@@ -20,6 +20,8 @@ class Indexer {
 public:
     Indexer(const Bounds& bounds);
 
+    Bounds indexToBounds(Index i) const;
+
     Index pointToIndex(const Point& p, int level) const;
     Point indexToPoint(Index i) const;
 

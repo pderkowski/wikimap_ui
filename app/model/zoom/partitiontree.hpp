@@ -5,21 +5,7 @@
 #include <vector>
 #include "bounds.hpp"
 #include "node.hpp"
-
-class Bucket {
-public:
-    explicit Bucket(const Node* node);
-
-    std::vector<Point> getPoints() const { return node_->getPoints(); }
-
-private:
-    friend bool operator == (const Bucket& lhs, const Bucket& rhs);
-
-private:
-    const Node* node_;
-};
-
-bool operator == (const Bucket& lhs, const Bucket& rhs);
+#include "indexer.hpp"
 
 class PartitionTree {
 public:
@@ -33,7 +19,7 @@ public:
 
     void insert(const Point& p);
 
-    Bucket getBucket(const Point& p, int level) const;
+    Points getPoints(const Index& index) const;
 
     Bounds getBounds() const { return root_->getBounds(); }
 
@@ -41,8 +27,8 @@ public:
     int getDepthAtPoint(const Point& p) const { return root_->getDepthAtPoint(p); }
 
 private:
-
     Node* root_;
+    Indexer indexer_;
 };
 
 

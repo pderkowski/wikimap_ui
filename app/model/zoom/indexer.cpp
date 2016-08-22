@@ -5,7 +5,7 @@ Indexer::Indexer(const Bounds& bounds)
 : bounds_(bounds)
 { }
 
-Point Indexer::indexToPoint(Index index) const {
+Bounds Indexer::indexToBounds(Index index) const {
     int p = (int)pow(2, index.level);
 
     auto bounds = bounds_;
@@ -32,6 +32,11 @@ Point Indexer::indexToPoint(Index index) const {
         p = half;
     }
 
+    return bounds;
+}
+
+Point Indexer::indexToPoint(Index index) const {
+    auto bounds = indexToBounds(index);
     return bounds.getMidpoint();
 }
 

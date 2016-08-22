@@ -15,8 +15,6 @@ public:
     Points getPoints(const Index& index) const;
     Range getBounds() const { return tree_.getBounds(); }
 
-    Index getClosestAvailableIndex(const Index& index) const;
-
 private:
     PartitionTree tree_;
 };

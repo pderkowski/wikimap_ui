@@ -24,10 +24,6 @@ public:
         return zoom_->getPoints(index);
     }
 
-    Index getClosestAvailableIndex(const Index& index) const {
-        return zoom_->getClosestAvailableIndex(index);
-    }
-
     Range getBounds() const {
         return zoom_->getBounds();
     }
@@ -43,7 +39,6 @@ BOOST_PYTHON_MODULE(libzoompy) {
 
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getPoints", &ZoomWrapper::getPoints)
-        .def("getClosestAvailableIndex", &ZoomWrapper::getClosestAvailableIndex)
         .def("getBounds", &ZoomWrapper::getBounds);
 
     py::class_<Point>("Point", py::init<double, double>())

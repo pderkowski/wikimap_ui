@@ -35,12 +35,6 @@ class TestZoom(unittest.TestCase):
         points2 = z.getPoints(index)
         self.assertTrue(equals(points, points2))
 
-    def test_getClosestAvailableIndex(self):
-        points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
-        z = Zoom(points, 100)
-
-        self.assertEqual(z.getClosestAvailableIndex(Index(0, 0, 0)), Index(0, 0, 0))
-
 class TestRange(unittest.TestCase):
     def test_accessors(self):
         p1 = Point(0, 0)
