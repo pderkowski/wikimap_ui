@@ -82,13 +82,13 @@ void Node::split() {
     auto bl = children_.getBottomLeft();
 
     for (const auto& p : points_) {
-        if (tl->contains(p)) {
+        if (tl->contains(p.point.to2D())) {
             tl->insert(p);
-        } else if (tr->contains(p)) {
+        } else if (tr->contains(p.point.to2D())) {
             tr->insert(p);
-        } else if (br->contains(p)) {
+        } else if (br->contains(p.point.to2D())) {
             br->insert(p);
-        } else if (bl->contains(p)) {
+        } else if (bl->contains(p.point.to2D())) {
             bl->insert(p);
         } else {
             assert(0);
@@ -96,17 +96,36 @@ void Node::split() {
     }
 }
 
-void Node::insert(const Point2D& p) {
+Node* Node::prepareInsert(const Point2D& p) {
     if (isFull()) {
         if (isLeaf()) {
             split();
         }
 
         assert(!isLeaf());
-        getChildContainingPoint(p)->insert(p);
+        return getChildContainingPoint(p)->prepareInsert(p);
     } else {
         assert(!isFull());
         assert(isLeaf());
-        points_.push_back(p);
+
+        return this;
     }
+}
+
+void Node::insert(const Point2D& p, const Data& data) {
+    auto node = prepareInsert(p);
+
+    auto z = getDepthAtPoint(p);
+    Datapoint d{Point3D(p.x, p.y, z), data};
+
+    node->doInsert(d);
+}
+
+void Node::insert(const Datapoint& d) {
+    auto node = prepareInsert(d.point.to2D());
+    node->doInsert(d);
+}
+
+void Node::doInsert(const Datapoint& d) {
+    points_.push_back(d);
 }

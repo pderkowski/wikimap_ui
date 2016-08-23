@@ -1,4 +1,5 @@
 import random
+import zoom
 from zoom import Zoom, Range, Point2D, Index
 from flask import current_app
 
@@ -9,24 +10,26 @@ class Data(object):
     def load(self, fileName):
         print 'Loading data from {}...'.format(fileName)
         points = []
+        data = []
         with open(fileName, 'r') as file:
             for line in file:
                 words = line.split()
                 x = float(words[0])
                 y = float(words[1])
                 name = words[2]
-                points.append(Point2D(x, y, name))
+                points.append(Point2D(x, y))
+                data.append(zoom.Data(name))
 
         print 'Loaded {} points.'.format(len(points))
 
         print 'Creating zoom object...'
 
-        self.zoom = Zoom(points, 100)
+        self.zoom = Zoom(points, data, 100)
 
         print 'Created zoom object with max depth {}.'.format(self.zoom.getMaxDepth())
 
-    def getPoints(self, index):
-        return self.zoom.getPoints(index)
+    def getDatapoints(self, index):
+        return self.zoom.getDatapoints(index)
 
     def getBounds(self):
         return self.zoom.getBounds()

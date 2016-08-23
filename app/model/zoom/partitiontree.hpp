@@ -10,16 +10,15 @@
 class PartitionTree {
 public:
     PartitionTree(const Bounds& bounds, int bucketCapacity);
-    PartitionTree(const Points2D& points, int bucketCapacity);
 
     PartitionTree(const PartitionTree& other) = delete;
     PartitionTree& operator = (const PartitionTree& other) = delete;
 
     ~PartitionTree();
 
-    void insert(const Point2D& p);
+    void insert(const Point2D& p, const Data& data);
 
-    Points2D getPoints(const Index& index) const;
+    Datapoints getDatapoints(const Index& index) const;
 
     Bounds getBounds() const { return root_->getBounds(); }
 

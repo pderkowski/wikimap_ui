@@ -8,11 +8,9 @@
 
 class Zoom {
 public:
+    Zoom(const Points2D& points, const std::vector<Data>& data, int pointsPerTile);
 
-public:
-    Zoom(const Points2D& points, int pointsPerTile);
-
-    Points2D getPoints(const Index& index) const;
+    Datapoints getDatapoints(const Index& index) const;
     Range getBounds() const { return tree_.getBounds(); }
     int getMaxDepth() const { return tree_.getMaxDepth(); }
 

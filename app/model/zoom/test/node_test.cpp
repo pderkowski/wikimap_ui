@@ -2,12 +2,15 @@
 #include "node.hpp"
 #include "bounds.hpp"
 
+
 TEST_CASE("Given a point, Node::getChildContainingPoint returns a child node that contains this point", "[node]") {
+    Data dummy{""};
+
     Bounds bounds(Point2D(0, 0), Point2D(4, 4));
 
     Node node(bounds, 1);
-    node.insert(Point2D(1, 1));
-    node.insert(Point2D(1, 2));
+    node.insert(Point2D(1, 1), dummy);
+    node.insert(Point2D(1, 2), dummy);
 
     REQUIRE(node.isLeaf()==false);
 
@@ -40,87 +43,99 @@ TEST_CASE("Given a point, Node::getChildContainingPoint returns a child node tha
 }
 
 TEST_CASE("A node can recognize whether it is a leaf or not", "[node]") {
+    Data dummy{""};
+
     Bounds bounds(Point2D(0, 0), Point2D(4, 4));
     Node node(bounds, 1);
 
     REQUIRE(node.isLeaf()==true);
 
-    node.insert(Point2D(1, 1));
-    node.insert(Point2D(1, 2));
+    node.insert(Point2D(1, 1), dummy);
+    node.insert(Point2D(1, 2), dummy);
 
     REQUIRE(node.isLeaf()==false);
 }
 
 TEST_CASE("Insertion to a node that is a leaf and not full, stores the point in this node without creating children", "[node]") {
+    Data dummy{""};
+
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
     REQUIRE(node.isLeaf());
 
     Point2D p(2, 2);
 
-    node.insert(p);
+    node.insert(p, dummy);
 
     REQUIRE(node.isLeaf());
 
-    auto inserted = node.getPoints();
+    auto inserted = node.getDatapoints();
 
-    REQUIRE((inserted.size() == 1 && inserted[0] == p) == true);
+    REQUIRE((inserted.size() == 1 && inserted[0].point.to2D() == p) == true);
 }
 
 TEST_CASE("Insertion to a node that is a leaf and full, creates children and stores the point in the one containing the point", "[node]") {
+    Data dummy{""};
+
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
     Point2D p1(3, 3);
-    node.insert(p1);
+    node.insert(p1, dummy);
 
     REQUIRE(node.isLeaf());
 
     Point2D p2(1, 1);
-    node.insert(p2);
+    node.insert(p2, dummy);
 
     REQUIRE(!node.isLeaf());
 
     Node* topLeft = node.getChildren().getTopLeft();
 
-    REQUIRE((topLeft->getPoints().size() == 1 && topLeft->getPoints()[0] == p2) == true);
+    REQUIRE((topLeft->getDatapoints().size() == 1 && topLeft->getDatapoints()[0].point.to2D() == p2) == true);
 }
 
 TEST_CASE("Insertion to a node that is not a leaf and full, inserts the point in a child containing the point", "[node]") {
+    Data dummy{""};
+
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
     Point2D p1(1, 1);
     Point2D p2(3, 3);
 
-    node.insert(p1);
-    node.insert(p2);
+    node.insert(p1, dummy);
+    node.insert(p2, dummy);
 
     REQUIRE(node.isLeaf() == false);
 
     Point2D p3(3, 1);
 
-    node.insert(p3);
+    node.insert(p3, dummy);
 
     Node* topRight = node.getChildren().getTopRight();
 
-    REQUIRE((topRight->getPoints().size() == 1 && topRight->getPoints()[0] == p3) == true);
+    REQUIRE((topRight->getDatapoints().size() == 1 && topRight->getDatapoints()[0].point.to2D() == p3) == true);
 }
 
 TEST_CASE("Node::getMaxDepth returns a correct depth of the tree rooted in this node.", "[node]") {
+    Data dummy{""};
+
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
     REQUIRE(node.getMaxDepth() == 0);
 
-    node.insert(Point2D(1, 1));
-    node.insert(Point2D(3, 3));
+    node.insert(Point2D(1, 1), dummy);
+    node.insert(Point2D(3, 3), dummy);
 
     REQUIRE(node.getMaxDepth() == 1);
 
-    node.insert(Point2D(0, 0));
+    node.insert(Point2D(0, 0), dummy);
 
     REQUIRE(node.getMaxDepth() == 2);
 }
 
 TEST_CASE("Node::getDepthAtPoint returns correct depths at given points.", "[node]") {
+    Data dummy{""};
+
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
     Point2D testPoint1(0.0, 0.0);
@@ -131,11 +146,28 @@ TEST_CASE("Node::getDepthAtPoint returns correct depths at given points.", "[nod
     REQUIRE(node.getDepthAtPoint(testPoint2)==0);
     REQUIRE(node.getDepthAtPoint(testPoint3)==0);
 
-    node.insert(Point2D(2.0, 2.0));
-    node.insert(Point2D(1.0, 1.0));
-    node.insert(Point2D(0.0, 0.0));
+    node.insert(Point2D(2.0, 2.0), dummy);
+    node.insert(Point2D(1.0, 1.0), dummy);
+    node.insert(Point2D(0.0, 0.0), dummy);
 
     REQUIRE(node.getDepthAtPoint(testPoint1)==2);
     REQUIRE(node.getDepthAtPoint(testPoint2)==1);
     REQUIRE(node.getDepthAtPoint(testPoint3)==1);
+}
+
+TEST_CASE("Node::insert copies datapoints to lower levels on split.", "[node]") {
+    Data dummy{""};
+
+    Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 2);
+
+    node.insert(Point2D(2.0, 2.0), dummy);
+    node.insert(Point2D(1.0, 1.0), dummy);
+    node.insert(Point2D(0.0, 0.0), dummy);
+
+    auto topLeft = node.getChildContainingPoint(Point2D(0, 0));
+    auto datapoints = topLeft->getDatapoints();
+
+    REQUIRE(datapoints.size() == 2);
+    REQUIRE(datapoints[0].point == Point3D(1, 1, 0));
+    REQUIRE(datapoints[1].point == Point3D(0, 0, 1));
 }

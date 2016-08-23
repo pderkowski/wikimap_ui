@@ -5,29 +5,29 @@
 #include <string>
 
 struct Point2D {
-    Point2D(double x, double y, const std::string& name = "")
-    : x(x), y(y), name(name)
+    Point2D(double x, double y)
+    : x(x), y(y)
     { }
 
-    bool operator == (const Point2D& other) const { return x == other.x && y == other.y && name == other.name; }
+    bool operator == (const Point2D& other) const { return x == other.x && y == other.y; }
     bool operator <= (const Point2D& other) const { return x <= other.x && y <= other.y; }
 
     double x;
     double y;
-    std::string name;
 };
 
 struct Point3D {
-    Point3D(double x, double y, double z, const std::string& name = "")
-    : x(x), y(y), z(z), name(name)
+    Point3D(double x, double y, double z)
+    : x(x), y(y), z(z)
     { }
 
-    bool operator == (const Point3D& other) const { return x == other.x && y == other.y && z == other.z && name == other.name; }
+    bool operator == (const Point3D& other) const { return x == other.x && y == other.y && z == other.z; }
+
+    Point2D to2D() const { return Point2D(x, y); }
 
     double x;
     double y;
     double z;
-    std::string name;
 };
 
 struct Range {

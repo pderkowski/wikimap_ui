@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import unittest
-from app.model.zoom import Point2D, Point3D, Range, Zoom, Index
+from app.model.zoom import Point2D, Point3D, Range, Zoom, Index, Data, Datapoint
 
 def contains(containing, contained):
     return all(p in containing for p in contained)
@@ -10,18 +10,15 @@ def equals(pointList1, pointList2):
 
 class TestPoint2D(unittest.TestCase):
     def test_accessors(self):
-        point = Point2D(1.0, 1.0, "abc")
+        point = Point2D(1.0, 1.0)
         self.assertEqual(point.x, 1.0)
         self.assertEqual(point.y, 1.0)
-        self.assertEqual(point.name, "abc")
 
         point.x = 2.0
         point.y = 2.0
-        point.name = "cba"
 
         self.assertEqual(point.x, 2.0)
         self.assertEqual(point.y, 2.0)
-        self.assertEqual(point.name, "cba")
 
     def test_equality(self):
         point = Point2D(1, 1)
@@ -31,21 +28,18 @@ class TestPoint2D(unittest.TestCase):
 
 class TestPoint3D(unittest.TestCase):
     def test_accessors(self):
-        point = Point3D(1.0, 1.0, 1.0, "abc")
+        point = Point3D(1.0, 1.0, 1.0)
         self.assertEqual(point.x, 1.0)
         self.assertEqual(point.y, 1.0)
         self.assertEqual(point.z, 1.0)
-        self.assertEqual(point.name, "abc")
 
         point.x = 2.0
         point.y = 2.0
         point.z = 2.0
-        point.name = "cba"
 
         self.assertEqual(point.x, 2.0)
         self.assertEqual(point.y, 2.0)
         self.assertEqual(point.z, 2.0)
-        self.assertEqual(point.name, "cba")
 
     def test_equality(self):
         point = Point3D(1, 1, 1)
@@ -53,18 +47,47 @@ class TestPoint3D(unittest.TestCase):
 
         self.assertTrue(point == point2)
 
+    def test_to2D(self):
+        point = Point3D(1, 1, 1)
+        point2D = point.to2D()
+
+        self.assertTrue(point2D == Point2D(1, 1))
+
+class TestDatapoint(unittest.TestCase):
+    def test_accessors(self):
+        point = Point3D(1, 1, 1)
+        data = Data("a")
+        datapoint = Datapoint(point, data)
+
+        self.assertTrue(datapoint.point == point)
+        self.assertTrue(datapoint.data == data)
+
+        point2 = Point3D(2, 2, 2)
+        data2 = Data("b")
+        datapoint.point = point2
+        datapoint.data = data2
+
+        self.assertTrue(datapoint.point == point2)
+        self.assertTrue(datapoint.data == data2)
+
 class TestZoom(unittest.TestCase):
-    def test_getPoints(self):
+    def sampleZoom(self):
         points = [Point2D(0, 0), Point2D(1, 0), Point2D(1, 1), Point2D(0, 1)]
-        z = Zoom(points, 100)
+        data = [Data("a"), Data("b"), Data("c"), Data("d")]
+        z = Zoom(points, data, 100)
+
+        return points, data, z
+
+    def test_getDatapoints(self):
+        points, data, z = self.sampleZoom()
 
         index = Index(0, 0, 0)
-        points2 = z.getPoints(index)
+        points2 = [p.point.to2D() for p in z.getDatapoints(index)]
+
         self.assertTrue(equals(points, points2))
 
     def test_getMaxDepth(self):
-        points = [Point2D(0, 0), Point2D(1, 0), Point2D(1, 1), Point2D(0, 1)]
-        z = Zoom(points, 100)
+        points, data, z = self.sampleZoom()
 
         self.assertEqual(z.getMaxDepth(), 0)
 

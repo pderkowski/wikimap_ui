@@ -6,8 +6,8 @@ def serializeRange(range_):
     br = range_.bottomRight
     return { 'xMin': tl.x, 'yMin': tl.y, 'xMax': br.x, 'yMax': br.y }
 
-def serializePoints(points):
-    return [{ 'x': p.x, 'y': p.y, 'name': p.name } for p in points]
+def serializeDatapoints(datapoints):
+    return [{ 'x': d.point.x, 'y': d.point.y, 'z': d.point.z, 'name': d.data.name } for d in datapoints]
 
 def deserializeRange(xMin, yMin, xMax, yMax):
     tl = Point2D(xMin, yMin)
