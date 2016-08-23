@@ -61,8 +61,6 @@ var TileDrawer = function (svg, cache, converter) {
   };
 
   function doDraw (tile, points) {
-    var r = 3.5;
-
     var g = svg.append("g")
       .attr("id", tile)
       .attr("transform", that._zoomTransform);
@@ -72,7 +70,7 @@ var TileDrawer = function (svg, cache, converter) {
       .enter()
       .append("circle")
       .attr("class", "dot")
-      .attr("r", r)
+      .attr("r", function(p) { return Math.pow(2, 2 - p.z); })
       .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
       .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
       .on("mouseover", tip.show)
