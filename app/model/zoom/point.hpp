@@ -22,7 +22,7 @@ struct Point3D {
     : x(x), y(y), z(z), name(name)
     { }
 
-    bool operator == (const Point2D& other) const { return x == other.x && y == other.y && name == other.name; }
+    bool operator == (const Point3D& other) const { return x == other.x && y == other.y && z == other.z && name == other.name; }
 
     double x;
     double y;

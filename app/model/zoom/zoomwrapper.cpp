@@ -41,6 +41,9 @@ BOOST_PYTHON_MODULE(libzoompy) {
     py::class_<Points2D>("Points2D")
         .def(py::vector_indexing_suite<Points2D>());
 
+    py::class_<Points3D>("Points3D")
+        .def(py::vector_indexing_suite<Points3D>());
+
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getPoints", &ZoomWrapper::getPoints)
         .def("getMaxDepth", &ZoomWrapper::getMaxDepth)
@@ -52,6 +55,14 @@ BOOST_PYTHON_MODULE(libzoompy) {
         .def_readwrite("y", &Point2D::y)
         .def_readwrite("name", &Point2D::name)
         .def("__eq__", &Point2D::operator ==);
+
+    py::class_<Point3D>("Point3D", py::init<double, double, double>())
+        .def(py::init<double, double, double, std::string>())
+        .def_readwrite("x", &Point3D::x)
+        .def_readwrite("y", &Point3D::y)
+        .def_readwrite("z", &Point3D::z)
+        .def_readwrite("name", &Point3D::name)
+        .def("__eq__", &Point3D::operator ==);
 
     py::class_<Range>("Range", py::init<const Point2D&, const Point2D&>())
         .def_readwrite("topLeft", &Range::topLeft)

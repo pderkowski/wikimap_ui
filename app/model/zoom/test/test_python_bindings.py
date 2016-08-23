@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import unittest
-from app.model.zoom import Point2D, Range, Zoom, Index
+from app.model.zoom import Point2D, Point3D, Range, Zoom, Index
 
 def contains(containing, contained):
     return all(p in containing for p in contained)
@@ -8,7 +8,7 @@ def contains(containing, contained):
 def equals(pointList1, pointList2):
     return contains(pointList1, pointList2) and contains(pointList2, pointList1)
 
-class TestPoint(unittest.TestCase):
+class TestPoint2D(unittest.TestCase):
     def test_accessors(self):
         point = Point2D(1.0, 1.0, "abc")
         self.assertEqual(point.x, 1.0)
@@ -26,6 +26,30 @@ class TestPoint(unittest.TestCase):
     def test_equality(self):
         point = Point2D(1, 1)
         point2 = Point2D(1, 1)
+
+        self.assertTrue(point == point2)
+
+class TestPoint3D(unittest.TestCase):
+    def test_accessors(self):
+        point = Point3D(1.0, 1.0, 1.0, "abc")
+        self.assertEqual(point.x, 1.0)
+        self.assertEqual(point.y, 1.0)
+        self.assertEqual(point.z, 1.0)
+        self.assertEqual(point.name, "abc")
+
+        point.x = 2.0
+        point.y = 2.0
+        point.z = 2.0
+        point.name = "cba"
+
+        self.assertEqual(point.x, 2.0)
+        self.assertEqual(point.y, 2.0)
+        self.assertEqual(point.z, 2.0)
+        self.assertEqual(point.name, "cba")
+
+    def test_equality(self):
+        point = Point3D(1, 1, 1)
+        point2 = Point3D(1, 1, 1)
 
         self.assertTrue(point == point2)
 
