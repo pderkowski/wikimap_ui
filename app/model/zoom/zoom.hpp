@@ -10,10 +10,11 @@ class Zoom {
 public:
 
 public:
-    Zoom(const Points& points, int pointsPerTile);
+    Zoom(const Points2D& points, int pointsPerTile);
 
-    Points getPoints(const Index& index) const;
+    Points2D getPoints(const Index& index) const;
     Range getBounds() const { return tree_.getBounds(); }
+    int getMaxDepth() const { return tree_.getMaxDepth(); }
 
 private:
     PartitionTree tree_;

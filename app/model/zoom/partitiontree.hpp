@@ -10,21 +10,21 @@
 class PartitionTree {
 public:
     PartitionTree(const Bounds& bounds, int bucketCapacity);
-    PartitionTree(const std::vector<Point>& points, int bucketCapacity);
+    PartitionTree(const Points2D& points, int bucketCapacity);
 
     PartitionTree(const PartitionTree& other) = delete;
     PartitionTree& operator = (const PartitionTree& other) = delete;
 
     ~PartitionTree();
 
-    void insert(const Point& p);
+    void insert(const Point2D& p);
 
-    Points getPoints(const Index& index) const;
+    Points2D getPoints(const Index& index) const;
 
     Bounds getBounds() const { return root_->getBounds(); }
 
     int getMaxDepth() const { return root_->getMaxDepth(); }
-    int getDepthAtPoint(const Point& p) const { return root_->getDepthAtPoint(p); }
+    int getDepthAtPoint(const Point2D& p) const { return root_->getDepthAtPoint(p); }
 
 private:
     Node* root_;

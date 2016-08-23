@@ -27,11 +27,11 @@ bool Node::isFull() const {
     return points_.size() >= capacity_;
 }
 
-bool Node::contains(const Point& p) const {
+bool Node::contains(const Point2D& p) const {
     return bounds_.contain(p);
 }
 
-const Node* Node::getChildContainingPoint(const Point& p) const {
+const Node* Node::getChildContainingPoint(const Point2D& p) const {
     assert(!isLeaf());
     assert(contains(p));
 
@@ -43,7 +43,7 @@ const Node* Node::getChildContainingPoint(const Point& p) const {
     assert(0);
 }
 
-Node* Node::getChildContainingPoint(const Point& p) {
+Node* Node::getChildContainingPoint(const Point2D& p) {
     return const_cast<Node*>(static_cast<const Node*>(this)->getChildContainingPoint(p));
 }
 
@@ -60,7 +60,7 @@ int Node::getMaxDepth() const {
     }
 }
 
-int Node::getDepthAtPoint(const Point& p) const {
+int Node::getDepthAtPoint(const Point2D& p) const {
     if (isLeaf()) {
         return 0;
     } else {
@@ -96,7 +96,7 @@ void Node::split() {
     }
 }
 
-void Node::insert(const Point& p) {
+void Node::insert(const Point2D& p) {
     if (isFull()) {
         if (isLeaf()) {
             split();

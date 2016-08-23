@@ -22,8 +22,8 @@ public:
 
     Bounds indexToBounds(Index i) const;
 
-    Index pointToIndex(const Point& p, int level) const;
-    Point indexToPoint(Index i) const;
+    Index pointToIndex(const Point2D& p, int level) const;
+    Point2D indexToPoint(Index i) const;
 
 private:
     Bounds bounds_;

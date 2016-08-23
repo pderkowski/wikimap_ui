@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import unittest
-from app.model.zoom import Point, Range, Zoom, Index
+from app.model.zoom import Point2D, Range, Zoom, Index
 
 def contains(containing, contained):
     return all(p in containing for p in contained)
@@ -10,7 +10,7 @@ def equals(pointList1, pointList2):
 
 class TestPoint(unittest.TestCase):
     def test_accessors(self):
-        point = Point(1.0, 1.0, "abc")
+        point = Point2D(1.0, 1.0, "abc")
         self.assertEqual(point.x, 1.0)
         self.assertEqual(point.y, 1.0)
         self.assertEqual(point.name, "abc")
@@ -24,24 +24,30 @@ class TestPoint(unittest.TestCase):
         self.assertEqual(point.name, "cba")
 
     def test_equality(self):
-        point = Point(1, 1)
-        point2 = Point(1, 1)
+        point = Point2D(1, 1)
+        point2 = Point2D(1, 1)
 
         self.assertTrue(point == point2)
 
 class TestZoom(unittest.TestCase):
     def test_getPoints(self):
-        points = [Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1)]
+        points = [Point2D(0, 0), Point2D(1, 0), Point2D(1, 1), Point2D(0, 1)]
         z = Zoom(points, 100)
 
         index = Index(0, 0, 0)
         points2 = z.getPoints(index)
         self.assertTrue(equals(points, points2))
 
+    def test_getMaxDepth(self):
+        points = [Point2D(0, 0), Point2D(1, 0), Point2D(1, 1), Point2D(0, 1)]
+        z = Zoom(points, 100)
+
+        self.assertEqual(z.getMaxDepth(), 0)
+
 class TestRange(unittest.TestCase):
     def test_accessors(self):
-        p1 = Point(0, 0)
-        p2 = Point(1, 1)
+        p1 = Point2D(0, 0)
+        p2 = Point2D(1, 1)
         range_ = Range(p1, p2)
 
         self.assertEqual(range_.topLeft, p1)

@@ -4,11 +4,11 @@
 #include <cassert>
 #include "indexer.hpp"
 
-Zoom::Zoom(const std::vector<Point>& points, int pointsPerTile)
+Zoom::Zoom(const Points2D& points, int pointsPerTile)
 : tree_(points, pointsPerTile)
 { }
 
-std::vector<Point> Zoom::getPoints(const Index& index) const {
+Points2D Zoom::getPoints(const Index& index) const {
     return tree_.getPoints(index);
 }
 

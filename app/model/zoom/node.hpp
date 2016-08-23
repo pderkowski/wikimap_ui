@@ -14,19 +14,19 @@ public:
     const Children& getChildren() const { return children_; }
     Children& getChildren() { return children_; }
 
-    const Node* getChildContainingPoint(const Point& p) const;
-    Node* getChildContainingPoint(const Point& p);
+    const Node* getChildContainingPoint(const Point2D& p) const;
+    Node* getChildContainingPoint(const Point2D& p);
 
-    std::vector<Point> getPoints() const { return points_; }
+    Points2D getPoints() const { return points_; }
     Bounds getBounds() const { return bounds_; }
 
     int getMaxDepth() const;
-    int getDepthAtPoint(const Point& p) const;
+    int getDepthAtPoint(const Point2D& p) const;
 
     bool isLeaf() const;
-    bool contains(const Point& p) const;
+    bool contains(const Point2D& p) const;
 
-    void insert(const Point& p);
+    void insert(const Point2D& p);
 
 private:
     bool isFull() const;
@@ -36,7 +36,7 @@ private:
     Children children_;
 
     Bounds bounds_;
-    std::vector<Point> points_;
+    Points2D points_;
 
     int capacity_;
 };

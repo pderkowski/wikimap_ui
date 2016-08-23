@@ -17,15 +17,19 @@ std::vector<T> to_std_vector(const py::list& iterable) {
 class ZoomWrapper {
 public:
     ZoomWrapper(const py::list& points, int pointsPerTile)
-    : zoom_(std::make_shared<Zoom>(to_std_vector<Point>(points), pointsPerTile))
+    : zoom_(std::make_shared<Zoom>(to_std_vector<Point2D>(points), pointsPerTile))
     { }
 
-    Points getPoints(const Index& index) const {
+    Points2D getPoints(const Index& index) const {
         return zoom_->getPoints(index);
     }
 
     Range getBounds() const {
         return zoom_->getBounds();
+    }
+
+    int getMaxDepth() const {
+        return zoom_->getMaxDepth();
     }
 
 private:
@@ -34,21 +38,22 @@ private:
 
 
 BOOST_PYTHON_MODULE(libzoompy) {
-    py::class_<Points>("Points")
-        .def(py::vector_indexing_suite<Points>());
+    py::class_<Points2D>("Points2D")
+        .def(py::vector_indexing_suite<Points2D>());
 
     py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getPoints", &ZoomWrapper::getPoints)
+        .def("getMaxDepth", &ZoomWrapper::getMaxDepth)
         .def("getBounds", &ZoomWrapper::getBounds);
 
-    py::class_<Point>("Point", py::init<double, double>())
+    py::class_<Point2D>("Point2D", py::init<double, double>())
         .def(py::init<double, double, std::string>())
-        .def_readwrite("x", &Point::x)
-        .def_readwrite("y", &Point::y)
-        .def_readwrite("name", &Point::name)
-        .def("__eq__", &Point::operator ==);
+        .def_readwrite("x", &Point2D::x)
+        .def_readwrite("y", &Point2D::y)
+        .def_readwrite("name", &Point2D::name)
+        .def("__eq__", &Point2D::operator ==);
 
-    py::class_<Range>("Range", py::init<const Point&, const Point&>())
+    py::class_<Range>("Range", py::init<const Point2D&, const Point2D&>())
         .def_readwrite("topLeft", &Range::topLeft)
         .def_readwrite("bottomRight", &Range::bottomRight);
 

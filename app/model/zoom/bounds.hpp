@@ -7,9 +7,9 @@
 class Bounds {
 public:
     Bounds(const Range& range); //implicit
-    Bounds(const Point& topLeft, const Point& bottomRight);
+    Bounds(const Point2D& topLeft, const Point2D& bottomRight);
 
-    bool contain(const Point& p) const;
+    bool contain(const Point2D& p) const;
     bool contain(const Bounds& b) const;
 
     Bounds getTopLeftQuadrant() const;
@@ -17,21 +17,21 @@ public:
     Bounds getBottomRightQuadrant() const;
     Bounds getBottomLeftQuadrant() const;
 
-    Point getTopLeftCorner() const { return topLeft_; }
-    Point getBottomRightCorner() const { return bottomRight_; }
+    Point2D getTopLeftCorner() const { return topLeft_; }
+    Point2D getBottomRightCorner() const { return bottomRight_; }
 
     double getWidth() const;
     double getHeight() const;
 
-    Point getMidpoint() const;
+    Point2D getMidpoint() const;
 
     Bounds intersect(const Bounds& other) const;
 
     operator Range() const;
 
 private:
-    Point topLeft_;
-    Point bottomRight_;
+    Point2D topLeft_;
+    Point2D bottomRight_;
 
 private:
     friend bool operator == (const Bounds& lhs, const Bounds& rhs);
@@ -41,7 +41,7 @@ bool operator == (const Bounds& lhs, const Bounds& rhs);
 
 
 namespace helpers {
-    Bounds getBounds(const std::vector<Point>& points);
+    Bounds getBounds(const Points2D& points);
     Bounds getClosedBounds(const Bounds& openBounds);
 
     double nextGreater(double x);
