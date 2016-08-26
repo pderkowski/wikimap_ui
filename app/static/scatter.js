@@ -132,7 +132,7 @@ var CoordsConverter = function () {
   };
 };
 
-var TileRenderer = function(svg, converter) {
+var TileRenderer = function(svg, converter, hackScale) {
   var that = this;
 
   var tip = d3.tip()
@@ -142,42 +142,68 @@ var TileRenderer = function(svg, converter) {
       return p.name;
     });
 
-  var targetOpacity = 0.5;
+  var tiles = svg.append("g")
+    .attr("id", "tiles");
 
   svg.call(tip);
 
   this.setZoomTransform = function(transform) {
     that._zoomTransform = transform;
 
-    svg.selectAll("g")
-      .attr("transform", transform);
+    tiles.attr("transform", transform);
+
+    // if (!that._lastScale || (that._lastScale != transform.k)) { // zoomed in or out
+    //   d3.selectAll(".label")
+    //     .attr("transform", "scale("+(1/transform.k)+")");
+    // }
   };
 
   this.add = function(tile, points) {
-    var g = svg.append("g")
-      .attr("id", getTileId(tile))
-      .attr("transform", that._zoomTransform)
-      .style("opacity", 0);
+    var tile = tiles.append("g")
+      .classed("tile", true)
+      .attr("id", getTileId(tile));
 
-    var dots = g.selectAll(".dot")
+    var dots = tile.append("g")
+      .classed("dots", true)
+      .style("fill-opacity", 0);
+
+    dots.selectAll(".dot")
       .data(points)
       .enter()
       .append("circle")
-      .attr("class", "dot");
-
-    dots.attr("r", function(p) { return Math.pow(2, 2 - p.z); })
+      .attr("class", "dot")
       .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; });
+      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+      .attr("r", function(p) { return getR(p.z); });
 
-    dots.on("mouseover", tip.show)
-      .on("mouseout", tip.hide)
+    // var labels = tile.append("g")
+    //   .classed("labels", true)
+    //   .style("opacity", 0)
+    //   .selectAll(".label")
+    //   .data(points)
+    //   .enter()
+    //   .append("text")
+    //   .classed("label", true)
+    //   .text(function(p) { return p.name })
+    //   .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+    //   .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+    //   .attr("dy", ".35em");
 
-    return g;
+    // dots.on("mouseover", tip.show)
+    //   .on("mouseout", tip.hide)
+
+    return tile;
   };
 
   this.show = function() {
-    svg.selectAll("g")
-      .style("opacity", targetOpacity);
+    var dotsOpacity = 0.4;
+    var labelsOpacity = 1.0;
+
+    d3.selectAll(".dots")
+      .style("fill-opacity", dotsOpacity);
+
+    // d3.selectAll(".labels")
+    //   .style("opacity", labelsOpacity);
   };
 
   this.remove = function(tile) {
@@ -187,17 +213,21 @@ var TileRenderer = function(svg, converter) {
   };
 
   this.redrawAll = function() {
-    svg.selectAll(".dot")
+    d3.selectAll(".dot")
       .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
       .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
   };
+
+  function getR(z) {
+    return hackScale * Math.pow(2, 3 - z);
+  }
 
   function getTileId(tile) {
     return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
   }
 };
 
-var TileDrawer = function (svg) {
+var TileDrawer = function (svg, hackScale) {
   var that = this;
 
   var drawnTiles = {};
@@ -207,14 +237,14 @@ var TileDrawer = function (svg) {
   var converter = new CoordsConverter();
   var cache = new TileCache();
   var indexer = new TileIndexer();
-  var renderer = new TileRenderer(svg, converter);
+  var renderer = new TileRenderer(svg, converter, hackScale);
 
   this.init = function (size, dataBounds) {
     that._size = size;
 
     converter.setViewportSize(size);
-    converter.setZoomTransform(d3.zoomIdentity);
     converter.setDomain(dataBounds);
+    converter.setZoomTransform(d3.zoomIdentity);
     indexer.setBounds(dataBounds);
   };
 
@@ -234,11 +264,16 @@ var TileDrawer = function (svg) {
     that._size = size;
 
     converter.setViewportSize(size);
-    renderer.redrawAll();
+    that.clear();
+    that.zoom(d3.zoomIdentity);
+  };
 
-    d3.selectAll("rect")
-      .attr("width", size[0])
-      .attr("height", size[1]);
+  this.clear = function () {
+    for (var tile in drawnTiles) {
+      if (drawnTiles.hasOwnProperty(tile)) {
+        removeTile(tile);
+      }
+    }
   };
 
   function draw (range, level) {
@@ -329,45 +364,84 @@ $(document).ready(function() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
 
+  function listenToResizeEvents(resizable) {
+    return function () {
+      var erd = elementResizeDetectorMaker({ strategy: "scroll" });
+      erd.listenTo(document.getElementById("container"), function () {
+        resizable.resize(getVirtualSize());
+
+        var usableSize = getUsableSize();
+        var virtualSize = getVirtualSize();
+
+        d3.selectAll("rect.margin-fixed")
+          .attr("width", usableSize[0])
+          .attr("height", usableSize[1]);
+
+        d3.selectAll("rect.margin-dynamic")
+          .attr("width", virtualSize[0])
+          .attr("height", virtualSize[1]);
+      });
+    };
+  }
+
   function getUsableSize () {
     var displayWidth = document.getElementById('container').offsetWidth;
     var displayHeight = document.getElementById('container').offsetHeight;
     return [displayWidth - margin.left - margin.right, displayHeight - margin.top - margin.bottom];
   }
 
-  var margin = { top: 15, right: 15, bottom: 15, left: 15 };
+  function getVirtualSize() {
+    var usableSize = getUsableSize();
+    return [hackScale * usableSize[0], hackScale * usableSize[1]];
+  }
+
+  var hackScale = 8;
+
+  var margin = { top: 16, right: 16, bottom: 16, left: 16 };
   var svg = d3.select(".svg-content");
+
+  var usableSize = getUsableSize();
+  var virtualSize = getVirtualSize();
+
+  svg.append("rect")
+    .classed("margin-fixed", true)
+    .attr("x", margin.left)
+    .attr("y", margin.top)
+    .attr("width", usableSize[0])
+    .attr("height", usableSize[1]);
 
   svg.append("clipPath")
     .attr("id", "margin-clip")
     .append("rect")
+    .classed("margin-fixed", true)
     .attr("x", 0)
     .attr("y", 0)
-    .attr("width", getUsableSize()[0])
-    .attr("height", getUsableSize()[1]);
-
-  svg.append("rect")
-    .attr("x", margin.left)
-    .attr("y", margin.top)
-    .attr("width", getUsableSize()[0])
-    .attr("height", getUsableSize()[1]);
+    .attr("width", usableSize[0])
+    .attr("height", usableSize[1]);
 
   var svgWithMargin = svg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .attr("transform",  "translate(" + margin.left + "," + margin.top + ")")
     .attr("clip-path", "url(#margin-clip)");
 
-  var drawer = new TileDrawer(svgWithMargin);
+  var hackSvg = svgWithMargin.append("g")
+    .attr("id", "hackScale")
+    .attr("transform", "scale(" + (1/hackScale) + ")");
+
+  var zoomCapture = hackSvg.append("rect")
+    .classed("zoom-capture margin-dynamic", true)
+    .attr("width", virtualSize[0])
+    .attr("height", virtualSize[1]);
+
+  var drawer = new TileDrawer(hackSvg, hackScale);
 
   var zoom = d3.zoom()
     .scaleExtent([1, Infinity])
     .on("zoom", function() { drawer.zoom(d3.event.transform); });
 
-  svg.call(zoom);
-
-  var erd = elementResizeDetectorMaker({ strategy: "scroll" });
-  erd.listenTo(document.getElementById("container"), function () { drawer.resize(getUsableSize()); });
+  hackSvg.call(zoom);
 
   loadBounds()
-    .then(function (dataBounds) { drawer.init(getUsableSize(), dataBounds); })
+    .then(function (dataBounds) { drawer.init(getVirtualSize(), dataBounds); })
+    .then(listenToResizeEvents(drawer))
     .then(function () { drawer.zoom(d3.zoomIdentity); });
 });
