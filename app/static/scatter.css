@@ -19,10 +19,6 @@ div#container {
     display: inline-block;
 }
 
-text {
-  font: 10px "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
 .margin-fixed {
   shape-rendering: crispEdges;
   stroke: #000;
@@ -31,6 +27,7 @@ text {
 
 .labels {
   text-anchor: middle;
+  font-family: Verdana, Geneva, sans-serif;
 }
 
 .svg-content {

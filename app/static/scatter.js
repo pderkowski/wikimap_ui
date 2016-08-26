@@ -151,11 +151,6 @@ var TileRenderer = function(svg, converter, hackScale) {
     that._zoomTransform = transform;
 
     tiles.attr("transform", transform);
-
-    // if (!that._lastScale || (that._lastScale != transform.k)) { // zoomed in or out
-    //   d3.selectAll(".label")
-    //     .attr("transform", "scale("+(1/transform.k)+")");
-    // }
   };
 
   this.add = function(tile, points) {
@@ -176,18 +171,19 @@ var TileRenderer = function(svg, converter, hackScale) {
       .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
       .attr("r", function(p) { return getR(p.z); });
 
-    // var labels = tile.append("g")
-    //   .classed("labels", true)
-    //   .style("opacity", 0)
-    //   .selectAll(".label")
-    //   .data(points)
-    //   .enter()
-    //   .append("text")
-    //   .classed("label", true)
-    //   .text(function(p) { return p.name })
-    //   .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-    //   .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
-    //   .attr("dy", ".35em");
+    var labels = tile.append("g")
+      .classed("labels", true)
+      .style("opacity", 0)
+      .selectAll(".label")
+      .data(points)
+      .enter()
+      .append("text")
+      .classed("label", true)
+      .text(function(p) { return p.name })
+      .style("font-size", function(p) { return ((1.9 * getR(p.z)) / this.getComputedTextLength() * 16) + "px"; })
+      .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+      .attr("dy", ".35em");
 
     // dots.on("mouseover", tip.show)
     //   .on("mouseout", tip.hide)
@@ -202,8 +198,8 @@ var TileRenderer = function(svg, converter, hackScale) {
     d3.selectAll(".dots")
       .style("fill-opacity", dotsOpacity);
 
-    // d3.selectAll(".labels")
-    //   .style("opacity", labelsOpacity);
+    d3.selectAll(".labels")
+      .style("opacity", labelsOpacity);
   };
 
   this.remove = function(tile) {
@@ -395,7 +391,7 @@ $(document).ready(function() {
     return [hackScale * usableSize[0], hackScale * usableSize[1]];
   }
 
-  var hackScale = 8;
+  var hackScale = 32;
 
   var margin = { top: 16, right: 16, bottom: 16, left: 16 };
   var svg = d3.select(".svg-content");
