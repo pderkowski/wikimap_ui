@@ -169,7 +169,9 @@ var TileRenderer = function(svg, converter, hackScale) {
       .attr("class", "dot")
       .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
       .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
-      .attr("r", function(p) { return getR(p.z); });
+      .attr("r", function(p) { return getR(p.z); })
+      .on("mouseover", tip.show)
+      .on("mouseout", tip.hide);
 
     var labels = tile.append("g")
       .classed("labels", true)
@@ -184,9 +186,6 @@ var TileRenderer = function(svg, converter, hackScale) {
       .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
       .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
       .attr("dy", ".35em");
-
-    // dots.on("mouseover", tip.show)
-    //   .on("mouseout", tip.hide)
 
     return tile;
   };

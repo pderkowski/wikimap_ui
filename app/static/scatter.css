@@ -28,6 +28,7 @@ div#container {
 .labels {
   text-anchor: middle;
   font-family: Verdana, Geneva, sans-serif;
+  pointer-events: none;
 }
 
 .svg-content {
