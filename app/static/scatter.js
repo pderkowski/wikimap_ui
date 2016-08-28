@@ -1,114 +1,3 @@
-var TileDrawer = function (svg, cache, converter) {
-  var that = this;
-
-  var drawnTiles = {};
-  var pendingTiles = {};
-  var requiredTiles = {};
-
-  this.draw = function (range, level) {
-    var requestedTiles = embed(range, level);
-
-    resetRequiredTiles(requestedTiles);
-
-    var drawingActions = drawTiles(requestedTiles);
-
-    $.when.apply($, drawingActions)
-      .done(function () {
-        removeStaleTiles();
-      });
-  };
-
-  this.setZoomTransform = function (transform) {
-    that._zoomTransform = transform;
-
-    svg.selectAll("g")
-      .attr("transform", transform);
-  };
-
-  function drawTiles (tiles) {
-    var drawingActions = [];
-
-    tiles.forEach(function (tile) {
-      if (!(tile in pendingTiles) && !(tile in drawnTiles)) {
-        pendingTiles[tile] = true;
-        var action = drawTile(tile)
-          .done(function (drawn) {
-            drawnTiles[tile] = drawn;
-            delete pendingTiles[tile];
-          });
-
-        drawingActions.push(action);
-      }
-    });
-
-    return drawingActions;
-  };
-
-  function drawTile (tile) {
-    return cache.get(tile[0], tile[1], tile[2])
-      .then(function (points) {
-        return doDraw(tile, points);
-      });
-  };
-
-  function doDraw (tile, points) {
-    var r = 3.5;
-    var strokeWidth = 1;
-    var g = svg.append("g")
-      .attr("id", tile)
-      .attr("transform", that._zoomTransform);
-
-    g.selectAll(".dot")
-      .data(points)
-      .enter()
-      .append("circle")
-      .attr("class", "dot")
-      .attr("r", r)
-      .attr("stroke-width", strokeWidth)
-      .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; });
-
-    return g;
-  };
-
-  function embed (range, level) {
-    var embedded = [];
-
-    for (var i = range[0][0]; i <= range[1][0]; i++) {
-      for (var j = range[0][1]; j <= range[1][1]; j++) {
-        embedded.push([i, j, level]);
-      }
-    }
-
-    return embedded;
-  };
-
-  function resetRequiredTiles (requestedTiles) {
-    requiredTiles = {};
-    requestedTiles.forEach(function (tile) {
-      requiredTiles[tile] = true;
-    });
-  };
-
-  // this method needs to be fixed - it should not be able to remove tiles touched by ANY newer request (not only the newest one) (need LRU for tiles for that)
-  function removeStaleTiles () {
-    for (var tile in drawnTiles) {
-      if (drawnTiles.hasOwnProperty(tile) && !(tile in requiredTiles)) {
-        removeTile(tile);
-      }
-    }
-  };
-
-  function removeTile (tile) {
-    if (tile in drawnTiles) {
-      drawnTiles[tile]
-        .remove();
-
-      delete drawnTiles[tile];
-    }
-  };
-};
-
 var TileCache = function () {
   var that = this;
 
@@ -209,7 +98,7 @@ var CoordsConverter = function () {
     }
   };
 
-  this.setDomain = function (bounds) {
+  this.setDomain = function(bounds) {
     that._domain = bounds;
 
     if (that._viewportSize) {
@@ -217,7 +106,7 @@ var CoordsConverter = function () {
     }
   };
 
-  this._updateTransitionTransform = function () {
+  this._updateTransitionTransform = function() {
     var xm = that._domain.xMin;
     var ym = that._domain.yMin;
     var XM = that._domain.xMax;
@@ -241,125 +130,313 @@ var CoordsConverter = function () {
 
     that._transitionTransform = d3.zoomIdentity.translate(xTranslation, yTranslation).scale(scale);
   };
-}
+};
+
+var TileRenderer = function(svg, converter, hackScale) {
+  var that = this;
+
+  var tip = d3.tip()
+    .attr("class", "d3-tip")
+    .offset([-10, 0])
+    .html(function(p) {
+      return p.name;
+    });
+
+  var tiles = svg.append("g")
+    .attr("id", "tiles");
+
+  svg.call(tip);
+
+  this.setZoomTransform = function(transform) {
+    that._zoomTransform = transform;
+
+    tiles.attr("transform", transform);
+  };
+
+  this.add = function(tile, points) {
+    var tile = tiles.append("g")
+      .classed("tile", true)
+      .attr("id", getTileId(tile));
+
+    var dots = tile.append("g")
+      .classed("dots", true)
+      .style("fill-opacity", 0);
+
+    dots.selectAll(".dot")
+      .data(points)
+      .enter()
+      .append("circle")
+      .attr("class", "dot")
+      .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+      .attr("r", function(p) { return getR(p.z); })
+      .on("mouseover", tip.show)
+      .on("mouseout", tip.hide);
+
+    var labels = tile.append("g")
+      .classed("labels", true)
+      .style("opacity", 0)
+      .selectAll(".label")
+      .data(points)
+      .enter()
+      .append("text")
+      .classed("label", true)
+      .text(function(p) { return p.name })
+      .style("font-size", function(p) { return ((1.9 * getR(p.z)) / this.getComputedTextLength() * 16) + "px"; })
+      .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+      .attr("dy", ".35em");
+
+    return tile;
+  };
+
+  this.show = function() {
+    var dotsOpacity = 0.4;
+    var labelsOpacity = 1.0;
+
+    d3.selectAll(".dots")
+      .style("fill-opacity", dotsOpacity);
+
+    d3.selectAll(".labels")
+      .style("opacity", labelsOpacity);
+  };
+
+  this.remove = function(tile) {
+    var selector = "#"+getTileId(tile);
+    d3.select(selector)
+      .remove();
+  };
+
+  this.redrawAll = function() {
+    d3.selectAll(".dot")
+      .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
+      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
+  };
+
+  function getR(z) {
+    return hackScale * Math.pow(2, 3 - z);
+  }
+
+  function getTileId(tile) {
+    return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
+  }
+};
+
+var TileDrawer = function (svg, hackScale) {
+  var that = this;
+
+  var drawnTiles = {};
+  var pendingTiles = {};
+  var requiredTiles = {};
+
+  var converter = new CoordsConverter();
+  var cache = new TileCache();
+  var indexer = new TileIndexer();
+  var renderer = new TileRenderer(svg, converter, hackScale);
+
+  this.init = function (size, dataBounds) {
+    that._size = size;
+
+    converter.setViewportSize(size);
+    converter.setDomain(dataBounds);
+    converter.setZoomTransform(d3.zoomIdentity);
+    indexer.setBounds(dataBounds);
+  };
+
+  this.zoom = function (transform) {
+    converter.setZoomTransform(transform);
+    renderer.setZoomTransform(transform);
+
+    var tl = converter.invertAll([0, 0]);
+    var br = converter.invertAll(that._size);
+    var level = getZoomLevel(transform.k);
+    var range = indexer.getTileRange([tl, br], level);
+
+    draw(range, level);
+  };
+
+  this.resize = function (size) {
+    that._size = size;
+
+    converter.setViewportSize(size);
+    that.clear();
+    that.zoom(d3.zoomIdentity);
+  };
+
+  this.clear = function () {
+    for (var tile in drawnTiles) {
+      if (drawnTiles.hasOwnProperty(tile)) {
+        removeTile(tile);
+      }
+    }
+  };
+
+  function draw (range, level) {
+    var requestedTiles = embed(range, level);
+
+    resetRequiredTiles(requestedTiles);
+
+    var drawingActions = drawTiles(requestedTiles);
+
+    $.when.apply($, drawingActions)
+      .done(function () {
+        renderer.show();
+        removeStaleTiles();
+      });
+  };
+
+  function drawTiles (tiles) {
+    var drawingActions = [];
+
+    tiles.forEach(function (tile) {
+      if (!(tile in pendingTiles) && !(tile in drawnTiles)) {
+        pendingTiles[tile] = true;
+        var action = drawTile(tile)
+          .done(function (drawn) {
+            drawnTiles[tile] = drawn;
+            delete pendingTiles[tile];
+          });
+
+        drawingActions.push(action);
+      }
+    });
+
+    return drawingActions;
+  };
+
+  function drawTile (tile) {
+    return cache.get(tile[0], tile[1], tile[2])
+      .then(function (points) {
+        return renderer.add(tile, points);
+      });
+  };
+
+  function embed (range, level) {
+    var embedded = [];
+
+    for (var i = range[0][0]; i <= range[1][0]; i++) {
+      for (var j = range[0][1]; j <= range[1][1]; j++) {
+        embedded.push([i, j, level]);
+      }
+    }
+
+    return embedded;
+  };
+
+  function resetRequiredTiles(requestedTiles) {
+    requiredTiles = {};
+    requestedTiles.forEach(function(tile) {
+      requiredTiles[tile] = true;
+    });
+  };
+
+  // this method needs to be fixed - it should not be able to remove tiles touched by ANY newer request (not only the newest one) (need LRU for tiles for that)
+  function removeStaleTiles() {
+    for (var tile in drawnTiles) {
+      if (drawnTiles.hasOwnProperty(tile) && !(tile in requiredTiles)) {
+        removeTile(tile);
+      }
+    }
+
+    renderer.show();
+  };
+
+  function removeTile(tile) {
+    if (tile in drawnTiles) {
+      renderer.remove(tile);
+      delete drawnTiles[tile];
+    }
+  };
+
+  function getZoomLevel(scale) {
+    return Math.max(0, Math.floor(Math.log2(scale)));
+  };
+};
+
 
 $(document).ready(function() {
-  function setScales() {
-    return function (bounds) {
-      converter.setDomain(bounds);
-      indexer.setBounds(bounds);
-    }
-  }
-
-  function getDisplaySize() {
-    var displayWidth = document.getElementById('container').offsetWidth;
-    var displayHeight = document.getElementById('container').offsetHeight;
-    return [+displayWidth, +displayHeight];
-  }
-
-  function getUsableSize() {
-    var displaySize = getDisplaySize();
-    return [displaySize[0] - margin.left - margin.right, displaySize[1] - margin.top - margin.bottom];
-  }
-
   function loadBounds() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
 
-  // function setTip() {
-  //   return function (dots) {
-  //     var tip = d3.tip()
-  //       .attr("class", "d3-tip")
-  //       .offset([-10, 0])
-  //       .html(function(p) {
-  //         return "x: "+p.x+" y: "+p.y;
-  //       });
+  function listenToResizeEvents(resizable) {
+    return function () {
+      var erd = elementResizeDetectorMaker({ strategy: "scroll" });
+      erd.listenTo(document.getElementById("container"), function () {
+        resizable.resize(getVirtualSize());
 
-  //     svg.call(tip);
+        var usableSize = getUsableSize();
+        var virtualSize = getVirtualSize();
 
-  //     dots.on("mouseover", tip.show)
-  //       .on("mouseout", tip.hide);
-  //     }
-  // }
+        d3.selectAll("rect.margin-fixed")
+          .attr("width", usableSize[0])
+          .attr("height", usableSize[1]);
 
-  function redrawPoints() {
-    svgWithMargin.selectAll(".dot")
-      .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
-      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
+        d3.selectAll("rect.margin-dynamic")
+          .attr("width", virtualSize[0])
+          .attr("height", virtualSize[1]);
+      });
+    };
   }
 
-  function redrawRects() {
-    d3.selectAll("rect")
-      .attr("width", getUsableSize()[0])
-      .attr("height", getUsableSize()[1]);
+  function getUsableSize () {
+    var displayWidth = document.getElementById('container').offsetWidth;
+    var displayHeight = document.getElementById('container').offsetHeight;
+    return [displayWidth - margin.left - margin.right, displayHeight - margin.top - margin.bottom];
   }
 
-  function zoomed() {
-    converter.setZoomTransform(d3.event.transform);
-    drawer.setZoomTransform(d3.event.transform);
-
-    var tl = converter.invertAll([0, 0]);
-    var br = converter.invertAll(getUsableSize());
-    var level = getZoomLevel(d3.event.transform.k);
-    var range = indexer.getTileRange([tl, br], level);
-    drawer.draw(range, level);
-    // console.log('['+range[0][0]+','+range[0][1]+'],['+range[1][0]+','+range[1][1]+']');
+  function getVirtualSize() {
+    var usableSize = getUsableSize();
+    return [hackScale * usableSize[0], hackScale * usableSize[1]];
   }
 
-  function resized(container) {
-    converter.setViewportSize(getUsableSize());
-    redrawPoints();
-    redrawRects();
-  }
+  var hackScale = 32;
 
-  function getZoomLevel(scale) {
-    return Math.max(0, Math.floor(Math.log2(scale)));
-  }
-
-
-  var margin = { top: 15, right: 15, bottom: 15, left: 15 };
-
-  var converter = new CoordsConverter();
-  converter.setViewportSize(getUsableSize());
-  converter.setZoomTransform(d3.zoomIdentity);
-
-  var indexer = new TileIndexer();
-  var cache = new TileCache();
-
+  var margin = { top: 16, right: 16, bottom: 16, left: 16 };
   var svg = d3.select(".svg-content");
+
+  var usableSize = getUsableSize();
+  var virtualSize = getVirtualSize();
+
+  svg.append("rect")
+    .classed("margin-fixed", true)
+    .attr("x", margin.left)
+    .attr("y", margin.top)
+    .attr("width", usableSize[0])
+    .attr("height", usableSize[1]);
 
   svg.append("clipPath")
     .attr("id", "margin-clip")
     .append("rect")
+    .classed("margin-fixed", true)
     .attr("x", 0)
     .attr("y", 0)
-    .attr("width", getUsableSize()[0])
-    .attr("height", getUsableSize()[1]);
-
-  svg.append("rect")
-    .attr("x", margin.left)
-    .attr("y", margin.top)
-    .attr("width", getUsableSize()[0])
-    .attr("height", getUsableSize()[1]);
+    .attr("width", usableSize[0])
+    .attr("height", usableSize[1]);
 
   var svgWithMargin = svg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .attr("transform",  "translate(" + margin.left + "," + margin.top + ")")
     .attr("clip-path", "url(#margin-clip)");
+
+  var hackSvg = svgWithMargin.append("g")
+    .attr("id", "hackScale")
+    .attr("transform", "scale(" + (1/hackScale) + ")");
+
+  var zoomCapture = hackSvg.append("rect")
+    .classed("zoom-capture margin-dynamic", true)
+    .attr("width", virtualSize[0])
+    .attr("height", virtualSize[1]);
+
+  var drawer = new TileDrawer(hackSvg, hackScale);
 
   var zoom = d3.zoom()
     .scaleExtent([1, Infinity])
-    .on("zoom", zoomed);
+    .on("zoom", function() { drawer.zoom(d3.event.transform); });
 
-  svg.call(zoom);
-
-  var erd = elementResizeDetectorMaker({ strategy: "scroll" });
-  erd.listenTo(document.getElementById("container"), resized);
-
-
-  var drawer = new TileDrawer(svgWithMargin, cache, converter);
+  hackSvg.call(zoom);
 
   loadBounds()
-    .then(setScales())
-    .then(drawer.draw([[0, 0], [0, 0]], 0));
-    // .then(setTip());
+    .then(function (dataBounds) { drawer.init(getVirtualSize(), dataBounds); })
+    .then(listenToResizeEvents(drawer))
+    .then(function () { drawer.zoom(d3.zoomIdentity); });
 });

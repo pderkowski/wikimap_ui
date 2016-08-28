@@ -5,9 +5,6 @@ body {
 
 rect {
   fill: transparent;
-  shape-rendering: crispEdges;
-  stroke: #000;
-  stroke-width: 1;
 }
 
 div#container {
@@ -22,6 +19,18 @@ div#container {
     display: inline-block;
 }
 
+.margin-fixed {
+  shape-rendering: crispEdges;
+  stroke: #000;
+  stroke-width: 1;
+}
+
+.labels {
+  text-anchor: middle;
+  font-family: Verdana, Geneva, sans-serif;
+  pointer-events: none;
+}
+
 .svg-content {
     display: inline-block;
     position: absolute;
@@ -32,9 +41,8 @@ div#container {
 }
 
 .dot {
-  stroke: #000;
-  fill-opacity: .5;
-  stroke-width: 1;
+  stroke: none;
+  fill: #000;
 }
 
 .d3-tip {

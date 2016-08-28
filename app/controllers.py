@@ -19,7 +19,7 @@ def getBounds():
 @bp.route("/points!<int:xIndex>!<int:yIndex>!<int:zoomLevel>")
 def getPoints(xIndex, yIndex, zoomLevel):
     requestedIndex = helpers.deserializeIndex(xIndex, yIndex, zoomLevel)
-    points = data.getPoints(requestedIndex)
-    current_app.logger.debug('Returning {} points for ({},{},{}).'.format(len(points), requestedIndex.x, requestedIndex.y, requestedIndex.level))
-    return jsonify(helpers.serializePoints(points))
+    datapoints = data.getDatapoints(requestedIndex)
+    current_app.logger.debug('Returning {} datapoints for ({},{},{}).'.format(len(datapoints), requestedIndex.x, requestedIndex.y, requestedIndex.level))
+    return jsonify(helpers.serializeDatapoints(datapoints))
 

@@ -35,12 +35,12 @@ Bounds Indexer::indexToBounds(Index index) const {
     return bounds;
 }
 
-Point Indexer::indexToPoint(Index index) const {
+Point2D Indexer::indexToPoint(Index index) const {
     auto bounds = indexToBounds(index);
     return bounds.getMidpoint();
 }
 
-Index Indexer::pointToIndex(const Point& p, int level) const {
+Index Indexer::pointToIndex(const Point2D& p, int level) const {
     assert(bounds_.contain(p));
 
     auto bounds = bounds_;
