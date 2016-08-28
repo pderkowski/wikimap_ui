@@ -11,7 +11,7 @@ public:
     typedef typename decltype(children_)::iterator iterator;
     typedef typename decltype(children_)::const_iterator const_iterator;
 public:
-    Children() : children_{ nullptr, nullptr, nullptr, nullptr } { }
+    Children() : children_{ { nullptr, nullptr, nullptr, nullptr } } { }
 
     iterator begin() { return children_.begin(); }
     iterator end() { return children_.end(); }
