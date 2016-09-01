@@ -147,10 +147,24 @@ var TileRenderer = function(svg, converter, hackScale) {
 
   svg.call(tip);
 
+  this.lastScale = 1;
+
   this.setZoomTransform = function(transform) {
     that._zoomTransform = transform;
 
     tiles.attr("transform", transform);
+
+    var scale = transform.k;
+    if (that.lastScale != scale) {
+      that.lastScale = scale; // getR and getFontSize depend on lastScale
+
+      // dont scale dots
+      d3.selectAll(".dot")
+        .attr("r", function(p) { return getR(p.z); })
+
+      d3.selectAll(".labels")
+        .style("font-size", getFontSize()+"px");
+    }
   };
 
   this.add = function(tile, points) {
@@ -173,19 +187,27 @@ var TileRenderer = function(svg, converter, hackScale) {
       .on("mouseover", tip.show)
       .on("mouseout", tip.hide);
 
+    var maxLength = 15;
+
     var labels = tile.append("g")
       .classed("labels", true)
+      .style("font-size", getFontSize()+"px")
       .style("opacity", 0)
       .selectAll(".label")
       .data(points)
       .enter()
       .append("text")
       .classed("label", true)
-      .text(function(p) { return p.name })
-      .style("font-size", function(p) { return ((1.9 * getR(p.z)) / this.getComputedTextLength() * 16) + "px"; })
+      .text(function(p) {
+        if (p.name.length <= maxLength) {
+          return p.name;
+        } else {
+          return p.name.substring(0, 12)+'...';
+        }
+      })
       .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
-      .attr("dy", ".35em");
+      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
+      .attr("dy", "1em");
 
     return tile;
   };
@@ -213,8 +235,15 @@ var TileRenderer = function(svg, converter, hackScale) {
       .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
   };
 
+  function getFontSize() {
+    var base = 10;
+    return hackScale * base / that.lastScale;
+  }
+
   function getR(z) {
-    return hackScale * Math.pow(2, 3 - z);
+    var base = 10;
+    var coef = 0.8;
+    return hackScale * base * Math.pow(coef, z) / that.lastScale;
   }
 
   function getTileId(tile) {
@@ -390,7 +419,7 @@ $(document).ready(function() {
     return [hackScale * usableSize[0], hackScale * usableSize[1]];
   }
 
-  var hackScale = 32;
+  var hackScale = 8;
 
   var margin = { top: 16, right: 16, bottom: 16, left: 16 };
   var svg = d3.select(".svg-content");

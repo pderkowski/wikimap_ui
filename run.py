@@ -10,7 +10,7 @@ def main():
 
     if os.path.isfile(args.data_path):
         app = createApp(args.data_path)
-        app.run(debug=True)
+        app.run(debug=False)
     else:
         print 'Could not open "{}".'.format(args.data_path)
 
