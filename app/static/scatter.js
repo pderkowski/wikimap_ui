@@ -436,6 +436,7 @@ $(document).ready(function() {
   svg.append("rect")
     .classed("frame", true)
     .classed("frame-sized", true)
+    .classed("background", true)
     .attr("x", margin.left - 0.5)
     .attr("y", margin.top - 0.5)
     .attr("width", usableSize[0] + 1)
