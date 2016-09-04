@@ -19,8 +19,7 @@ div#container {
     display: inline-block;
 }
 
-.margin-fixed {
-  shape-rendering: crispEdges;
+.frame {
   stroke: #000;
   stroke-width: 1;
 }

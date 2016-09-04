@@ -397,9 +397,13 @@ $(document).ready(function() {
         var usableSize = getUsableSize();
         var virtualSize = getVirtualSize();
 
-        d3.selectAll("rect.margin-fixed")
+        d3.selectAll(".clip-sized")
           .attr("width", usableSize[0])
           .attr("height", usableSize[1]);
+
+        d3.selectAll(".frame-sized")
+          .attr("width", usableSize[0] + 1)
+          .attr("height", usableSize[1] + 1);
 
         d3.selectAll("rect.margin-dynamic")
           .attr("width", virtualSize[0])
@@ -411,7 +415,7 @@ $(document).ready(function() {
   function getUsableSize () {
     var displayWidth = document.getElementById('container').offsetWidth;
     var displayHeight = document.getElementById('container').offsetHeight;
-    return [displayWidth - margin.left - margin.right, displayHeight - margin.top - margin.bottom];
+    return [Math.floor(displayWidth - margin.left - margin.right), Math.floor(displayHeight - margin.top - margin.bottom)];
   }
 
   function getVirtualSize() {
@@ -422,22 +426,25 @@ $(document).ready(function() {
   var hackScale = 8;
 
   var margin = { top: 16, right: 16, bottom: 16, left: 16 };
-  var svg = d3.select(".svg-content");
+  var svg = d3.select("#container")
+    .append("svg")
+    .classed("svg-content", true);
 
   var usableSize = getUsableSize();
   var virtualSize = getVirtualSize();
 
   svg.append("rect")
-    .classed("margin-fixed", true)
-    .attr("x", margin.left)
-    .attr("y", margin.top)
-    .attr("width", usableSize[0])
-    .attr("height", usableSize[1]);
+    .classed("frame", true)
+    .classed("frame-sized", true)
+    .attr("x", margin.left - 0.5)
+    .attr("y", margin.top - 0.5)
+    .attr("width", usableSize[0] + 1)
+    .attr("height", usableSize[1] + 1);
 
   svg.append("clipPath")
     .attr("id", "margin-clip")
     .append("rect")
-    .classed("margin-fixed", true)
+    .classed("clip-sized", true)
     .attr("x", 0)
     .attr("y", 0)
     .attr("width", usableSize[0])
