@@ -288,8 +288,6 @@ var TileDrawer = function (svg, hackScale) {
     that._size = size;
 
     converter.setViewportSize(size);
-    that.clear();
-    that.zoom(d3.zoomIdentity);
   };
 
   this.clear = function () {
@@ -408,6 +406,8 @@ $(document).ready(function() {
         d3.selectAll("rect.margin-dynamic")
           .attr("width", virtualSize[0])
           .attr("height", virtualSize[1]);
+
+        hackSvg.call(zoom.transform, d3.zoomIdentity);
       });
     };
   }
