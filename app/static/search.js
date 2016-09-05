@@ -1,8 +1,6 @@
 $(document).ready(function() {
-  $('#search-button').click(function (ev) {
+  $('#search-box').on('input propertychange paste', function() {
     var query = $('#search-box').val();
-
-    ev.preventDefault();
 
     if (query) {
       $.getJSON($SCRIPT_ROOT+'search!'+query).done(function (data) {
