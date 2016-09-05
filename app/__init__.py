@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 
 def createApp(dataPath):
@@ -14,5 +15,7 @@ def createApp(dataPath):
 
     from app.controllers import bp
     app.register_blueprint(bp)
+
+    app.secret_key = os.urandom(24)
 
     return app

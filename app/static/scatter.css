@@ -19,6 +19,11 @@ div#container {
     display: inline-block;
 }
 
+div#search-box-container {
+  z-index: 10;
+  position: absolute;
+}
+
 .background {
   fill: #fff;
 }
