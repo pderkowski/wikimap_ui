@@ -392,77 +392,59 @@ $(document).ready(function() {
       erd.listenTo(document.getElementById("container"), function () {
         resizable.resize(getVirtualSize());
 
-        var usableSize = getUsableSize();
-        var virtualSize = getVirtualSize();
+        d3.selectAll(".frame-size")
+          .attr("width", getFrameSize()[0])
+          .attr("height", getFrameSize()[1]);
 
-        d3.selectAll(".clip-sized")
-          .attr("width", usableSize[0])
-          .attr("height", usableSize[1]);
-
-        d3.selectAll(".frame-sized")
-          .attr("width", usableSize[0] + 1)
-          .attr("height", usableSize[1] + 1);
-
-        d3.selectAll("rect.margin-dynamic")
-          .attr("width", virtualSize[0])
-          .attr("height", virtualSize[1]);
+        d3.selectAll("rect.virtual-size")
+          .attr("width", getVirtualSize()[0])
+          .attr("height", getVirtualSize()[1]);
 
         hackSvg.call(zoom.transform, d3.zoomIdentity);
       });
     };
   }
 
-  function getUsableSize () {
+  function getRealSize () {
     var displayWidth = document.getElementById('container').offsetWidth;
     var displayHeight = document.getElementById('container').offsetHeight;
-    return [Math.floor(displayWidth - margin.left - margin.right), Math.floor(displayHeight - margin.top - margin.bottom)];
+    return [displayWidth, displayHeight];
+  }
+
+  function getFrameSize() {
+    var realSize = getRealSize();
+    return [realSize[0] - 1, realSize[1] - 1];
   }
 
   function getVirtualSize() {
-    var usableSize = getUsableSize();
-    return [hackScale * usableSize[0], hackScale * usableSize[1]];
+    var realSize = getRealSize();
+    return [hackScale * realSize[0], hackScale * realSize[1]];
   }
 
   var hackScale = 8;
 
-  var margin = { top: 16, right: 16, bottom: 16, left: 16 };
   var svg = d3.select("#container")
     .append("svg")
     .classed("svg-content", true);
 
-  var usableSize = getUsableSize();
-  var virtualSize = getVirtualSize();
-
   svg.append("rect")
     .classed("frame", true)
-    .classed("frame-sized", true)
+    .classed("frame-size", true)
     .classed("background", true)
-    .attr("x", margin.left - 0.5)
-    .attr("y", margin.top - 0.5)
-    .attr("width", usableSize[0] + 1)
-    .attr("height", usableSize[1] + 1);
+    .attr("x", 0.5)
+    .attr("y", 0.5)
+    .attr("width", getFrameSize()[0])
+    .attr("height", getFrameSize()[1]);
 
-  svg.append("clipPath")
-    .attr("id", "margin-clip")
-    .append("rect")
-    .classed("clip-sized", true)
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("width", usableSize[0])
-    .attr("height", usableSize[1]);
-
-  var svgWithMargin = svg.append("g")
-    .attr("transform",  "translate(" + margin.left + "," + margin.top + ")")
-    .attr("clip-path", "url(#margin-clip)");
-
-  var hackSvg = svgWithMargin.append("g")
+  var hackSvg = svg.append("g")
     .attr("id", "hackScale")
     .attr("transform", "scale(" + (1/hackScale) + ")");
 
   var zoomCapture = hackSvg.append("rect")
-    .classed("zoom-capture margin-dynamic", true)
-    .attr("width", virtualSize[0])
-    .attr("height", virtualSize[1]);
+    .classed("zoom-capture", true)
+    .classed("virtual-size", true)
+    .attr("width", getVirtualSize()[0])
+    .attr("height", getVirtualSize()[1]);
 
   var drawer = new TileDrawer(hackSvg, hackScale);
 

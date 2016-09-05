@@ -1,6 +1,6 @@
 body {
-    margin: 0;
-    overflow: hidden;
+  margin: 0;
+  overflow: hidden;
 }
 
 rect {
@@ -8,15 +8,11 @@ rect {
 }
 
 div#container {
-    max-height: 100%;
-    max-width: 100%;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    position: fixed;
-    top: 0; left: 0; bottom: 0; right: 0;
-    overflow: hidden;
-    display: inline-block;
+  position: absolute;
+  position: fixed;
+  top: 16px; left: 16px; bottom: 16px; right: 16px;
+  overflow: hidden;
+  display: inline-block;
 }
 
 div#search-box-container {
@@ -29,6 +25,7 @@ div#search-box-container {
 }
 
 .frame {
+  shape-rendering: crispEdges;
   stroke: #000;
   stroke-width: 1;
 }
@@ -40,12 +37,12 @@ div#search-box-container {
 }
 
 .svg-content {
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .dot {
