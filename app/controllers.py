@@ -1,5 +1,5 @@
 from flask import render_template, request, url_for, jsonify, Blueprint, current_app
-from app.model import data
+from app.models import data
 import helpers
 import logging
 

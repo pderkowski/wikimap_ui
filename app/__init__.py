@@ -10,7 +10,7 @@ def createApp(dataPath):
 
     app.url_map.converters['float'] = FloatConverter
 
-    from app.model import data
+    from app.models import data
     data.load(dataPath)
 
     from app.controllers import bp

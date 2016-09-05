@@ -1,5 +1,5 @@
 from flask import jsonify
-from model import Point2D, Range, Index
+from models import Point2D, Range, Index
 
 def serializeRange(range_):
     tl = range_.topLeft
