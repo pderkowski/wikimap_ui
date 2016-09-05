@@ -18,14 +18,11 @@
   </head>
   <body>
     <div id="search-box-container">
-      <form id="search-box" method="POST" action="{{ url_for('routes.search') }}">
-        {{ searchBox.csrf_token }}
-        {{ searchBox.query(size=20) }}
-        <input type="submit" value="Search">
-      </form>
+      <span><input id="search-box" type="search" class="search rounded" placeholder="Search..."></span>
+      <span><input id="search-button" type="button" value="Search"></span>
     </div>
     <div id="container"></div>
     <script src="static/scatter.js" charset="utf-8"></script>
-    <script src="static/forms.js" charset="utf-8"></script>
+    <script src="static/search.js" charset="utf-8"></script>
   </body>
 </html>

@@ -16,8 +16,10 @@ div#container {
 }
 
 div#search-box-container {
+  top: 24px; left: 24px;
   z-index: 10;
   position: absolute;
+  position: fixed;
 }
 
 .background {
