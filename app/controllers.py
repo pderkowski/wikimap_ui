@@ -1,5 +1,5 @@
 from flask import render_template, request, url_for, jsonify, Blueprint, current_app
-from app.models import data
+from app.models import data, index
 import helpers
 import logging
 
@@ -25,5 +25,6 @@ def getPoints(xIndex, yIndex, zoomLevel):
 
 @bp.route('/search!<query>')
 def search(query):
-    current_app.logger.debug('SearchBox query: {}'.format(query))
-    return jsonify(query)
+    results = index.search(query)
+    current_app.logger.debug('SearchBox query: {} yielded {}'.format(query, results[:]))
+    return jsonify(results)
