@@ -15,37 +15,6 @@ div#container {
   display: inline-block;
 }
 
-div#search-container {
-  top: 24px; left: 24px;
-  z-index: 10;
-  position: absolute;
-  position: fixed;
-}
-
-#search input[type="search"] {
-  background: url(images/search-dark.png) no-repeat 10px 6px #fcfcfc;
-  border: 1px solid #000;
-  font: bold 12px Arial, Helvetica, Sans-serif;
-  color: #777;
-  width: 107px;
-  padding: 6px 15px 6px 35px;
-  -webkit-border-radius: 20px;
-  -moz-border-radius: 20px;
-  border-radius: 20px;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
-  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
-  -webkit-transition: all 0.7s ease 0s;
-  -moz-transition: all 0.7s ease 0s;
-  -o-transition: all 0.7s ease 0s;
-  transition: all 0.7s ease 0s;
-}
-
-#search input[type="search"]:focus {
-  width: 200px;
-}
-
 .background {
   fill: #fff;
 }

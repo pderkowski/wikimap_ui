@@ -23,8 +23,11 @@ def getPoints(xIndex, yIndex, zoomLevel):
     current_app.logger.debug('Returning {} datapoints for ({},{},{}).'.format(len(datapoints), requestedIndex.x, requestedIndex.y, requestedIndex.level))
     return jsonify(helpers.serializeDatapoints(datapoints))
 
-@bp.route('/search!<query>')
-def search(query):
-    results = index.search(query)
-    current_app.logger.debug('SearchBox query: {} yielded {}'.format(query, results[:]))
-    return jsonify(results)
+@bp.route('/search')
+def search():
+    query = request.args.get('query')
+    queryResults = index.search(query)
+    current_app.logger.debug('SearchBox query: {} yielded {}'.format(query, queryResults[:]))
+    json = jsonify({ 'query': query, 'results': queryResults })
+    current_app.logger.debug('Returning: {} '.format(json))
+    return json
