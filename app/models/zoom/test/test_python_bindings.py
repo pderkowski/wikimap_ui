@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import unittest
-from app.model.zoom import Point2D, Point3D, Range, Zoom, Index, Data, Datapoint
+from app.models.zoom import Point2D, Point3D, Range, Zoom, Index, Data, Datapoint
 
 def contains(containing, contained):
     return all(p in containing for p in contained)

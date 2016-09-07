@@ -1,4 +1,4 @@
-ZOOMDIR = app/model/zoom
+ZOOMDIR = app/models/zoom
 ZOOMSOURCES = $(ZOOMDIR)/bounds.cpp $(ZOOMDIR)/node.cpp $(ZOOMDIR)/partitiontree.cpp $(ZOOMDIR)/zoom.cpp $(ZOOMDIR)/indexer.cpp
 WRAPSOURCES = $(ZOOMDIR)/zoomwrapper.cpp
 
@@ -36,7 +36,7 @@ $(ZOOMLIB): $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $^ -shared -lboost_python -o $(ZOOMLIB)
 
-test: $(TESTBIN) $(ZOOMLIB)
+test: $(ZOOMLIB) $(TESTBIN)
 	./$(TESTBIN)
 	python -m unittest discover
 
