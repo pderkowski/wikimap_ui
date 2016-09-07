@@ -25,9 +25,9 @@ def getPoints(xIndex, yIndex, zoomLevel):
 
 @bp.route('/search')
 def search():
-    query = request.args.get('query')
+    query = request.args.get('term')
     queryResults = index.search(query)
     current_app.logger.debug('SearchBox query: {} yielded {}'.format(query, queryResults[:]))
-    json = jsonify({ 'query': query, 'results': queryResults })
+    json = jsonify(queryResults)
     current_app.logger.debug('Returning: {} '.format(json))
     return json

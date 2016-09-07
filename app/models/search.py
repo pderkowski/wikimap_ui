@@ -6,7 +6,7 @@ from whoosh.qparser import SimpleParser
 
 class Index(object):
     def __init__(self):
-        self.schema = Schema(title=NGRAMWORDS, title_=TEXT(stored=True), x=STORED, y=STORED)
+        self.schema = Schema(title=NGRAMWORDS(minsize=1), title_=TEXT(stored=True), x=STORED, y=STORED)
         self.parser = SimpleParser("title", schema=self.schema)
 
     def load(self, dataPath):
