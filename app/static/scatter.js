@@ -263,16 +263,33 @@ var TileDrawer = function (svg, hackScale) {
   var indexer = new TileIndexer();
   var renderer = new TileRenderer(svg, converter, hackScale);
 
+  var zoom_ = d3.zoom()
+    .scaleExtent([1, Infinity])
+    .on("zoom", function() { doZoom(d3.event.transform); });
+
+  svg.call(zoom_);
+
   this.init = function (size, dataBounds) {
     that._size = size;
 
     converter.setViewportSize(size);
     converter.setDomain(dataBounds);
-    converter.setZoomTransform(d3.zoomIdentity);
     indexer.setBounds(dataBounds);
+
+    that.zoom(d3.zoomIdentity);
   };
 
   this.zoom = function (transform) {
+    zoom_.transform(svg, transform);
+  };
+
+  this.resize = function (size) {
+    that._size = size;
+
+    converter.setViewportSize(size);
+  };
+
+  function doZoom(transform) {
     converter.setZoomTransform(transform);
     renderer.setZoomTransform(transform);
 
@@ -282,21 +299,7 @@ var TileDrawer = function (svg, hackScale) {
     var range = indexer.getTileRange([tl, br], level);
 
     draw(range, level);
-  };
-
-  this.resize = function (size) {
-    that._size = size;
-
-    converter.setViewportSize(size);
-  };
-
-  this.clear = function () {
-    for (var tile in drawnTiles) {
-      if (drawnTiles.hasOwnProperty(tile)) {
-        removeTile(tile);
-      }
-    }
-  };
+  }
 
   function draw (range, level) {
     var requestedTiles = embed(range, level);
@@ -381,7 +384,9 @@ var TileDrawer = function (svg, hackScale) {
 };
 
 
-$(document).ready(function() {
+var wikimap = (function () {
+  var hackScale = 8;
+
   function loadBounds() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
@@ -400,7 +405,7 @@ $(document).ready(function() {
           .attr("width", getVirtualSize()[0])
           .attr("height", getVirtualSize()[1]);
 
-        hackSvg.call(zoom.transform, d3.zoomIdentity);
+        resizable.zoom(d3.zoomIdentity);
       });
     };
   }
@@ -421,41 +426,43 @@ $(document).ready(function() {
     return [hackScale * realSize[0], hackScale * realSize[1]];
   }
 
-  var hackScale = 8;
+  function init() {
+    var svg = d3.select("#container")
+      .append("svg")
+      .classed("svg-content", true);
 
-  var svg = d3.select("#container")
-    .append("svg")
-    .classed("svg-content", true);
+    svg.append("rect")
+      .classed("frame", true)
+      .classed("frame-size", true)
+      .classed("background", true)
+      .attr("x", 0.5)
+      .attr("y", 0.5)
+      .attr("width", getFrameSize()[0])
+      .attr("height", getFrameSize()[1]);
 
-  svg.append("rect")
-    .classed("frame", true)
-    .classed("frame-size", true)
-    .classed("background", true)
-    .attr("x", 0.5)
-    .attr("y", 0.5)
-    .attr("width", getFrameSize()[0])
-    .attr("height", getFrameSize()[1]);
+    var hackSvg = svg.append("g")
+      .attr("id", "hackScale")
+      .attr("transform", "scale(" + (1/hackScale) + ")");
 
-  var hackSvg = svg.append("g")
-    .attr("id", "hackScale")
-    .attr("transform", "scale(" + (1/hackScale) + ")");
+    var zoomCapture = hackSvg.append("rect")
+      .classed("zoom-capture", true)
+      .classed("virtual-size", true)
+      .attr("width", getVirtualSize()[0])
+      .attr("height", getVirtualSize()[1]);
 
-  var zoomCapture = hackSvg.append("rect")
-    .classed("zoom-capture", true)
-    .classed("virtual-size", true)
-    .attr("width", getVirtualSize()[0])
-    .attr("height", getVirtualSize()[1]);
+    var drawer = new TileDrawer(hackSvg, hackScale);
 
-  var drawer = new TileDrawer(hackSvg, hackScale);
+    loadBounds()
+      .then(function (dataBounds) { drawer.init(getVirtualSize(), dataBounds); })
+      .then(listenToResizeEvents(drawer));
+  }
 
-  var zoom = d3.zoom()
-    .scaleExtent([1, Infinity])
-    .on("zoom", function() { drawer.zoom(d3.event.transform); });
+  return {
+    init: init
+  };
+})();
 
-  hackSvg.call(zoom);
 
-  loadBounds()
-    .then(function (dataBounds) { drawer.init(getVirtualSize(), dataBounds); })
-    .then(listenToResizeEvents(drawer))
-    .then(function () { drawer.zoom(d3.zoomIdentity); });
+$(document).ready(function() {
+  wikimap.init();
 });
