@@ -47,6 +47,6 @@ class Index(object):
 
         with self.index.searcher() as s:
             results = s.search(q, limit=5)
-            return [{ 'title': r["title_"] } for r in results]
+            return [{ 'title': r['title_'], 'x': r['x'], 'y': r['y'] } for r in results]
 
 index_ = Index()

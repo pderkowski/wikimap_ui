@@ -26,6 +26,12 @@ $(document).ready(function() {
       maxNumberOfElements: 5,
       match: {
         enabled: true
+      },
+
+      onChooseEvent: function() {
+        var data = $("#search-box").getSelectedItemData();
+        console.log("Selected ("+data.title+', '+data.x+', '+data.y+')');
+        wikimap.centerOn(data.x, data.y);
       }
     },
 

@@ -86,6 +86,10 @@ var CoordsConverter = function () {
     return that._zoomTransform.apply(point);
   };
 
+  this.applyAll = function (point) {
+    return that.applyZoom(that.applyTransition(point));
+  };
+
   this.setZoomTransform = function (transform) {
     that._zoomTransform = transform;
   };
@@ -289,6 +293,14 @@ var TileDrawer = function (svg, hackScale) {
     converter.setViewportSize(size);
   };
 
+  this.centerOn = function(point) {
+    var screenCenter = converter.invertZoom([that._size[0] / 2, that._size[1] / 2]);
+    var pointCoords = converter.applyTransition(point);
+    var shift = [pointCoords[0] - screenCenter[0], pointCoords[1] - screenCenter[1]];
+
+    zoom_.translateBy(svg, -shift[0], -shift[1]);
+  };
+
   function doZoom(transform) {
     converter.setZoomTransform(transform);
     renderer.setZoomTransform(transform);
@@ -386,6 +398,7 @@ var TileDrawer = function (svg, hackScale) {
 
 var wikimap = (function () {
   var hackScale = 8;
+  var drawer;
 
   function loadBounds() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
@@ -426,6 +439,10 @@ var wikimap = (function () {
     return [hackScale * realSize[0], hackScale * realSize[1]];
   }
 
+  function centerOn(x, y) {
+    drawer.centerOn([x, y]);
+  }
+
   function init() {
     var svg = d3.select("#container")
       .append("svg")
@@ -450,7 +467,7 @@ var wikimap = (function () {
       .attr("width", getVirtualSize()[0])
       .attr("height", getVirtualSize()[1]);
 
-    var drawer = new TileDrawer(hackSvg, hackScale);
+    drawer = new TileDrawer(hackSvg, hackScale);
 
     loadBounds()
       .then(function (dataBounds) { drawer.init(getVirtualSize(), dataBounds); })
@@ -458,7 +475,8 @@ var wikimap = (function () {
   }
 
   return {
-    init: init
+    init: init,
+    centerOn: centerOn,
   };
 })();
 
