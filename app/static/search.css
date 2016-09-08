@@ -29,43 +29,32 @@ div#search-container {
   font: 12px Arial, Helvetica, Sans-serif;
   color: #222;
 }
-/*.easy-autocomplete.eac-round input {
-  border: 1px solid #000;
-  border-radius: 10px;
-  color: #888;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 400;
-  margin: 0;
-  min-width: 300px;
-  padding: 10px;
-}*/
-/*.easy-autocomplete.eac-round input:hover, .easy-autocomplete.eac-round input:focus {
-  border-color: #3079ed;
-}*/
-.ui-menu {
-  position: absolute;
-  background: none;
-  border-color: #888;
+
+.ui-autocomplete.ui-menu {
   border-width: 0;
   /*box-shadow: none;*/
   /*min-width: 300px;*/
-  top: 8px;
 }
-.ui-autocomplete ul li {
+
+.ui-autocomplete.ui-menu .ui-menu-item .ui-state-active {
+  background: #777!important;
+  margin: 0!important;
+  /*font-weight: normal;*/
+  /*color: #ffffff;*/
+}
+
+.ui-autocomplete.ui-menu .ui-menu-item .ui-menu-item-wrapper {
   background: #fff;
   border-color: #000;
   border-width: 0 1px;
+  border-style: solid;
   /*font-size: 14px;*/
   padding: 8px 12px;
   transition: all 0.4s ease 0s;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
-.easy-autocomplete.eac-round ul li.selected, .easy-autocomplete.eac-round ul .eac-category.selected {
-  background-color: #d4e3fb;
-}
 
-.easy-autocomplete.eac-round ul li:first-child, .easy-autocomplete.eac-round ul .eac-category:first-child {
+.ui-autocomplete.ui-menu .ui-menu-item:first-child .ui-menu-item-wrapper {
   -webkit-border-radius: 20px 20px 0 0;
   -moz-border-radius: 20px 20px 0 0;
   border-radius: 20px 20px 0 0;
@@ -73,21 +62,17 @@ div#search-container {
   box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
 }
 
-.easy-autocomplete.eac-round ul li:last-child, .easy-autocomplete.eac-round ul .eac-category:last-child {
+.ui-autocomplete.ui-menu .ui-menu-item:last-child .ui-menu-item-wrapper {
   -webkit-border-radius: 0 0 20px 20px;
   -moz-border-radius: 0 0 20px 20px;
   border-radius: 0 0 20px 20px;
   border-width: 0 1px 1px;
 }
 
-.easy-autocomplete.eac-round ul li:only-child, .easy-autocomplete.eac-round ul .eac-category:only-child {
+.ui-autocomplete.ui-menu .ui-menu-item:only-child .ui-menu-item-wrapper {
   -webkit-border-radius: 20px;
   -moz-border-radius: 20px;
   border-radius: 20px;
   border-width: 1px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
-}
-
-.easy-autocomplete.eac-round ul li b, .easy-autocomplete.eac-round ul .eac-category b {
-  font-weight: 700;
 }

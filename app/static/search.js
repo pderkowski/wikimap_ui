@@ -3,7 +3,6 @@ $(document).ready(function() {
     return $.getJSON($SCRIPT_ROOT+'search?term='+term);
   }
 
-
   $("#search-box").autocomplete({
     source: function(request, response) {
       search(request.term)
@@ -20,8 +19,14 @@ $(document).ready(function() {
     minLength: 1,
     delay: 100,
     autoFocus: true,
+    appendTo: "#search-container",
+    position: {
+      my: "left top+8",
+      at: "left bottom",
+      collision: "none"
+    },
     select: function (event, ui) {
       wikimap.centerOn(ui.item.x, ui.item.y);
-    }
+    },
   });
 });
