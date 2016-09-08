@@ -34,4 +34,7 @@ class Data(object):
     def getBounds(self):
         return self.zoom.getBounds()
 
+    def getMaxDepth(self):
+        return self.zoom.getMaxDepth()
+
 data = Data()

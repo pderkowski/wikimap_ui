@@ -275,10 +275,11 @@ var TileDrawer = function (svg, hackScale) {
 
   this.init = function (size, dataBounds) {
     that._size = size;
+    that._maxZoomLevel = dataBounds.maxDepth;
 
     converter.setViewportSize(size);
-    converter.setDomain(dataBounds);
-    indexer.setBounds(dataBounds);
+    converter.setDomain(dataBounds.range);
+    indexer.setBounds(dataBounds.range);
 
     that.zoom(d3.zoomIdentity);
   };
@@ -294,11 +295,17 @@ var TileDrawer = function (svg, hackScale) {
   };
 
   this.centerOn = function(point) {
-    var screenCenter = converter.invertZoom([that._size[0] / 2, that._size[1] / 2]);
-    var pointCoords = converter.applyTransition(point);
-    var shift = [pointCoords[0] - screenCenter[0], pointCoords[1] - screenCenter[1]];
+    var size = that._size;
 
-    zoom_.translateBy(svg, -shift[0], -shift[1]);
+    var screenCenter = [size[0] / 2, size[1] / 2];
+    var pointCoords = converter.applyTransition(point);
+
+    var scale = Math.pow(2, that._maxZoomLevel);
+    var newTransform = d3.zoomIdentity
+      .translate(screenCenter[0] - scale * pointCoords[0], screenCenter[1] - scale * pointCoords[1])
+      .scale(scale);
+
+    that.zoom(newTransform);
   };
 
   function doZoom(transform) {

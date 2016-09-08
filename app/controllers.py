@@ -14,7 +14,8 @@ def renderChart():
 @bp.route("/bounds")
 def getBounds():
     range_ = data.getBounds()
-    return jsonify(helpers.serializeRange(range_))
+    depth = data.getMaxDepth()
+    return jsonify({ 'range': helpers.serializeRange(range_), 'maxDepth': depth })
 
 @bp.route("/points!<int:xIndex>!<int:yIndex>!<int:zoomLevel>")
 def getPoints(xIndex, yIndex, zoomLevel):
