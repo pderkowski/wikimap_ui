@@ -1,3 +1,7 @@
+:focus {
+  outline:none;
+}
+
 div#search-container {
   top: 24px; left: 24px;
   z-index: 10;
