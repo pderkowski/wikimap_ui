@@ -12,6 +12,7 @@ $(document).ready(function() {
               value: hit.title,
               x: hit.x,
               y: hit.y,
+              id: hit.id,
             };
           }));
         });
@@ -26,6 +27,7 @@ $(document).ready(function() {
       collision: "none"
     },
     select: function (event, ui) {
+      wikimap.select(ui.item.id);
       wikimap.centerOn(ui.item.x, ui.item.y);
     },
   });

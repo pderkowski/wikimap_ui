@@ -52,7 +52,8 @@ BOOST_PYTHON_MODULE(libzoompy) {
         .def("getMaxDepth", &ZoomWrapper::getMaxDepth)
         .def("getBounds", &ZoomWrapper::getBounds);
 
-    py::class_<Data>("Data", py::init<const std::string&>())
+    py::class_<Data>("Data", py::init<int, const std::string&>())
+        .def_readwrite("id", &Data::id)
         .def_readwrite("name", &Data::name)
         .def("__eq__", &Data::operator ==);
 

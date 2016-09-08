@@ -3,7 +3,7 @@
 #include "bounds.hpp"
 
 TEST_CASE("Partitiontree creates and gets correct buckets", "[partitiontree]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     PartitionTree pt(Bounds(Point2D(0, 0), Point2D(4, 4)), 2);
 

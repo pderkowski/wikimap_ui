@@ -5,14 +5,15 @@
 #include <vector>
 
 struct Data {
-    explicit Data(const std::string& name)
-    : name(name)
+    explicit Data(int id, const std::string& name)
+    : id(id), name(name)
     { }
 
+    int id;
     std::string name;
 
     bool operator == (const Data& other) const {
-        return name == other.name;
+        return id == other.id && name == other.name;
     }
 };
 

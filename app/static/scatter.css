@@ -42,7 +42,12 @@ div#container {
 
 .dot {
   stroke: none;
-  fill: #000;
+  fill: #444;
+}
+
+.dot.selected {
+  fill: #00B6F2;
+  /*fill: #EA00F2;*/
 }
 
 .d3-tip {

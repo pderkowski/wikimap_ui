@@ -149,6 +149,8 @@ var TileRenderer = function(svg, converter, hackScale) {
   var tiles = svg.append("g")
     .attr("id", "tiles");
 
+  var selectedPoints = {};
+
   svg.call(tip);
 
   this.lastScale = 1;
@@ -191,6 +193,8 @@ var TileRenderer = function(svg, converter, hackScale) {
       .on("mouseover", tip.show)
       .on("mouseout", tip.hide);
 
+    setSelectionStyle(dots.selectAll(".dot"));
+
     var maxLength = 15;
 
     var labels = tile.append("g")
@@ -217,7 +221,7 @@ var TileRenderer = function(svg, converter, hackScale) {
   };
 
   this.show = function() {
-    var dotsOpacity = 0.4;
+    var dotsOpacity = 0.6;
     var labelsOpacity = 1.0;
 
     d3.selectAll(".dots")
@@ -238,6 +242,20 @@ var TileRenderer = function(svg, converter, hackScale) {
       .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
       .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
   };
+
+  this.select = function (points) {
+    selectedPoints = {};
+    points.forEach(function (p) {
+      selectedPoints[p] = true;
+    });
+    setSelectionStyle(d3.selectAll(".dot"));
+  };
+
+  function setSelectionStyle(d3selection) {
+    d3selection.classed("selected", function (p) {
+        return p.id in selectedPoints;
+      });
+  }
 
   function getFontSize() {
     var base = 10;
@@ -261,6 +279,8 @@ var TileDrawer = function (svg, hackScale) {
   var drawnTiles = {};
   var pendingTiles = {};
   var requiredTiles = {};
+
+  var selected
 
   var converter = new CoordsConverter();
   var cache = new TileCache();
@@ -306,6 +326,10 @@ var TileDrawer = function (svg, hackScale) {
       .scale(scale);
 
     that.zoom(newTransform);
+  };
+
+  this.select = function (id) {
+    renderer.select([id]);
   };
 
   function doZoom(transform) {
@@ -450,6 +474,10 @@ var wikimap = (function () {
     drawer.centerOn([x, y]);
   }
 
+  function select(id) {
+    drawer.select(id);
+  }
+
   function init() {
     var svg = d3.select("#container")
       .append("svg")
@@ -484,6 +512,7 @@ var wikimap = (function () {
   return {
     init: init,
     centerOn: centerOn,
+    select: select,
   };
 })();
 

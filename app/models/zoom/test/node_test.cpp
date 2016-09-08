@@ -4,7 +4,7 @@
 
 
 TEST_CASE("Given a point, Node::getChildContainingPoint returns a child node that contains this point", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Bounds bounds(Point2D(0, 0), Point2D(4, 4));
 
@@ -43,7 +43,7 @@ TEST_CASE("Given a point, Node::getChildContainingPoint returns a child node tha
 }
 
 TEST_CASE("A node can recognize whether it is a leaf or not", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Bounds bounds(Point2D(0, 0), Point2D(4, 4));
     Node node(bounds, 1);
@@ -57,7 +57,7 @@ TEST_CASE("A node can recognize whether it is a leaf or not", "[node]") {
 }
 
 TEST_CASE("Insertion to a node that is a leaf and not full, stores the point in this node without creating children", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
@@ -75,7 +75,7 @@ TEST_CASE("Insertion to a node that is a leaf and not full, stores the point in 
 }
 
 TEST_CASE("Insertion to a node that is a leaf and full, creates children and stores the point in the one containing the point", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
@@ -95,7 +95,7 @@ TEST_CASE("Insertion to a node that is a leaf and full, creates children and sto
 }
 
 TEST_CASE("Insertion to a node that is not a leaf and full, inserts the point in a child containing the point", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
@@ -117,7 +117,7 @@ TEST_CASE("Insertion to a node that is not a leaf and full, inserts the point in
 }
 
 TEST_CASE("Node::getMaxDepth returns a correct depth of the tree rooted in this node.", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
@@ -134,7 +134,7 @@ TEST_CASE("Node::getMaxDepth returns a correct depth of the tree rooted in this 
 }
 
 TEST_CASE("Node::getDepthAtPoint returns correct depths at given points.", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 1);
 
@@ -156,7 +156,7 @@ TEST_CASE("Node::getDepthAtPoint returns correct depths at given points.", "[nod
 }
 
 TEST_CASE("Node::insert copies datapoints to lower levels on split.", "[node]") {
-    Data dummy{""};
+    Data dummy{0, ""};
 
     Node node(Bounds(Point2D(0, 0), Point2D(4, 4)), 2);
 

@@ -56,14 +56,14 @@ class TestPoint3D(unittest.TestCase):
 class TestDatapoint(unittest.TestCase):
     def test_accessors(self):
         point = Point3D(1, 1, 1)
-        data = Data("a")
+        data = Data(0, "a")
         datapoint = Datapoint(point, data)
 
         self.assertTrue(datapoint.point == point)
         self.assertTrue(datapoint.data == data)
 
         point2 = Point3D(2, 2, 2)
-        data2 = Data("b")
+        data2 = Data(1, "b")
         datapoint.point = point2
         datapoint.data = data2
 
@@ -73,7 +73,7 @@ class TestDatapoint(unittest.TestCase):
 class TestZoom(unittest.TestCase):
     def sampleZoom(self):
         points = [Point2D(0, 0), Point2D(1, 0), Point2D(1, 1), Point2D(0, 1)]
-        data = [Data("a"), Data("b"), Data("c"), Data("d")]
+        data = [Data(0, "a"), Data(1, "b"), Data(2, "c"), Data(3, "d")]
         z = Zoom(points, data, 100)
 
         return points, data, z
