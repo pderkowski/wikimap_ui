@@ -12,13 +12,6 @@ class Index(object):
     def load(self, dataPath):
         print 'Loading index for {}...'.format(dataPath)
 
-        # REMOVE IT WHEN THIS CLASS STARTS WORKING
-        if os.path.exists("index"):
-            if os.path.isdir("index"):
-                shutil.rmtree("index")
-            else:
-                os.remove("index")
-
         if not os.path.isdir("index"):
             print "Index not found, creating..."
             os.mkdir("index")
