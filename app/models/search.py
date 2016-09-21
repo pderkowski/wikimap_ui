@@ -24,7 +24,7 @@ class Index(object):
                     words = line.split()
                     x = float(words[0])
                     y = float(words[1])
-                    title = words[2][1:-1].replace('_', ' ') # skip quotes and replace underscores with spaces for natural presentation
+                    title = words[2].replace('_', ' ') # skip quotes and replace underscores with spaces for natural presentation
                     title = unicode(title, "utf8")
                     writer.add_document(title=title, title_=title, id=i, x=x, y=y)
 

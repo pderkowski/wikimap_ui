@@ -16,7 +16,7 @@ class Data(object):
                 words = line.split()
                 x = float(words[0])
                 y = float(words[1])
-                name = words[2][1:-1].replace('_', ' ') # skip quotes and replace underscores with spaces for natural presentation
+                name = words[2].replace('_', ' ') # replace underscores with spaces for natural presentation
                 points.append(Point2D(x, y))
                 data.append(zoom.Data(i, name))
 
