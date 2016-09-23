@@ -1,6 +1,5 @@
 *.pyc
 *.o
-*.so
 bin
 lib
 bower_components/
