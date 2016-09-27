@@ -34,7 +34,7 @@ $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 
 $(ZOOMLIB): $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $^ -shared -Lexternal -lboost_python -o $(ZOOMLIB)
+	$(CXX) $^ -shared -Lexternal -lboost_python -lpython2.7 -o $(ZOOMLIB)
 
 test: $(ZOOMLIB) $(TESTBIN)
 	./$(TESTBIN)
