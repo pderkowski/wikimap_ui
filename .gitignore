@@ -1,7 +1,10 @@
 *.pyc
 *.o
+*.so
 bin
-lib
+external/lib
+external/include/boost
 bower_components/
 node_modules/
 env/
+external/boost/
