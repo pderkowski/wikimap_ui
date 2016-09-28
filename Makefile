@@ -9,36 +9,45 @@ TESTOBJECTS = $(patsubst %.cpp, %.o, $(TESTSOURCES))
 ZOOMOBJECTS = $(patsubst %.cpp, %.o, $(ZOOMSOURCES))
 WRAPOBJECTS = $(patsubst %.cpp, %.o, $(WRAPSOURCES))
 
-CXX = g++
-CXXFLAGS  = -I$(ZOOMDIR) -std=c++11 -fPIC
+EXTERNALDIR=external
+EXTERNALINCLUDE=$(EXTERNALDIR)/include
+EXTERNALLIB=$(EXTERNALDIR)/lib
 
-PYTHON = /usr/include/python2.7
+BOOSTDIR=$(EXTERNALDIR)/boost
+
+CXX = g++
+CXXFLAGS  = -I$(ZOOMDIR) -I$(EXTERNALINCLUDE) -std=c++11 -fPIC
+
+PYTHONINCLUDE = /usr/include/python2.7
 
 TESTBIN = $(TESTDIR)/bin/run_tests
 ZOOMLIB = $(ZOOMDIR)/libzoompy.so
 
-# export PYTHONPATH := $(realpath $(LIBDIR)):$(realpath $(MODELDIR)):$(PYTHONPATH)
-
 .DEFAULT_GOAL := $(ZOOMLIB)
 
-.PHONY: test clean
+.PHONY: test clean boost
 
-$(WRAPOBJECTS): CXXFLAGS += -I$(PYTHON)
+$(WRAPOBJECTS): CXXFLAGS += -I$(PYTHONINCLUDE)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+boost:
+	cd $(realpath $(BOOSTDIR)) && \
+	./bootstrap.sh --with-libraries=python --prefix=$(realpath $(EXTERNALDIR)) && \
+	./b2 install
 
 $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(TESTBIN) $^
 
-$(ZOOMLIB): $(ZOOMOBJECTS) $(WRAPOBJECTS)
+$(ZOOMLIB): boost $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $^ -shared -Lexternal -lboost_python -lpython2.7 -o $(ZOOMLIB)
+	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -lpython2.7 -o $(ZOOMLIB)
 
 test: $(ZOOMLIB) $(TESTBIN)
 	./$(TESTBIN)
 	python -m unittest discover
 
 clean:
-	rm -f $(TESTOBJECTS) $(ZOOMOBJECTS) $(WRAPOBJECTS) $(TESTBIN) $(ZOOMLIB)
+	rm -rf $(TESTOBJECTS) $(ZOOMOBJECTS) $(WRAPOBJECTS) $(TESTBIN) $(ZOOMLIB) $(EXTERNALLIB) $(EXTERNALINCLUDE)
