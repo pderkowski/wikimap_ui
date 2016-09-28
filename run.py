@@ -4,7 +4,6 @@ import argparse
 import os
 
 app = createApp('final')
-app.run(debug=False, host='0.0.0.0', port=5000)
 
 # def main():
 #     # parser = argparse.ArgumentParser()
@@ -19,5 +18,5 @@ app.run(debug=False, host='0.0.0.0', port=5000)
 #     # else:
 #     #     print 'Could not open "{}".'.format(args.data_path)
 
-# if __name__=="__main__":
-#     main()
+if __name__=="__main__":
+    app.run(debug=False, host='0.0.0.0', port=5000)
