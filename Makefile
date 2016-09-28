@@ -18,7 +18,8 @@ BOOSTDIR=$(EXTERNALDIR)/boost
 CXX = g++
 CXXFLAGS  = -I$(ZOOMDIR) -I$(EXTERNALINCLUDE) -std=c++11 -fPIC
 
-PYTHONINCLUDE = /usr/include/python2.7
+PYTHONVERSION = python2.7
+PYTHONINCLUDE = /usr/include/$(PYTHONVERSION)
 
 TESTBIN = $(TESTDIR)/bin/run_tests
 ZOOMLIB = $(ZOOMDIR)/libzoompy.so
@@ -34,7 +35,7 @@ $(WRAPOBJECTS): CXXFLAGS += -I$(PYTHONINCLUDE)
 
 boost:
 	cd $(realpath $(BOOSTDIR)) && \
-	./bootstrap.sh --with-libraries=python --prefix=$(realpath $(EXTERNALDIR)) && \
+	./bootstrap.sh --with-python=/usr/bin/$(PYTHONVERSION) --with-libraries=python --prefix=$(realpath $(EXTERNALDIR)) && \
 	./b2 install
 
 $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
@@ -43,11 +44,11 @@ $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 
 $(ZOOMLIB): boost $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -lpython2.7 -o $(ZOOMLIB)
+	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -l$(PYTHONVERSION) -o $(ZOOMLIB)
 
 test: $(ZOOMLIB) $(TESTBIN)
 	./$(TESTBIN)
-	python -m unittest discover
+	$(PYTHONVERSION) -m unittest discover
 
 clean:
 	rm -rf $(TESTOBJECTS) $(ZOOMOBJECTS) $(WRAPOBJECTS) $(TESTBIN) $(ZOOMLIB) $(EXTERNALLIB) $(EXTERNALINCLUDE)
