@@ -51,5 +51,17 @@ $(document).ready(function() {
           });
       }
     },
-  });
+  })
+  .autocomplete("instance")._renderItem = function(ul, item) {
+    var html = "<div><span class=label>"+ item.label+"</span>";
+
+    if (item.isCategory) {
+      html += "<span class=description>category</span>";
+    }
+    html += "</div>";
+
+    return $("<li>")
+      .append(html)
+      .appendTo(ul);
+  };
 });

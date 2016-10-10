@@ -29,9 +29,23 @@ div#search-container {
   transition: all 0.7s ease 0s;
 }
 
-.ui-autocomplete {
+.ui-menu-item-wrapper {
   font: 12px Arial, Helvetica, Sans-serif;
   color: #222;
+}
+
+.ui-menu-item-wrapper .label {
+  width: 75%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.ui-menu-item-wrapper .description {
+  color: #555;
+  font-style: italic;
+  float: right;
 }
 
 .ui-autocomplete.ui-menu {
@@ -53,7 +67,7 @@ div#search-container {
   border-width: 0 1px;
   border-style: solid;
   /*font-size: 14px;*/
-  padding: 8px 12px;
+  padding: 8px 8px;
   transition: all 0.4s ease 0s;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
