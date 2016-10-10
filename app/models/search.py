@@ -1,45 +1,146 @@
 import os
 import shutil
-from whoosh.fields import Schema, NGRAMWORDS, STORED, TEXT
-from whoosh import index
+from whoosh.fields import Schema, NGRAMWORDS, STORED, TEXT, ID
+import whoosh
 from whoosh.qparser import SimpleParser
+import codecs
+import cPickle
+import urllib
 
 class Index(object):
-    def __init__(self):
-        self.schema = Schema(title=NGRAMWORDS(minsize=1), title_=TEXT(stored=True), id=STORED, x=STORED, y=STORED)
-        self.parser = SimpleParser("title", schema=self.schema)
+    def __init__(self, idxPath):
+        self._idxPath = idxPath
+        self._storagePath = os.path.join(idxPath, 'storage.p')
+        self._data = []
+        self._nextKey = 0
 
-    def load(self, dataPath):
-        print 'Loading index for {}...'.format(dataPath)
-
-        if not os.path.isdir("index"):
-            print "Index not found, creating..."
-            os.mkdir("index")
-            self.index = index.create_in("index", self.schema)
-
-            with open(dataPath, 'r') as data:
-                writer = self.index.writer()
-
-                for i, line in enumerate(data):
-                    words = line.split()
-                    x = float(words[0])
-                    y = float(words[1])
-                    title = words[2].replace('_', ' ') # skip quotes and replace underscores with spaces for natural presentation
-                    title = unicode(title, "utf8")
-                    writer.add_document(title=title, title_=title, id=i, x=x, y=y)
-
-                writer.commit(optimize=True)
+    def load(self):
+        if self._exists():
+            self._load()
         else:
-            print "Index found, loading..."
-            self.index = index.open_dir("index")
+            self._create()
 
-        print "Finished loading index!"
+        return self
 
-    def search(self, string):
-        q = self.parser.parse(string)
+    def search(self, string, limit):
+        query = self._parser.parse(self._normalize(string))
 
-        with self.index.searcher() as s:
-            results = s.search(q, limit=5)
-            return [{ 'title': r['title_'], 'x': r['x'], 'y': r['y'], 'id': r['id'] } for r in results]
+        with self._index.searcher() as searcher:
+            results = searcher.search(query, limit=limit)
+            return [self._describe(r) for r in results]
 
-index_ = Index()
+    def _exists(self):
+        return os.path.isdir(self._idxPath)
+
+    def _load(self):
+        print 'Loading index {}'.format(self._idxPath)
+
+        self._index = whoosh.index.open_dir(self._idxPath)
+        self._data = cPickle.load(open(self._storagePath, 'rb'))
+        self._nextKey = len(self._data)
+
+    def _create(self):
+        print 'Creating index {}'.format(self._idxPath)
+
+        os.makedirs(self._idxPath)
+        self._index = whoosh.index.create_in(self._idxPath, self._schema)
+        open(self._storagePath, 'wb').close()
+
+    def _addData(self, dataPath, extractor):
+        print 'Adding data from {}'.format(dataPath)
+
+        writer = self._index.writer()
+
+        with codecs.open(dataPath, 'r', encoding='utf8') as file:
+            for line in file:
+                key, data = extractor(line)
+                dataKey = self._storeData(data)
+                writer.add_document(key=key, dataKey=dataKey)
+
+        cPickle.dump(self._data, open(self._storagePath, 'wb'))
+        writer.commit(optimize=True)
+
+    def _storeData(self, value):
+        self._data.append(value)
+        self._nextKey += 1
+        return self._nextKey - 1
+
+    def _normalize(self, string):
+        return urllib.unquote(string).replace(' ', '_')
+
+    def _denormalize(self, string):
+        return string.replace('_', ' ')
+
+class TermIndex(Index):
+    def __init__(self, idxPath, pointsPath, categoriesPath):
+        super(TermIndex, self).__init__(idxPath)
+        self._schema = Schema(key=NGRAMWORDS(minsize=1), dataKey=STORED)
+        self._parser = SimpleParser('key', self._schema)
+        self._pointsPath = pointsPath
+        self._categoriesPath = categoriesPath
+
+    def _create(self):
+        def extractPoints(line):
+            words = line.split()
+            term = words[2]
+            return term, (term, False) # data: term, isCategory
+
+        def extractCategories(line):
+            words = line.split()
+            term = words[0]
+            return term, (term, True) # data: term, isCategory
+
+        super(TermIndex, self)._create()
+
+        self._addData(self._pointsPath, extractPoints)
+        self._addData(self._categoriesPath, extractCategories)
+
+    def _describe(self, result):
+        dataKey = result['dataKey']
+        return { 'title': self._denormalize(self._data[dataKey][0]), 'isCategory': self._data[dataKey][1] }
+
+class PointIndex(Index):
+    def __init__(self, idxPath, pointsPath):
+        super(PointIndex, self).__init__(idxPath)
+        self._schema = Schema(key=ID(stored=True), dataKey=STORED)
+        self._parser = SimpleParser('key', self._schema)
+        self._pointsPath = pointsPath
+
+    def _create(self):
+        def extractPoints(line):
+            words = line.split()
+            title = words[2]
+            id_ = int(words[3])
+            x = float(words[0])
+            y = float(words[1])
+            return title, (id_, x, y)
+
+        super(PointIndex, self)._create()
+
+        self._addData(self._pointsPath, extractPoints)
+
+    def _describe(self, result):
+        dataKey = result['dataKey']
+        return { 'title': self._denormalize(result['key']), 'id': self._data[dataKey][0], 'x': self._data[dataKey][1], 'y': self._data[dataKey][2] }
+
+class CategoryIndex(Index):
+    def __init__(self, idxPath, categoriesPath):
+        super(CategoryIndex, self).__init__(idxPath)
+        self._schema = Schema(key=ID(stored=True), dataKey=STORED)
+        self._parser = SimpleParser('key', self._schema)
+        self._categoriesPath = categoriesPath
+
+    def _create(self):
+        def extractCategories(line):
+            words = line.split()
+            title = words[0]
+            ids = [int(w) for w in words[1:]]
+            return title, (ids,)
+
+        super(CategoryIndex, self)._create()
+
+        self._addData(self._categoriesPath, extractCategories)
+
+    def _describe(self, result):
+        dataKey = result['dataKey']
+        return { 'title': self._denormalize(result['key']), 'ids': self._data[dataKey][0] }

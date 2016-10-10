@@ -12,13 +12,14 @@ class Data(object):
         points = []
         data = []
         with open(fileName, 'r') as file:
-            for i, line in enumerate(file):
+            for line in file:
                 words = line.split()
                 x = float(words[0])
                 y = float(words[1])
                 name = words[2].replace('_', ' ') # replace underscores with spaces for natural presentation
+                id_ = int(words[3])
                 points.append(Point2D(x, y))
-                data.append(zoom.Data(i, name))
+                data.append(zoom.Data(id_, name))
 
         print 'Loaded {} points.'.format(len(points))
 

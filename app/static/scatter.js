@@ -328,8 +328,8 @@ var TileDrawer = function (svg, hackScale) {
     that.zoom(newTransform);
   };
 
-  this.select = function (id) {
-    renderer.select([id]);
+  this.select = function (ids) {
+    renderer.select(ids);
   };
 
   function doZoom(transform) {

@@ -1,18 +1,25 @@
 $(document).ready(function() {
-  function search(term) {
-    return $.getJSON($SCRIPT_ROOT+'search?term='+term);
+  function searchTerm(term) {
+    return $.getJSON($SCRIPT_ROOT+'search?title='+term);
+  }
+
+  function getPoint(term) {
+    return $.getJSON($SCRIPT_ROOT+'point?title='+term);
+  }
+
+  function getCategory(term) {
+    return $.getJSON($SCRIPT_ROOT+'category?title='+term);
   }
 
   $("#search-box").autocomplete({
     source: function(request, response) {
-      search(request.term)
+      searchTerm(request.term)
         .done(function (data) {
           response($.map(data, function (hit) {
             return {
               value: hit.title,
-              x: hit.x,
-              y: hit.y,
               id: hit.id,
+              isCategory: hit.isCategory,
             };
           }));
         });
@@ -27,8 +34,22 @@ $(document).ready(function() {
       collision: "none"
     },
     select: function (event, ui) {
-      wikimap.select(ui.item.id);
-      wikimap.centerOn(ui.item.x, ui.item.y);
+      if (ui.item.isCategory) {
+        getCategory(ui.item.value)
+          .done(function (categories) {
+            if (categories.length > 0) {
+              wikimap.select(categories[0].ids);
+            }
+          });
+      } else {
+        getPoint(ui.item.value)
+          .done(function (points) {
+            if (points.length > 0) {
+              wikimap.select([points[0].id]);
+              wikimap.centerOn(points[0].x, points[0].y);
+            }
+          });
+      }
     },
   });
 });

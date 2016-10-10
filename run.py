@@ -3,7 +3,7 @@ from app import createApp
 import argparse
 import os
 
-app = createApp('final')
+app = createApp('points', 'categories')
 
 # def main():
 #     # parser = argparse.ArgumentParser()
