@@ -1,16 +1,19 @@
-$(document).ready(function() {
-  function searchTerm(term) {
-    return $.getJSON($SCRIPT_ROOT+'search?title='+term);
-  }
+var $ = require('jquery');
+require('jquery-ui/ui/widgets/autocomplete');
 
-  function getPoint(term) {
-    return $.getJSON($SCRIPT_ROOT+'point?title='+term);
-  }
+function searchTerm(term) {
+  return $.getJSON($SCRIPT_ROOT+'search?title='+term);
+}
 
-  function getCategory(term) {
-    return $.getJSON($SCRIPT_ROOT+'category?title='+term);
-  }
+function getPoint(term) {
+  return $.getJSON($SCRIPT_ROOT+'point?title='+term);
+}
 
+function getCategory(term) {
+  return $.getJSON($SCRIPT_ROOT+'category?title='+term);
+}
+
+var search = function (wikimap) {
   $("#search-box").autocomplete({
     source: function(request, response) {
       searchTerm(request.term)
@@ -64,4 +67,6 @@ $(document).ready(function() {
       .append(html)
       .appendTo(ul);
   };
-});
+};
+
+module.exports = search;

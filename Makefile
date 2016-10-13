@@ -15,6 +15,11 @@ EXTERNALLIB=$(EXTERNALDIR)/lib
 
 BOOSTDIR=$(EXTERNALDIR)/boost
 
+JSDIR = app/static/scripts
+JSSOURCES = $(wildcard $(JSDIR)/*.js)
+
+WEBPACK = $(realpath node_modules/.bin/webpack)
+
 CXX = g++
 CXXFLAGS  = -I$(ZOOMDIR) -I$(EXTERNALINCLUDE) -std=c++11 -fPIC
 
@@ -24,7 +29,7 @@ PYTHONINCLUDE = /usr/include/$(PYTHONVERSION)
 TESTBIN = $(TESTDIR)/bin/run_tests
 ZOOMLIB = $(ZOOMDIR)/libzoompy.so
 
-.DEFAULT_GOAL := $(ZOOMLIB)
+.DEFAULT_GOAL := build
 
 .PHONY: test clean boost
 
@@ -45,6 +50,12 @@ $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 $(ZOOMLIB): boost $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -l$(PYTHONVERSION) -o $(ZOOMLIB)
+
+js: $(JSSOURCES)
+	cd $(realpath $(JSDIR)) && \
+	$(WEBPACK)
+
+build: $(ZOOMLIB) js
 
 test: $(ZOOMLIB) $(TESTBIN)
 	./$(TESTBIN)

@@ -4,8 +4,7 @@
   "description": "Simple browser for the data produced by the Wikimap project.",
   "main": "run.py",
   "scripts": {
-    "test": "make test",
-    "postinstall": "bower install"
+    "test": "make test"
   },
   "repository": {
     "type": "git",
@@ -14,7 +13,14 @@
   "author": "Piotr Derkowski",
   "license": "UNLICENSED",
   "dependencies": {
-    "bower": "",
-    "js-lru-cache": "~0.1.10"
+    "js-lru-cache": "~0.1.10",
+    "jquery": "~3.1.1",
+    "jquery-ui": "~1.12.1",
+    "d3": "~4.2.6",
+    "d3-tip": "~0.7.1",
+    "element-resize-detector": "~1.1.9"
+  },
+  "devDependencies": {
+    "webpack": "~1.13.2"
   }
 }

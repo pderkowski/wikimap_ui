@@ -4,16 +4,9 @@
     <meta charset="utf-8" />
     <title>Wikimap</title>
 
-    <link href="static/bower_components/jquery-ui/themes/base/jquery-ui.css" rel="stylesheet" type="text/css">
+    <link href="static/node_modules/jquery-ui/themes/base/all.css" rel="stylesheet" type="text/css">
     <link href="static/search.css" rel="stylesheet" type="text/css">
     <link href="static/scatter.css" rel="stylesheet" type="text/css">
-
-    <script src="static/bower_components/jquery/dist/jquery.js"></script>
-    <script src="static/bower_components/jquery-ui/jquery-ui.js"></script>
-    <script src="static/bower_components/d3/d3.js" charset="utf-8"></script>
-    <script src="static/bower_components/d3-tip/index.js"></script>
-    <script src="static/bower_components/element-resize-detector/dist/element-resize-detector.min.js"></script>
-    <script src="static/node_modules/js-lru-cache/dist/lru-cache.js"></script>
 
     <script type=text/javascript>
       $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
@@ -24,7 +17,6 @@
       <input id="search-box" type="search" class="search rounded" placeholder="Search...">
     </div>
     <div id="container"></div>
-    <script src="static/scatter.js" charset="utf-8"></script>
-    <script src="static/search.js" charset="utf-8"></script>
+    <script src="static/scripts/dist/app.bundle.js" charset="utf-8"></script>
   </body>
 </html>
