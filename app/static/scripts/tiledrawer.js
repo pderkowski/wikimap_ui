@@ -2,20 +2,18 @@ var TileCache = require('./tilecache');
 var TileIndexer = require('./tileindexer');
 var CoordsConverter = require('./coordsconverter');
 var Renderer = require('./renderer');
+var TileScheduler = require('./tilescheduler');
 var d3 = require('d3');
 var $ = require('jquery');
 
 var TileDrawer = function (svg, hackScale) {
   var that = this;
 
-  var drawnTiles = {};
-  var pendingTiles = {};
-  var requiredTiles = {};
-
   var converter = new CoordsConverter();
   var cache = new TileCache();
   var indexer = new TileIndexer();
   var renderer = new Renderer(svg, converter, hackScale);
+  var scheduler = new TileScheduler(removeTiles);
 
   var zoom_ = d3.zoom()
     .scaleExtent([1, Infinity])
@@ -75,41 +73,23 @@ var TileDrawer = function (svg, hackScale) {
   }
 
   function draw (range, level) {
-    var requestedTiles = embed(range, level);
+    var requested = embed(range, level);
+    var needed = scheduler.schedule(requested.map(function (t) { return t.toString(); }));
 
-    resetRequiredTiles(requestedTiles);
-
-    var drawingActions = drawTiles(requestedTiles);
-
-    $.when.apply($, drawingActions)
-      .done(function () {
-        removeStaleTiles();
-      });
-  };
-
-  function drawTiles (tiles) {
-    var drawingActions = [];
-
-    tiles.forEach(function (tile) {
-      if (!(tile in pendingTiles) && !(tile in drawnTiles)) {
-        pendingTiles[tile] = true;
-        var action = drawTile(tile)
-          .done(function (drawn) {
-            drawnTiles[tile] = drawn;
-            delete pendingTiles[tile];
-          });
-
-        drawingActions.push(action);
-      }
-    });
-
-    return drawingActions;
+    needed.forEach(drawTile);
   };
 
   function drawTile (tile) {
-    return cache.get(tile[0], tile[1], tile[2])
+    var args = tile.split(',');
+    return cache.get(args[0], args[1], args[2])
       .then(function (points) {
-        return renderer.add(getTileId(tile), points);
+        if (scheduler.isExpecting(tile) && !renderer.has(tile)) {
+          renderer.add(tile, points);
+          scheduler.finish(tile);
+          // console.log('Drawn ' + tile);
+        } else {
+          scheduler.dismiss(tile);
+        }
       });
   };
 
@@ -125,36 +105,18 @@ var TileDrawer = function (svg, hackScale) {
     return embedded;
   };
 
-  function resetRequiredTiles(requestedTiles) {
-    requiredTiles = {};
-    requestedTiles.forEach(function(tile) {
-      requiredTiles[tile] = true;
-    });
-  };
-
-  // this method needs to be fixed - it should not be able to remove tiles touched by ANY newer request (not only the newest one) (need LRU for tiles for that)
-  function removeStaleTiles() {
-    for (var tile in drawnTiles) {
-      if (drawnTiles.hasOwnProperty(tile) && !(tile in requiredTiles)) {
-        removeTile(tile);
+  function removeTiles(tiles) {
+    tiles.forEach(function (t) {
+      if (renderer.has(t)) {
+        renderer.remove(t);
+        // console.log('Removed ' + t);
       }
-    }
-  };
-
-  function removeTile(tile) {
-    if (tile in drawnTiles) {
-      renderer.remove(getTileId(tile));
-      delete drawnTiles[tile];
-    }
+    });
   };
 
   function getZoomLevel(scale) {
     return Math.max(0, Math.floor(Math.log2(scale)));
   };
-
-  function getTileId(tile) {
-    return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
-  }
 };
 
 module.exports = TileDrawer;

@@ -68,6 +68,10 @@ var Renderer = function(svg, converter, hackScale) {
     //   .attr("dy", "1em");
   };
 
+  this.has = function (name) {
+    return that._renderedPoints.hasHandle(name);
+  }
+
   this.remove = function(name) {
     var ids = that._renderedPoints.getElements(name);
     that._renderedPoints.remove(name);
