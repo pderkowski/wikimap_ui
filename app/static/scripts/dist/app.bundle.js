@@ -46,7 +46,7 @@
 
 	var $ = __webpack_require__(1);
 	var Wikimap = __webpack_require__(2);
-	var search = __webpack_require__(24);
+	var search = __webpack_require__(25);
 
 	$(document).ready(function() {
 	  var wikimap = new Wikimap();
@@ -28359,7 +28359,7 @@
 	var TileCache = __webpack_require__(18);
 	var TileIndexer = __webpack_require__(20);
 	var CoordsConverter = __webpack_require__(21);
-	var TileRenderer = __webpack_require__(22);
+	var Renderer = __webpack_require__(22);
 	var d3 = __webpack_require__(3);
 	var $ = __webpack_require__(1);
 
@@ -28373,7 +28373,7 @@
 	  var converter = new CoordsConverter();
 	  var cache = new TileCache();
 	  var indexer = new TileIndexer();
-	  var renderer = new TileRenderer(svg, converter, hackScale);
+	  var renderer = new Renderer(svg, converter, hackScale);
 
 	  var zoom_ = d3.zoom()
 	    .scaleExtent([1, Infinity])
@@ -28416,9 +28416,9 @@
 	    that.zoom(newTransform);
 	  };
 
-	  this.select = function (ids) {
-	    renderer.select(ids);
-	  };
+	  // this.select = function (ids) {
+	  //   renderer.select(ids);
+	  // };
 
 	  function doZoom(transform) {
 	    converter.setZoomTransform(transform);
@@ -28441,7 +28441,6 @@
 
 	    $.when.apply($, drawingActions)
 	      .done(function () {
-	        renderer.show();
 	        removeStaleTiles();
 	      });
 	  };
@@ -28468,7 +28467,7 @@
 	  function drawTile (tile) {
 	    return cache.get(tile[0], tile[1], tile[2])
 	      .then(function (points) {
-	        return renderer.add(tile, points);
+	        return renderer.add(getTileId(tile), points);
 	      });
 	  };
 
@@ -28498,13 +28497,11 @@
 	        removeTile(tile);
 	      }
 	    }
-
-	    renderer.show();
 	  };
 
 	  function removeTile(tile) {
 	    if (tile in drawnTiles) {
-	      renderer.remove(tile);
+	      renderer.remove(getTileId(tile));
 	      delete drawnTiles[tile];
 	    }
 	  };
@@ -28512,6 +28509,10 @@
 	  function getZoomLevel(scale) {
 	    return Math.max(0, Math.floor(Math.log2(scale)));
 	  };
+
+	  function getTileId(tile) {
+	    return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
+	  }
 	};
 
 	module.exports = TileDrawer;
@@ -28846,107 +28847,100 @@
 
 	var d3 = __webpack_require__(3);
 	var d3tip = __webpack_require__(23);
+	var FlatMultiset = __webpack_require__(24);
 
-	var TileRenderer = function(svg, converter, hackScale) {
+	var Renderer = function(svg, converter, hackScale) {
 	  var that = this;
 
-	  var tip = d3tip()
-	    .attr("class", "d3-tip")
-	    .offset([-10, 0])
-	    .html(function(p) {
-	      return p.name;
-	    });
-
-	  var tiles = svg.append("g")
-	    .attr("id", "tiles");
-
-	  var selectedPoints = {};
-
-	  svg.call(tip);
-
-	  this.lastScale = 1;
+	  init();
 
 	  this.setZoomTransform = function(transform) {
-	    that._zoomTransform = transform;
-
-	    tiles.attr("transform", transform);
+	    that._all.attr("transform", transform);
 
 	    var scale = transform.k;
-	    if (that.lastScale != scale) {
-	      that.lastScale = scale; // getR and getFontSize depend on lastScale
+	    if (that._lastScale != scale) {
+	      that._lastScale = scale; // getR and getFontSize depend on _lastScale
 
 	      // dont scale dots
 	      d3.selectAll(".dot")
 	        .attr("r", function(p) { return getR(p.z); })
 
-	      d3.selectAll(".labels")
-	        .style("font-size", getFontSize()+"px");
+	      // d3.selectAll(".labels")
+	      //   .style("font-size", getFontSize()+"px");
 	    }
 	  };
 
-	  this.add = function(tile, points) {
-	    var tile = tiles.append("g")
-	      .classed("tile", true)
-	      .attr("id", getTileId(tile));
+	  this.add = function(name, points) {
+	    that._renderedPoints.add(name, getPointIds(points));
+	    that._name2color[name] = chooseColor();
 
-	    var dots = tile.append("g")
-	      .classed("dots", true)
-	      .style("fill-opacity", 0);
+	    var selection = d3.select('.dots')
+	      .selectAll('.dot')
+	      .data(points, function (p) { return p.id; });
 
-	    dots.selectAll(".dot")
-	      .data(points)
-	      .enter()
+	    var changed = selection
+	      .enter() // add new points
 	      .append("circle")
 	      .attr("class", "dot")
 	      .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
 	      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
 	      .attr("r", function(p) { return getR(p.z); })
-	      .on("mouseover", tip.show)
-	      .on("mouseout", tip.hide);
+	      .on("mouseover", that._tip.show)
+	      .on("mouseout", that._tip.hide)
+	      .merge(selection); // merge with updated points
 
-	    setSelectionStyle(dots.selectAll(".dot"));
+	    updateFill(changed);
 
-	    var maxLength = 15;
+	    // setSelectionStyle(dots.data(points));
 
-	    var labels = tile.append("g")
-	      .classed("labels", true)
-	      .style("font-size", getFontSize()+"px")
-	      .style("opacity", 0)
-	      .selectAll(".label")
-	      .data(points)
-	      .enter()
-	      .append("text")
-	      .classed("label", true)
-	      .text(function(p) {
-	        if (p.name.length <= maxLength) {
-	          return p.name;
-	        } else {
-	          return p.name.substring(0, 12)+'...';
-	        }
-	      })
-	      .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-	      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
-	      .attr("dy", "1em");
+	    // var maxLength = 15;
 
-	    return tile;
+	    //   .classed("labels", true)
+	    //   .selectAll(".label")
+	    //   .data(points)
+	    //   .style("font-size", getFontSize()+"px")
+
+	    //   .enter()
+	    //   .append("text")
+	    //   .classed("label", true)
+	    //   .text(function(p) {
+	    //     if (p.name.length <= maxLength) {
+	    //       return p.name;
+	    //     } else {
+	    //       return p.name.substring(0, 12)+'...';
+	    //     }
+	    //   })
+	    //   .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+	    //   .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
+	    //   .attr("dy", "1em");
 	  };
 
-	  this.show = function() {
-	    var dotsOpacity = 0.6;
-	    var labelsOpacity = 1.0;
+	  this.remove = function(name) {
+	    var ids = that._renderedPoints.getElements(name);
+	    that._renderedPoints.remove(name);
+	    delete that._name2color[name];
 
-	    d3.selectAll(".dots")
-	      .style("fill-opacity", dotsOpacity);
+	    var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
+	    var updated = d3.set(ids.filter(function (id) { return  that._renderedPoints.hasElement(id); }));
 
-	    d3.selectAll(".labels")
-	      .style("opacity", labelsOpacity);
-	  };
-
-	  this.remove = function(tile) {
-	    var selector = "#"+getTileId(tile);
-	    d3.select(selector)
+	    d3.selectAll('.dot')
+	      .filter(function (p) { return removed.has(p.id); })
 	      .remove();
+
+	    updateFill(d3.selectAll('.dot')
+	      .filter(function (p) { return updated.has(p.id); }));
 	  };
+
+	  // this.show = function() {
+	  //   var dotsOpacity = 0.6;
+	  //   var labelsOpacity = 1.0;
+
+	  //   d3.selectAll(".dots")
+	  //     .style("fill-opacity", dotsOpacity);
+
+	  //   d3.selectAll(".labels")
+	  //     .style("opacity", labelsOpacity);
+	  // };
 
 	  this.redrawAll = function() {
 	    d3.selectAll(".dot")
@@ -28954,37 +28948,62 @@
 	      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
 	  };
 
-	  this.select = function (points) {
-	    selectedPoints = {};
-	    points.forEach(function (p) {
-	      selectedPoints[p] = true;
-	    });
-	    setSelectionStyle(d3.selectAll(".dot"));
-	  };
+	  // function getFontSize() {
+	  //   var base = 10;
+	  //   return hackScale * base / that._lastScale;
+	  // }
 
-	  function setSelectionStyle(d3selection) {
-	    d3selection.classed("selected", function (p) {
-	        return p.id in selectedPoints;
+	  function init() {
+	    that._all = svg.append("g")
+	      .attr("id", "all");
+
+	    that._all.append("g")
+	      .classed("dots", true);
+
+	    // var labels = all.append("g")
+	    //   .classed("labels", true);
+
+	    that._renderedPoints = new FlatMultiset();
+	    that._name2color = Object.create(null);
+	    that._lastScale = 1;
+
+	    that._tip = d3tip()
+	      .attr("class", "d3-tip")
+	      .offset([-10, 0])
+	      .html(function(p) {
+	        return p.name;
 	      });
+
+	    svg.call(that._tip);
 	  }
 
-	  function getFontSize() {
-	    var base = 10;
-	    return hackScale * base / that.lastScale;
+	  function updateFill(selection) {
+	    selection
+	      .style('fill', function (p) { return getColor(p.id); });
+	  }
+
+	  function getColor(id) {
+	    var names = that._renderedPoints.getHandles(id);
+	    var colors = names.map(function (n) { return that._name2color[n]; });
+	    return colors[0];
 	  }
 
 	  function getR(z) {
 	    var base = 6;
 	    var coef = 0.8;
-	    return hackScale * base * Math.pow(coef, z) / that.lastScale;
+	    return hackScale * base * Math.pow(coef, z) / that._lastScale;
 	  }
 
-	  function getTileId(tile) {
-	    return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
+	  function getPointIds(points) {
+	    return points.map(function (p) { return p.id; });
+	  }
+
+	  function chooseColor() {
+	    return '#' + Math.floor(Math.random()*16777215).toString(16);
 	  }
 	};
 
-	module.exports = TileRenderer;
+	module.exports = Renderer;
 
 /***/ },
 /* 23 */
@@ -29317,10 +29336,76 @@
 
 /***/ },
 /* 24 */
+/***/ function(module, exports) {
+
+	var FlatMultiset = function () {
+	  var that = this;
+
+	  // hashmaps
+	  var handle2elems = Object.create(null);
+	  var elem2handles = Object.create(null);
+
+	  this.add = function (handle, elems) {
+	    if (handle in handle2elems) {
+	      console.log('Cannot add handle ' + handle + ': it already exists.');
+	    } else {
+	      handle2elems[handle] = elems;
+
+	      elems.forEach(function (el) {
+	        if (el in elem2handles) {
+	          elem2handles[el].push(handle);
+	        } else {
+	          elem2handles[el] = [handle];
+	        }
+	      });
+	    }
+	  };
+
+	  this.remove = function (handle) {
+	    if (!(handle in handle2elems)) {
+	      console.log('Cannot remove handle '+ handle + ': it does not exist.');
+	    } else {
+	      var elems = handle2elems[handle];
+	      delete handle2elems[handle];
+
+	      elems.forEach(function (el) {
+	        if (elem2handles[el].length == 1 && elem2handles[el][0] == handle) { // most cases should fall here
+	          delete elem2handles[el];
+	        } else {
+	          var idx = elem2handles[el].indexOf(handle);
+	          if (idx > -1) {
+	            elem2handles[el].splice(idx, 1);
+	          }
+	        }
+	      });
+	    }
+	  };
+
+	  this.getHandles = function (el) {
+	    return elem2handles[el];
+	  };
+
+	  this.getElements = function (handle) {
+	    return handle2elems[handle];
+	  };
+
+	  this.hasElement = function (el) {
+	    return el in elem2handles;
+	  };
+
+	  this.hasHandle = function (handle) {
+	    return handle in handle2elems;
+	  };
+	};
+
+	module.exports = FlatMultiset;
+
+/***/ },
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var $ = __webpack_require__(1);
-	__webpack_require__(25);
+	__webpack_require__(26);
 
 	function searchTerm(term) {
 	  return $.getJSON($SCRIPT_ROOT+'search?title='+term);
@@ -29393,7 +29478,7 @@
 	module.exports = search;
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -29420,12 +29505,12 @@
 			// AMD. Register as an anonymous module.
 			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 				__webpack_require__(1),
-				__webpack_require__(26),
 				__webpack_require__(27),
-				__webpack_require__(29),
-				__webpack_require__(30),
 				__webpack_require__(28),
-				__webpack_require__(32)
+				__webpack_require__(30),
+				__webpack_require__(31),
+				__webpack_require__(29),
+				__webpack_require__(33)
 			], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
@@ -30081,7 +30166,7 @@
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30108,12 +30193,12 @@
 			// AMD. Register as an anonymous module.
 			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 				__webpack_require__(1),
-				__webpack_require__(27),
-				__webpack_require__(29),
+				__webpack_require__(28),
 				__webpack_require__(30),
 				__webpack_require__(31),
-				__webpack_require__(28),
-				__webpack_require__(32)
+				__webpack_require__(32),
+				__webpack_require__(29),
+				__webpack_require__(33)
 			], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
@@ -30760,7 +30845,7 @@
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30781,7 +30866,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(28) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -30811,7 +30896,7 @@
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;( function( factory ) {
@@ -30834,7 +30919,7 @@
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30858,7 +30943,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(28) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31338,14 +31423,14 @@
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;( function( factory ) {
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(28) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31384,7 +31469,7 @@
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31405,7 +31490,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(28) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31439,7 +31524,7 @@
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31461,7 +31546,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(28) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals

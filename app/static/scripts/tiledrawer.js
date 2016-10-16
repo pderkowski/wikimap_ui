@@ -1,7 +1,7 @@
 var TileCache = require('./tilecache');
 var TileIndexer = require('./tileindexer');
 var CoordsConverter = require('./coordsconverter');
-var TileRenderer = require('./tilerenderer');
+var Renderer = require('./renderer');
 var d3 = require('d3');
 var $ = require('jquery');
 
@@ -15,7 +15,7 @@ var TileDrawer = function (svg, hackScale) {
   var converter = new CoordsConverter();
   var cache = new TileCache();
   var indexer = new TileIndexer();
-  var renderer = new TileRenderer(svg, converter, hackScale);
+  var renderer = new Renderer(svg, converter, hackScale);
 
   var zoom_ = d3.zoom()
     .scaleExtent([1, Infinity])
@@ -58,9 +58,9 @@ var TileDrawer = function (svg, hackScale) {
     that.zoom(newTransform);
   };
 
-  this.select = function (ids) {
-    renderer.select(ids);
-  };
+  // this.select = function (ids) {
+  //   renderer.select(ids);
+  // };
 
   function doZoom(transform) {
     converter.setZoomTransform(transform);
@@ -83,7 +83,6 @@ var TileDrawer = function (svg, hackScale) {
 
     $.when.apply($, drawingActions)
       .done(function () {
-        renderer.show();
         removeStaleTiles();
       });
   };
@@ -110,7 +109,7 @@ var TileDrawer = function (svg, hackScale) {
   function drawTile (tile) {
     return cache.get(tile[0], tile[1], tile[2])
       .then(function (points) {
-        return renderer.add(tile, points);
+        return renderer.add(getTileId(tile), points);
       });
   };
 
@@ -140,13 +139,11 @@ var TileDrawer = function (svg, hackScale) {
         removeTile(tile);
       }
     }
-
-    renderer.show();
   };
 
   function removeTile(tile) {
     if (tile in drawnTiles) {
-      renderer.remove(tile);
+      renderer.remove(getTileId(tile));
       delete drawnTiles[tile];
     }
   };
@@ -154,6 +151,10 @@ var TileDrawer = function (svg, hackScale) {
   function getZoomLevel(scale) {
     return Math.max(0, Math.floor(Math.log2(scale)));
   };
+
+  function getTileId(tile) {
+    return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
+  }
 };
 
 module.exports = TileDrawer;
