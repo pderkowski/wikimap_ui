@@ -16,10 +16,11 @@ var Renderer = function(svg, converter, hackScale) {
 
       // dont scale dots
       d3.selectAll(".dot")
-        .attr("r", function(p) { return getR(p.z); })
+        .attr("r", function(p) { return getR(p.z); });
 
-      // d3.selectAll(".labels")
-      //   .style("font-size", getFontSize()+"px");
+      d3.selectAll(".label")
+        .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
+        .style("font-size", getFontSize()+"px");
     }
   };
 
@@ -27,45 +28,8 @@ var Renderer = function(svg, converter, hackScale) {
     that._renderedPoints.add(name, getPointIds(points));
     that._name2color[name] = chooseColor();
 
-    var selection = d3.select('.dots')
-      .selectAll('.dot')
-      .data(points, function (p) { return p.id; });
-
-    var changed = selection
-      .enter() // add new points
-      .append("circle")
-      .attr("class", "dot")
-      .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
-      .attr("r", function(p) { return getR(p.z); })
-      .on("mouseover", that._tip.show)
-      .on("mouseout", that._tip.hide)
-      .merge(selection); // merge with updated points
-
-    updateFill(changed);
-
-    // setSelectionStyle(dots.data(points));
-
-    // var maxLength = 15;
-
-    //   .classed("labels", true)
-    //   .selectAll(".label")
-    //   .data(points)
-    //   .style("font-size", getFontSize()+"px")
-
-    //   .enter()
-    //   .append("text")
-    //   .classed("label", true)
-    //   .text(function(p) {
-    //     if (p.name.length <= maxLength) {
-    //       return p.name;
-    //     } else {
-    //       return p.name.substring(0, 12)+'...';
-    //     }
-    //   })
-    //   .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-    //   .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
-    //   .attr("dy", "1em");
+    addPoints(points);
+    addLabels(points);
   };
 
   this.has = function (name) {
@@ -84,20 +48,13 @@ var Renderer = function(svg, converter, hackScale) {
       .filter(function (p) { return removed.has(p.id); })
       .remove();
 
+    d3.selectAll('.label')
+      .filter(function (p) { return removed.has(p.id); })
+      .remove();
+
     updateFill(d3.selectAll('.dot')
       .filter(function (p) { return updated.has(p.id); }));
   };
-
-  // this.show = function() {
-  //   var dotsOpacity = 0.6;
-  //   var labelsOpacity = 1.0;
-
-  //   d3.selectAll(".dots")
-  //     .style("fill-opacity", dotsOpacity);
-
-  //   d3.selectAll(".labels")
-  //     .style("opacity", labelsOpacity);
-  // };
 
   this.redrawAll = function() {
     d3.selectAll(".dot")
@@ -105,10 +62,51 @@ var Renderer = function(svg, converter, hackScale) {
       .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
   };
 
-  // function getFontSize() {
-  //   var base = 10;
-  //   return hackScale * base / that._lastScale;
-  // }
+  function getFontSize() {
+    var base = 10;
+    return hackScale * base / that._lastScale;
+  }
+
+  function addPoints(points) {
+    var selection = d3.select('.dots')
+      .selectAll('.dot')
+      .data(points, function (p) { return p.id; });
+
+    var changed = selection
+      .enter() // add new points
+      .append("circle")
+      .attr("class", "dot")
+      .attr("cx", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+      .attr("cy", function(p) { return converter.applyTransition([+p.x, +p.y])[1]; })
+      .attr("r", function(p) { return getR(p.z); })
+      .on("mouseover", that._tip.show)
+      .on("mouseout", that._tip.hide)
+      .merge(selection); // merge with updated points
+
+    updateFill(changed);
+  }
+
+  function addLabels(points) {
+    var maxLength = 15;
+
+    var selection = d3.select('.labels')
+      .selectAll('.label')
+      .data(points, function (p) { return p.id; })
+      .enter() // add new points
+      .append("text")
+      .classed("label", true)
+      .text(function(p) {
+        if (p.name.length <= maxLength) {
+          return p.name;
+        } else {
+          return p.name.substring(0, 12)+'...';
+        }
+      })
+      .style("font-size", getFontSize()+"px")
+      .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
+      .attr("dy", "1em");
+  }
 
   function init() {
     that._all = svg.append("g")
@@ -117,8 +115,8 @@ var Renderer = function(svg, converter, hackScale) {
     that._all.append("g")
       .classed("dots", true);
 
-    // var labels = all.append("g")
-    //   .classed("labels", true);
+    that._all.append("g")
+      .classed("labels", true);
 
     that._renderedPoints = new FlatMultiset();
     that._name2color = Object.create(null);
