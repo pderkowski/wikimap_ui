@@ -1,4 +1,4 @@
-var TileCache = require('./tilecache');
+var Cache = require('./cache');
 var TileIndexer = require('./tileindexer');
 var CoordsConverter = require('./coordsconverter');
 var Renderer = require('./renderer');
@@ -10,7 +10,9 @@ var TileDrawer = function (svg, hackScale) {
   var that = this;
 
   var converter = new CoordsConverter();
-  var cache = new TileCache();
+  var cache = new Cache(1000,
+    function (x, y, z) { return x+','+y+','+z; },
+    function (x, y, z) { return $.getJSON($SCRIPT_ROOT + 'points!'+x+'!'+y+'!'+z); });
   var indexer = new TileIndexer();
   var renderer = new Renderer(svg, converter, hackScale);
   var scheduler = new TileScheduler(removeTiles);
@@ -84,7 +86,7 @@ var TileDrawer = function (svg, hackScale) {
     return cache.get(args[0], args[1], args[2])
       .then(function (points) {
         if (scheduler.isExpecting(tile) && !renderer.has(tile)) {
-          renderer.add(tile, points);
+          renderer.add(tile, points, 0);
           scheduler.finish(tile);
           // console.log('Drawn ' + tile);
         } else {
