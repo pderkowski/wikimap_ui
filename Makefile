@@ -1,5 +1,5 @@
 ZOOMDIR = app/models/zoom
-ZOOMSOURCES = $(ZOOMDIR)/bounds.cpp $(ZOOMDIR)/node.cpp $(ZOOMDIR)/partitiontree.cpp $(ZOOMDIR)/zoom.cpp $(ZOOMDIR)/indexer.cpp
+ZOOMSOURCES = $(ZOOMDIR)/bounds.cpp $(ZOOMDIR)/node.cpp $(ZOOMDIR)/partitiontree.cpp $(ZOOMDIR)/zoom.cpp $(ZOOMDIR)/indexer.cpp $(ZOOMDIR)/reverseindex.cpp
 WRAPSOURCES = $(ZOOMDIR)/zoomwrapper.cpp
 
 TESTDIR = $(ZOOMDIR)/test
@@ -47,7 +47,7 @@ $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(TESTBIN) $^
 
-$(ZOOMLIB): boost $(ZOOMOBJECTS) $(WRAPOBJECTS)
+$(ZOOMLIB): $(ZOOMOBJECTS) $(WRAPOBJECTS) boost
 	@mkdir -p $(@D)
 	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -l$(PYTHONVERSION) -o $(ZOOMLIB)
 

@@ -1,8 +1,10 @@
 var $ = require('jquery');
 var d3 = require('d3');
 var elementResizeDetectorMaker = require('element-resize-detector');
+var Renderer = require('./renderer');
+var CoordsConverter = require('./coordsconverter');
 var TileDrawer = require('./tiledrawer');
-
+var CategoryDrawer = require('./categorydrawer');
 
 function getRealSize () {
   var displayWidth = document.getElementById('container').offsetWidth;
@@ -49,20 +51,23 @@ var Wikimap = function () {
     .attr("width", getVirtualSize(hackScale)[0])
     .attr("height", getVirtualSize(hackScale)[1]);
 
-  var drawer = new TileDrawer(hackSvg, hackScale);
+  var converter = new CoordsConverter();
+  var renderer = new Renderer(hackSvg, converter, hackScale);
+  var tiles = new TileDrawer(renderer, converter, hackSvg);
+  var categories = new CategoryDrawer(renderer);
 
   this.start = function () {
     return loadBounds()
-      .then(function (dataBounds) { drawer.init(getVirtualSize(hackScale), dataBounds); })
-      .then(listenToResizeEvents(drawer));
+      .then(function (dataBounds) { tiles.init(getVirtualSize(hackScale), dataBounds); })
+      .then(listenToResizeEvents(tiles));
   };
 
   this.centerOn = function (x, y) {
-    drawer.centerOn([x, y]);
+    tiles.centerOn([x, y]);
   };
 
-  this.select = function (ids) {
-    drawer.select(ids);
+  this.selectCategory = function (name) {
+    categories.draw(name);
   };
 
   function loadBounds() {

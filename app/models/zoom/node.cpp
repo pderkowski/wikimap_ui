@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <iterator>
 
-Node::Node(const Bounds& bounds, int capacity)
-: children_(), bounds_(bounds), points_(), capacity_(capacity)
+Node::Node(const Bounds& bounds, const Index& index, int capacity)
+: children_(), bounds_(bounds), points_(), index_(index), capacity_(capacity)
 {
     assert(capacity_ > 0);
 }
@@ -27,11 +27,11 @@ bool Node::isFull() const {
     return points_.size() >= capacity_;
 }
 
-bool Node::contains(const Point2D& p) const {
+bool Node::contains(const Point& p) const {
     return bounds_.contain(p);
 }
 
-const Node* Node::getChildContainingPoint(const Point2D& p) const {
+const Node* Node::getChildContainingPoint(const Point& p) const {
     assert(!isLeaf());
     assert(contains(p));
 
@@ -43,7 +43,7 @@ const Node* Node::getChildContainingPoint(const Point2D& p) const {
     assert(0);
 }
 
-Node* Node::getChildContainingPoint(const Point2D& p) {
+Node* Node::getChildContainingPoint(const Point& p) {
     return const_cast<Node*>(static_cast<const Node*>(this)->getChildContainingPoint(p));
 }
 
@@ -60,7 +60,7 @@ int Node::getMaxDepth() const {
     }
 }
 
-int Node::getDepthAtPoint(const Point2D& p) const {
+int Node::getDepthAtPoint(const Point& p) const {
     if (isLeaf()) {
         return 0;
     } else {
@@ -68,35 +68,39 @@ int Node::getDepthAtPoint(const Point2D& p) const {
     }
 }
 
+Index Node::getIndex() const {
+    return index_;
+}
+
 void Node::split() {
     assert(isLeaf());
 
-    children_.setTopLeft(new Node(bounds_.getTopLeftQuadrant(), capacity_));
-    children_.setTopRight(new Node(bounds_.getTopRightQuadrant(), capacity_));
-    children_.setBottomRight(new Node(bounds_.getBottomRightQuadrant(), capacity_));
-    children_.setBottomLeft(new Node(bounds_.getBottomLeftQuadrant(), capacity_));
+    children_.setTopLeft(new Node(bounds_.getTopLeftQuadrant(), index_.getTopLeftSubindex(), capacity_));
+    children_.setTopRight(new Node(bounds_.getTopRightQuadrant(), index_.getTopRightSubindex(), capacity_));
+    children_.setBottomRight(new Node(bounds_.getBottomRightQuadrant(), index_.getBottomRightSubindex(), capacity_));
+    children_.setBottomLeft(new Node(bounds_.getBottomLeftQuadrant(), index_.getBottomLeftSubindex(), capacity_));
 
     auto tl = children_.getTopLeft();
     auto tr = children_.getTopRight();
     auto br = children_.getBottomRight();
     auto bl = children_.getBottomLeft();
 
-    for (const auto& p : points_) {
-        if (tl->contains(p.point.to2D())) {
-            tl->insert(p);
-        } else if (tr->contains(p.point.to2D())) {
-            tr->insert(p);
-        } else if (br->contains(p.point.to2D())) {
-            br->insert(p);
-        } else if (bl->contains(p.point.to2D())) {
-            bl->insert(p);
+    for (const auto& dp : points_) {
+        if (tl->contains(dp.p)) {
+            tl->insert(dp);
+        } else if (tr->contains(dp.p)) {
+            tr->insert(dp);
+        } else if (br->contains(dp.p)) {
+            br->insert(dp);
+        } else if (bl->contains(dp.p)) {
+            bl->insert(dp);
         } else {
             assert(0);
         }
     }
 }
 
-Node* Node::prepareInsert(const Point2D& p) {
+Node* Node::prepareInsert(const Point& p) {
     if (isFull()) {
         if (isLeaf()) {
             split();
@@ -112,20 +116,8 @@ Node* Node::prepareInsert(const Point2D& p) {
     }
 }
 
-void Node::insert(const Point2D& p, const Data& data) {
-    auto node = prepareInsert(p);
-
-    auto z = getDepthAtPoint(p);
-    Datapoint d{Point3D(p.x, p.y, z), data};
-
-    node->doInsert(d);
-}
-
-void Node::insert(const Datapoint& d) {
-    auto node = prepareInsert(d.point.to2D());
-    node->doInsert(d);
-}
-
-void Node::doInsert(const Datapoint& d) {
-    points_.push_back(d);
+Index Node::insert(const Datapoint& dp) {
+    auto node = prepareInsert(dp.p);
+    node->points_.push_back(dp);
+    return node->getIndex();
 }

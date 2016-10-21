@@ -1,4 +1,6 @@
 #include "indexer.hpp"
+#include "index.hpp"
+#include "bounds.hpp"
 #include <cmath>
 
 Indexer::Indexer(const Bounds& bounds)
@@ -6,11 +8,11 @@ Indexer::Indexer(const Bounds& bounds)
 { }
 
 Bounds Indexer::indexToBounds(Index index) const {
-    int p = (int)pow(2, index.level);
+    int p = (int)pow(2, index.z);
 
     auto bounds = bounds_;
 
-    for (int l = 0; l < index.level; ++l) {
+    for (int l = 0; l < index.z; ++l) {
         int half = p / 2;
 
         if (index.x < half && index.y < half) {
@@ -35,19 +37,19 @@ Bounds Indexer::indexToBounds(Index index) const {
     return bounds;
 }
 
-Point2D Indexer::indexToPoint(Index index) const {
+Point Indexer::indexToPoint(Index index) const {
     auto bounds = indexToBounds(index);
     return bounds.getMidpoint();
 }
 
-Index Indexer::pointToIndex(const Point2D& p, int level) const {
+Index Indexer::pointToIndex(const Point& p, int z) const {
     assert(bounds_.contain(p));
 
     auto bounds = bounds_;
 
     int x = 0;
     int y = 0;
-    for (int l = 0; l < level; ++l) {
+    for (int l = 0; l < z; ++l) {
         auto tl = bounds.getTopLeftQuadrant();
         auto tr = bounds.getTopRightQuadrant();
         auto br = bounds.getBottomRightQuadrant();
@@ -74,9 +76,5 @@ Index Indexer::pointToIndex(const Point2D& p, int level) const {
         }
     }
 
-    return Index{x, y, level};
-}
-
-bool Index::operator == (const Index& other) const {
-    return x == other.x && y == other.y && level == other.level;
+    return Index{x, y, z};
 }

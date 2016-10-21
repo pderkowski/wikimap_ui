@@ -1,41 +1,42 @@
 import random
-import zoom
-from zoom import Zoom, Range, Point2D, Index
 from flask import current_app
+from terms import TermIndex
+from datapoints import Datapoints
+from categories import Categories
 
 class Data(object):
-    def __init__(self):
-        self.zoom = None
+    def __init__(self, datapointsPath, categoriesPath):
+        termIdxPath = 'term.idx'
+        datapointsDbPath = 'datapoints.db'
 
-    def load(self, fileName):
-        print 'Loading data from {}...'.format(fileName)
-        points = []
-        data = []
-        with open(fileName, 'r') as file:
-            for line in file:
-                words = line.split()
-                x = float(words[0])
-                y = float(words[1])
-                name = words[2].replace('_', ' ') # replace underscores with spaces for natural presentation
-                id_ = int(words[3])
-                points.append(Point2D(x, y))
-                data.append(zoom.Data(id_, name))
+        self._loadDatapoints(datapointsDbPath, datapointsPath)
+        self._loadCategories(categoriesPath)
+        self._loadTerms(termIdxPath, datapointsPath, categoriesPath)
 
-        print 'Loaded {} points.'.format(len(points))
+    def _loadDatapoints(self, datapointsDbPath, datapointsPath):
+        self._datapoints = Datapoints(datapointsDbPath, datapointsPath)
 
-        print 'Creating zoom object...'
+    def _loadTerms(self, termIdxPath, datapointsPath, categoriesPath):
+        self._terms = TermIndex(termIdxPath, datapointsPath, categoriesPath).load()
 
-        self.zoom = Zoom(points, data, 100)
-
-        print 'Created zoom object with max depth {}.'.format(self.zoom.getMaxDepth())
-
-    def getDatapoints(self, index):
-        return self.zoom.getDatapoints(index)
+    def _loadCategories(self, categoriesPath):
+        self._categories = Categories(categoriesPath)
 
     def getBounds(self):
-        return self.zoom.getBounds()
+        return self._datapoints.getBounds()
 
     def getMaxDepth(self):
-        return self.zoom.getMaxDepth()
+        return self._datapoints.getMaxDepth()
 
-data = Data()
+    def getSimilarTerms(self, term, limit):
+        return self._terms.search(term, limit)
+
+    def getDatapointsByIndex(self, index):
+        return self._datapoints.getDatapointsByIndex(index)
+
+    def getDatapointByTitle(self, title):
+        return self._datapoints.getDatapointByTitle(title)
+
+    def getDatapointsByCategory(self, category):
+        ids = self._categories.getCategoryByTitle(category).ids
+        return self._datapoints.getDatapointsByIds(ids)

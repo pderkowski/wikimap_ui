@@ -7,6 +7,11 @@ import codecs
 import cPickle
 import urllib
 
+class Term(object):
+    def __init__(self, term, isCategory):
+        self.term = term
+        self.isCategory = isCategory
+
 class Index(object):
     def __init__(self, idxPath):
         self._idxPath = idxPath
@@ -97,50 +102,4 @@ class TermIndex(Index):
 
     def _describe(self, result):
         dataKey = result['dataKey']
-        return { 'title': self._denormalize(self._data[dataKey][0]), 'isCategory': self._data[dataKey][1] }
-
-class PointIndex(Index):
-    def __init__(self, idxPath, pointsPath):
-        super(PointIndex, self).__init__(idxPath)
-        self._schema = Schema(key=ID(stored=True), dataKey=STORED)
-        self._parser = SimpleParser('key', self._schema)
-        self._pointsPath = pointsPath
-
-    def _create(self):
-        def extractPoints(line):
-            words = line.split()
-            title = words[2]
-            id_ = int(words[3])
-            x = float(words[0])
-            y = float(words[1])
-            return title, (id_, x, y)
-
-        super(PointIndex, self)._create()
-
-        self._addData(self._pointsPath, extractPoints)
-
-    def _describe(self, result):
-        dataKey = result['dataKey']
-        return { 'title': self._denormalize(result['key']), 'id': self._data[dataKey][0], 'x': self._data[dataKey][1], 'y': self._data[dataKey][2] }
-
-class CategoryIndex(Index):
-    def __init__(self, idxPath, categoriesPath):
-        super(CategoryIndex, self).__init__(idxPath)
-        self._schema = Schema(key=ID(stored=True), dataKey=STORED)
-        self._parser = SimpleParser('key', self._schema)
-        self._categoriesPath = categoriesPath
-
-    def _create(self):
-        def extractCategories(line):
-            words = line.split()
-            title = words[0]
-            ids = [int(w) for w in words[1:]]
-            return title, (ids,)
-
-        super(CategoryIndex, self)._create()
-
-        self._addData(self._categoriesPath, extractCategories)
-
-    def _describe(self, result):
-        dataKey = result['dataKey']
-        return { 'title': self._denormalize(result['key']), 'ids': self._data[dataKey][0] }
+        return Term(self._denormalize(self._data[dataKey][0]), self._data[dataKey][1])

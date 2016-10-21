@@ -1,20 +1,16 @@
 var Cache = require('./cache');
 var TileIndexer = require('./tileindexer');
-var CoordsConverter = require('./coordsconverter');
-var Renderer = require('./renderer');
 var TileScheduler = require('./tilescheduler');
 var d3 = require('d3');
 var $ = require('jquery');
 
-var TileDrawer = function (svg, hackScale) {
+var TileDrawer = function (renderer, converter, svg) {
   var that = this;
 
-  var converter = new CoordsConverter();
   var cache = new Cache(1000,
     function (x, y, z) { return x+','+y+','+z; },
     function (x, y, z) { return $.getJSON($SCRIPT_ROOT + 'points!'+x+'!'+y+'!'+z); });
   var indexer = new TileIndexer();
-  var renderer = new Renderer(svg, converter, hackScale);
   var scheduler = new TileScheduler(removeTiles);
 
   var zoom_ = d3.zoom()
@@ -76,7 +72,7 @@ var TileDrawer = function (svg, hackScale) {
 
   function draw (range, level) {
     var requested = embed(range, level);
-    var needed = scheduler.schedule(requested.map(function (t) { return t.toString(); }));
+    var needed = scheduler.replace(requested.map(function (t) { return t.toString(); }));
 
     needed.forEach(drawTile);
   };

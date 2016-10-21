@@ -19,14 +19,17 @@ var Renderer = function(svg, converter, hackScale) {
         .attr("r", function(p) { return getR(p.z); });
 
       d3.selectAll(".label")
-        .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
+        .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); });
+
+      d3.select('.labels')
         .style("font-size", getFontSize()+"px");
     }
   };
 
-  this.add = function(name, points) {
+  this.add = function(name, points, priority) {
     that._renderedPoints.add(name, getPointIds(points));
     that._name2color[name] = chooseColor();
+    that._name2priority[name] = priority;
 
     addPoints(points);
     addLabels(points);
@@ -40,6 +43,7 @@ var Renderer = function(svg, converter, hackScale) {
     var ids = that._renderedPoints.getElements(name);
     that._renderedPoints.remove(name);
     delete that._name2color[name];
+    delete that._name2priority[name];
 
     var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
     var updated = d3.set(ids.filter(function (id) { return  that._renderedPoints.hasElement(id); }));
@@ -63,6 +67,7 @@ var Renderer = function(svg, converter, hackScale) {
   };
 
   function getFontSize() {
+    console.log('here');
     var base = 10;
     return hackScale * base / that._lastScale;
   }
@@ -90,19 +95,19 @@ var Renderer = function(svg, converter, hackScale) {
     var maxLength = 15;
 
     var selection = d3.select('.labels')
+      .style("font-size", getFontSize()+"px")
       .selectAll('.label')
       .data(points, function (p) { return p.id; })
       .enter() // add new points
       .append("text")
       .classed("label", true)
       .text(function(p) {
-        if (p.name.length <= maxLength) {
-          return p.name;
+        if (p.title.length <= maxLength) {
+          return p.title;
         } else {
-          return p.name.substring(0, 12)+'...';
+          return p.title.substring(0, 12)+'...';
         }
       })
-      .style("font-size", getFontSize()+"px")
       .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
       .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
       .attr("dy", "1em");
@@ -120,13 +125,14 @@ var Renderer = function(svg, converter, hackScale) {
 
     that._renderedPoints = new FlatMultiset();
     that._name2color = Object.create(null);
+    that._name2priority = Object.create(null);
     that._lastScale = 1;
 
     that._tip = d3tip()
       .attr("class", "d3-tip")
       .offset([-10, 0])
       .html(function(p) {
-        return p.name;
+        return p.title;
       });
 
     svg.call(that._tip);
@@ -139,7 +145,20 @@ var Renderer = function(svg, converter, hackScale) {
 
   function getColor(id) {
     var names = that._renderedPoints.getHandles(id);
-    var colors = names.map(function (n) { return that._name2color[n]; });
+    var highestPriorityNames = [];
+
+    var highestPriority = 0;
+    for (var i = 0; i < names.length; ++i) {
+      var n = names[i];
+      var priority = that._name2priority[n];
+      if (priority == highestPriority) {
+        highestPriorityNames.push(n);
+      } else if (priority > highestPriority) {
+        highestPriorityNames = [n];
+      }
+    }
+
+    var colors = highestPriorityNames.map(function (n) { return that._name2color[n]; });
     return colors[0];
   }
 

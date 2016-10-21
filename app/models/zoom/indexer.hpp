@@ -2,19 +2,7 @@
 
 #include "point.hpp"
 #include "bounds.hpp"
-
-struct Index {
-public:
-    Index(int x, int y, int level)
-    : x(x), y(y), level(level)
-    { }
-
-    int x;
-    int y;
-    int level;
-
-    bool operator == (const Index& other) const;
-};
+#include "index.hpp"
 
 class Indexer {
 public:
@@ -22,10 +10,9 @@ public:
 
     Bounds indexToBounds(Index i) const;
 
-    Index pointToIndex(const Point2D& p, int level) const;
-    Point2D indexToPoint(Index i) const;
+    Index pointToIndex(const Point& p, int z) const;
+    Point indexToPoint(Index i) const;
 
 private:
     Bounds bounds_;
-    int level_;
 };

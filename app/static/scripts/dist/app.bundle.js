@@ -46,7 +46,7 @@
 
 	var $ = __webpack_require__(1);
 	var Wikimap = __webpack_require__(2);
-	var search = __webpack_require__(25);
+	var search = __webpack_require__(27);
 
 	$(document).ready(function() {
 	  var wikimap = new Wikimap();
@@ -10287,8 +10287,10 @@
 	var $ = __webpack_require__(1);
 	var d3 = __webpack_require__(3);
 	var elementResizeDetectorMaker = __webpack_require__(4);
-	var TileDrawer = __webpack_require__(17);
-
+	var Renderer = __webpack_require__(17);
+	var CoordsConverter = __webpack_require__(20);
+	var TileDrawer = __webpack_require__(21);
+	var CategoryDrawer = __webpack_require__(26);
 
 	function getRealSize () {
 	  var displayWidth = document.getElementById('container').offsetWidth;
@@ -10335,20 +10337,23 @@
 	    .attr("width", getVirtualSize(hackScale)[0])
 	    .attr("height", getVirtualSize(hackScale)[1]);
 
-	  var drawer = new TileDrawer(hackSvg, hackScale);
+	  var converter = new CoordsConverter();
+	  var renderer = new Renderer(hackSvg, converter, hackScale);
+	  var tiles = new TileDrawer(renderer, converter, hackSvg);
+	  var categories = new CategoryDrawer(renderer);
 
 	  this.start = function () {
 	    return loadBounds()
-	      .then(function (dataBounds) { drawer.init(getVirtualSize(hackScale), dataBounds); })
-	      .then(listenToResizeEvents(drawer));
+	      .then(function (dataBounds) { tiles.init(getVirtualSize(hackScale), dataBounds); })
+	      .then(listenToResizeEvents(tiles));
 	  };
 
 	  this.centerOn = function (x, y) {
-	    drawer.centerOn([x, y]);
+	    tiles.centerOn([x, y]);
 	  };
 
-	  this.select = function (ids) {
-	    drawer.select(ids);
+	  this.selectCategory = function (name) {
+	    categories.draw(name);
 	  };
 
 	  function loadBounds() {
@@ -28356,498 +28361,9 @@
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var TileCache = __webpack_require__(18);
-	var TileIndexer = __webpack_require__(20);
-	var CoordsConverter = __webpack_require__(21);
-	var Renderer = __webpack_require__(22);
 	var d3 = __webpack_require__(3);
-	var $ = __webpack_require__(1);
-
-	var TileDrawer = function (svg, hackScale) {
-	  var that = this;
-
-	  var drawnTiles = {};
-	  var pendingTiles = {};
-	  var requiredTiles = {};
-
-	  var converter = new CoordsConverter();
-	  var cache = new TileCache();
-	  var indexer = new TileIndexer();
-	  var renderer = new Renderer(svg, converter, hackScale);
-
-	  var zoom_ = d3.zoom()
-	    .scaleExtent([1, Infinity])
-	    .on("zoom", function() { doZoom(d3.event.transform); });
-
-	  svg.call(zoom_);
-
-	  this.init = function (size, dataBounds) {
-	    that._size = size;
-	    that._maxZoomLevel = dataBounds.maxDepth;
-
-	    converter.setViewportSize(size);
-	    converter.setDomain(dataBounds.range);
-	    indexer.setBounds(dataBounds.range);
-
-	    that.zoom(d3.zoomIdentity);
-	  };
-
-	  this.zoom = function (transform) {
-	    zoom_.transform(svg, transform);
-	  };
-
-	  this.resize = function (size) {
-	    that._size = size;
-
-	    converter.setViewportSize(size);
-	  };
-
-	  this.centerOn = function(point) {
-	    var size = that._size;
-
-	    var screenCenter = [size[0] / 2, size[1] / 2];
-	    var pointCoords = converter.applyTransition(point);
-
-	    var scale = Math.pow(2, that._maxZoomLevel);
-	    var newTransform = d3.zoomIdentity
-	      .translate(screenCenter[0] - scale * pointCoords[0], screenCenter[1] - scale * pointCoords[1])
-	      .scale(scale);
-
-	    that.zoom(newTransform);
-	  };
-
-	  // this.select = function (ids) {
-	  //   renderer.select(ids);
-	  // };
-
-	  function doZoom(transform) {
-	    converter.setZoomTransform(transform);
-	    renderer.setZoomTransform(transform);
-
-	    var tl = converter.invertAll([0, 0]);
-	    var br = converter.invertAll(that._size);
-	    var level = getZoomLevel(transform.k);
-	    var range = indexer.getTileRange([tl, br], level);
-
-	    draw(range, level);
-	  }
-
-	  function draw (range, level) {
-	    var requestedTiles = embed(range, level);
-
-	    resetRequiredTiles(requestedTiles);
-
-	    var drawingActions = drawTiles(requestedTiles);
-
-	    $.when.apply($, drawingActions)
-	      .done(function () {
-	        removeStaleTiles();
-	      });
-	  };
-
-	  function drawTiles (tiles) {
-	    var drawingActions = [];
-
-	    tiles.forEach(function (tile) {
-	      if (!(tile in pendingTiles) && !(tile in drawnTiles)) {
-	        pendingTiles[tile] = true;
-	        var action = drawTile(tile)
-	          .done(function (drawn) {
-	            drawnTiles[tile] = drawn;
-	            delete pendingTiles[tile];
-	          });
-
-	        drawingActions.push(action);
-	      }
-	    });
-
-	    return drawingActions;
-	  };
-
-	  function drawTile (tile) {
-	    return cache.get(tile[0], tile[1], tile[2])
-	      .then(function (points) {
-	        return renderer.add(getTileId(tile), points);
-	      });
-	  };
-
-	  function embed (range, level) {
-	    var embedded = [];
-
-	    for (var i = range[0][0]; i <= range[1][0]; i++) {
-	      for (var j = range[0][1]; j <= range[1][1]; j++) {
-	        embedded.push([i, j, level]);
-	      }
-	    }
-
-	    return embedded;
-	  };
-
-	  function resetRequiredTiles(requestedTiles) {
-	    requiredTiles = {};
-	    requestedTiles.forEach(function(tile) {
-	      requiredTiles[tile] = true;
-	    });
-	  };
-
-	  // this method needs to be fixed - it should not be able to remove tiles touched by ANY newer request (not only the newest one) (need LRU for tiles for that)
-	  function removeStaleTiles() {
-	    for (var tile in drawnTiles) {
-	      if (drawnTiles.hasOwnProperty(tile) && !(tile in requiredTiles)) {
-	        removeTile(tile);
-	      }
-	    }
-	  };
-
-	  function removeTile(tile) {
-	    if (tile in drawnTiles) {
-	      renderer.remove(getTileId(tile));
-	      delete drawnTiles[tile];
-	    }
-	  };
-
-	  function getZoomLevel(scale) {
-	    return Math.max(0, Math.floor(Math.log2(scale)));
-	  };
-
-	  function getTileId(tile) {
-	    return "tile-"+String(tile).replace(new RegExp(',', 'g'), '-');
-	  }
-	};
-
-	module.exports = TileDrawer;
-
-/***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var LRUCache = __webpack_require__(19),
-	    $ = __webpack_require__(1);
-
-	var TileCache = function () {
-	  var that = this;
-
-	  var cache = new LRUCache(1000, Number.MAX_SAFE_INTEGER); // don't expire cache
-
-	  this.get = function (xIndex, yIndex, level) {
-	    var key = [xIndex, yIndex, level];
-	    var item = cache.get(key);
-
-	    if (item) {
-	      return item; // it's a promise
-	    } else {
-	      var request = new $.Deferred(); // create a promise and place it in cache
-
-	      cache.set(key, request.promise());
-
-	      loadPoints(xIndex, yIndex, level)
-	        .done(function (points) {
-	          request.resolve(points);
-	        });
-
-	      return request.promise();
-	    }
-	  };
-
-	  function loadPoints(xIndex, yIndex, level) {
-	    return $.getJSON($SCRIPT_ROOT + 'points!'+xIndex+'!'+yIndex+'!'+level);
-	  }
-	};
-
-	module.exports = TileCache;
-
-/***/ },
-/* 19 */
-/***/ function(module, exports) {
-
-	// Generated by CoffeeScript 1.10.0
-	(function() {
-	  var DoubleLinkedList, LRUCache, createNode;
-
-	  createNode = function(data, pre, next) {
-	    return {
-	      data: data,
-	      pre: pre,
-	      next: next
-	    };
-	  };
-
-	  DoubleLinkedList = (function() {
-	    function DoubleLinkedList() {
-	      this.headNode = this.tailNode = null;
-	    }
-
-	    DoubleLinkedList.prototype.remove = function(node) {
-	      if (node.pre) {
-	        node.pre.next = node.next;
-	      } else {
-	        this.headNode = node.next;
-	      }
-	      if (node.next) {
-	        return node.next.pre = node.pre;
-	      } else {
-	        return this.tailNode = node.pre;
-	      }
-	    };
-
-	    DoubleLinkedList.prototype.insertBeginning = function(node) {
-	      if (this.headNode) {
-	        node.next = this.headNode;
-	        this.headNode.pre = node;
-	        return this.headNode = node;
-	      } else {
-	        return this.headNode = this.tailNode = node;
-	      }
-	    };
-
-	    DoubleLinkedList.prototype.moveToHead = function(node) {
-	      this.remove(node);
-	      return this.insertBeginning(node);
-	    };
-
-	    DoubleLinkedList.prototype.clear = function() {
-	      return this.headNode = this.tailNode = null;
-	    };
-
-	    return DoubleLinkedList;
-
-	  })();
-
-	  LRUCache = (function() {
-	    function LRUCache(capacity, maxAge) {
-	      this.capacity = capacity != null ? capacity : 10;
-	      this.maxAge = maxAge != null ? maxAge : 60000;
-	      this._linkList = new DoubleLinkedList();
-	      this.reset();
-	    }
-
-	    LRUCache.prototype.keys = function() {
-	      return Object.keys(this._hash);
-	    };
-
-	    LRUCache.prototype.values = function() {
-	      var values;
-	      values = this.keys().map((function(_this) {
-	        return function(key) {
-	          return _this.get(key);
-	        };
-	      })(this));
-	      return values.filter(function(v) {
-	        return v !== void 0;
-	      });
-	    };
-
-	    LRUCache.prototype.remove = function(key) {
-	      var node;
-	      if (this._hash[key] != null) {
-	        node = this._hash[key];
-	        this._linkList.remove(node);
-	        delete this._hash[key];
-	        if (node.data.onDispose) {
-	          node.data.onDispose.call(this, node.data.key, node.data.value);
-	        }
-	        return this.size--;
-	      }
-	    };
-
-	    LRUCache.prototype.reset = function() {
-	      this._hash = {};
-	      this.size = 0;
-	      return this._linkList.clear();
-	    };
-
-	    LRUCache.prototype.set = function(key, value, onDispose) {
-	      var node;
-	      node = this._hash[key];
-	      if (node) {
-	        node.data.value = value;
-	        node.data.onDispose = onDispose;
-	        return this._refreshNode(node);
-	      } else {
-	        if (this.size === this.capacity) {
-	          this.remove(this._linkList.tailNode.data.key);
-	        }
-	        node = createNode({
-	          key: key,
-	          value: value,
-	          onDispose: onDispose
-	        });
-	        node.data.lastVisitTime = Date.now();
-	        this._linkList.insertBeginning(node);
-	        this._hash[key] = node;
-	        this.size++;
-	      }
-	    };
-
-	    LRUCache.prototype.get = function(key) {
-	      var node;
-	      node = this._hash[key];
-	      if (!node) {
-	        return void 0;
-	      }
-	      if (this._isExpiredNode(node)) {
-	        this.remove(key);
-	        return void 0;
-	      }
-	      this._refreshNode(node);
-	      return node.data.value;
-	    };
-
-	    LRUCache.prototype._refreshNode = function(node) {
-	      node.data.lastVisitTime = Date.now();
-	      return this._linkList.moveToHead(node);
-	    };
-
-	    LRUCache.prototype._isExpiredNode = function(node) {
-	      return Date.now() - node.data.lastVisitTime > this.maxAge;
-	    };
-
-	    LRUCache.prototype.has = function(key) {
-	      return this._hash[key] != null;
-	    };
-
-	    return LRUCache;
-
-	  })();
-
-	  if (typeof module === 'object' && module.exports) {
-	    module.exports = LRUCache;
-	  } else {
-	    this.LRUCache = LRUCache;
-	  }
-
-	}).call(this);
-
-
-/***/ },
-/* 20 */
-/***/ function(module, exports) {
-
-	var TileIndexer = function () {
-	  var that = this;
-
-	  this.getTileRange = function (pointRange, level) {
-	    var tl = pointRange[0];
-	    var br = pointRange[1];
-
-	    var tlXIndex = Math.max(Math.floor(xFloatIndex(tl[0], level)), 0);
-	    var tlYIndex = Math.max(Math.floor(yFloatIndex(tl[1], level)), 0);
-
-	    var brXIndex = Math.min(Math.ceil(xFloatIndex(br[0], level)), maxIndex(level));
-	    var brYIndex = Math.min(Math.ceil(yFloatIndex(br[1], level)), maxIndex(level));
-
-	    return [[tlXIndex, tlYIndex], [brXIndex, brYIndex]];
-	  };
-
-	  this.setBounds = function (bounds) {
-	    that._bounds = bounds;
-	  };
-
-	  function xFloatIndex (x, level) {
-	    var factor = (x - that._bounds.xMin) / (that._bounds.xMax - that._bounds.xMin);
-	    return factor * (maxIndex(level) + 1);
-	  };
-
-	  function yFloatIndex (y, level) {
-	    var factor = (y - that._bounds.yMin) / (that._bounds.yMax - that._bounds.yMin);
-	    return factor * (maxIndex(level) + 1);
-	  };
-
-	  function maxIndex (level) {
-	    return Math.pow(2, level) - 1;
-	  };
-	};
-
-	module.exports = TileIndexer;
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var d3 = __webpack_require__(3);
-
-	var CoordsConverter = function () {
-	  var that = this;
-
-	  this.invertAll = function (point) {
-	    return that.invertTransition(that.invertZoom(point));
-	  };
-
-	  this.invertTransition = function (point) {
-	    return that._transitionTransform.invert(point);
-	  };
-
-	  this.invertZoom = function (point) {
-	    return that._zoomTransform.invert(point);
-	  };
-
-	  this.applyTransition = function (point) {
-	    return that._transitionTransform.apply(point);
-	  };
-
-	  this.applyZoom = function (point) {
-	    return that._zoomTransform.apply(point);
-	  };
-
-	  this.applyAll = function (point) {
-	    return that.applyZoom(that.applyTransition(point));
-	  };
-
-	  this.setZoomTransform = function (transform) {
-	    that._zoomTransform = transform;
-	  };
-
-	  this.setViewportSize = function (size) {
-	    that._viewportSize = size;
-
-	    if (that._domain) {
-	      that._updateTransitionTransform();
-	    }
-	  };
-
-	  this.setDomain = function(bounds) {
-	    that._domain = bounds;
-
-	    if (that._viewportSize) {
-	      that._updateTransitionTransform();
-	    }
-	  };
-
-	  this._updateTransitionTransform = function() {
-	    var xm = that._domain.xMin;
-	    var ym = that._domain.yMin;
-	    var XM = that._domain.xMax;
-	    var YM = that._domain.yMax;
-
-	    var boundsWidth = XM - xm;
-	    var boundsHeight = YM - ym;
-
-	    var viewportWidth = that._viewportSize[0];
-	    var viewportHeight = that._viewportSize[1];
-
-	    var scale = 0.9 * Math.min(viewportWidth / boundsWidth, viewportHeight / boundsHeight);
-
-	    var xMid = (xm + XM) / 2;
-	    var yMid = (ym + YM) / 2;
-	    var vxMid = viewportWidth / 2;
-	    var vyMid = viewportHeight / 2;
-
-	    var xTranslation = vxMid - scale * xMid;
-	    var yTranslation = vyMid - scale * yMid;
-
-	    that._transitionTransform = d3.zoomIdentity.translate(xTranslation, yTranslation).scale(scale);
-	  };
-	};
-
-	module.exports = CoordsConverter;
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var d3 = __webpack_require__(3);
-	var d3tip = __webpack_require__(23);
-	var FlatMultiset = __webpack_require__(24);
+	var d3tip = __webpack_require__(18);
+	var FlatMultiset = __webpack_require__(19);
 
 	var Renderer = function(svg, converter, hackScale) {
 	  var that = this;
@@ -28863,17 +28379,63 @@
 
 	      // dont scale dots
 	      d3.selectAll(".dot")
-	        .attr("r", function(p) { return getR(p.z); })
+	        .attr("r", function(p) { return getR(p.z); });
 
-	      // d3.selectAll(".labels")
-	      //   .style("font-size", getFontSize()+"px");
+	      d3.selectAll(".label")
+	        .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); });
+
+	      d3.select('.labels')
+	        .style("font-size", getFontSize()+"px");
 	    }
 	  };
 
-	  this.add = function(name, points) {
+	  this.add = function(name, points, priority) {
 	    that._renderedPoints.add(name, getPointIds(points));
 	    that._name2color[name] = chooseColor();
+	    that._name2priority[name] = priority;
 
+	    addPoints(points);
+	    addLabels(points);
+	  };
+
+	  this.has = function (name) {
+	    return that._renderedPoints.hasHandle(name);
+	  }
+
+	  this.remove = function(name) {
+	    var ids = that._renderedPoints.getElements(name);
+	    that._renderedPoints.remove(name);
+	    delete that._name2color[name];
+	    delete that._name2priority[name];
+
+	    var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
+	    var updated = d3.set(ids.filter(function (id) { return  that._renderedPoints.hasElement(id); }));
+
+	    d3.selectAll('.dot')
+	      .filter(function (p) { return removed.has(p.id); })
+	      .remove();
+
+	    d3.selectAll('.label')
+	      .filter(function (p) { return removed.has(p.id); })
+	      .remove();
+
+	    updateFill(d3.selectAll('.dot')
+	      .filter(function (p) { return updated.has(p.id); }));
+	  };
+
+	  this.redrawAll = function() {
+	    d3.selectAll(".dot")
+	      .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
+	      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
+	  };
+
+	  function getFontSize() {
+	    console.log('here');
+	    var base = 10;
+	    return hackScale * base / that._lastScale;
+	  }
+
+	  function addPoints(points) {
 	    var selection = d3.select('.dots')
 	      .selectAll('.dot')
 	      .data(points, function (p) { return p.id; });
@@ -28890,68 +28452,29 @@
 	      .merge(selection); // merge with updated points
 
 	    updateFill(changed);
+	  }
 
-	    // setSelectionStyle(dots.data(points));
+	  function addLabels(points) {
+	    var maxLength = 15;
 
-	    // var maxLength = 15;
-
-	    //   .classed("labels", true)
-	    //   .selectAll(".label")
-	    //   .data(points)
-	    //   .style("font-size", getFontSize()+"px")
-
-	    //   .enter()
-	    //   .append("text")
-	    //   .classed("label", true)
-	    //   .text(function(p) {
-	    //     if (p.name.length <= maxLength) {
-	    //       return p.name;
-	    //     } else {
-	    //       return p.name.substring(0, 12)+'...';
-	    //     }
-	    //   })
-	    //   .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
-	    //   .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
-	    //   .attr("dy", "1em");
-	  };
-
-	  this.remove = function(name) {
-	    var ids = that._renderedPoints.getElements(name);
-	    that._renderedPoints.remove(name);
-	    delete that._name2color[name];
-
-	    var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
-	    var updated = d3.set(ids.filter(function (id) { return  that._renderedPoints.hasElement(id); }));
-
-	    d3.selectAll('.dot')
-	      .filter(function (p) { return removed.has(p.id); })
-	      .remove();
-
-	    updateFill(d3.selectAll('.dot')
-	      .filter(function (p) { return updated.has(p.id); }));
-	  };
-
-	  // this.show = function() {
-	  //   var dotsOpacity = 0.6;
-	  //   var labelsOpacity = 1.0;
-
-	  //   d3.selectAll(".dots")
-	  //     .style("fill-opacity", dotsOpacity);
-
-	  //   d3.selectAll(".labels")
-	  //     .style("opacity", labelsOpacity);
-	  // };
-
-	  this.redrawAll = function() {
-	    d3.selectAll(".dot")
-	      .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
-	      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
-	  };
-
-	  // function getFontSize() {
-	  //   var base = 10;
-	  //   return hackScale * base / that._lastScale;
-	  // }
+	    var selection = d3.select('.labels')
+	      .style("font-size", getFontSize()+"px")
+	      .selectAll('.label')
+	      .data(points, function (p) { return p.id; })
+	      .enter() // add new points
+	      .append("text")
+	      .classed("label", true)
+	      .text(function(p) {
+	        if (p.title.length <= maxLength) {
+	          return p.title;
+	        } else {
+	          return p.title.substring(0, 12)+'...';
+	        }
+	      })
+	      .attr("x", function(p) { return converter.applyTransition([+p.x, +p.y])[0]; })
+	      .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); })
+	      .attr("dy", "1em");
+	  }
 
 	  function init() {
 	    that._all = svg.append("g")
@@ -28960,18 +28483,19 @@
 	    that._all.append("g")
 	      .classed("dots", true);
 
-	    // var labels = all.append("g")
-	    //   .classed("labels", true);
+	    that._all.append("g")
+	      .classed("labels", true);
 
 	    that._renderedPoints = new FlatMultiset();
 	    that._name2color = Object.create(null);
+	    that._name2priority = Object.create(null);
 	    that._lastScale = 1;
 
 	    that._tip = d3tip()
 	      .attr("class", "d3-tip")
 	      .offset([-10, 0])
 	      .html(function(p) {
-	        return p.name;
+	        return p.title;
 	      });
 
 	    svg.call(that._tip);
@@ -28984,7 +28508,20 @@
 
 	  function getColor(id) {
 	    var names = that._renderedPoints.getHandles(id);
-	    var colors = names.map(function (n) { return that._name2color[n]; });
+	    var highestPriorityNames = [];
+
+	    var highestPriority = 0;
+	    for (var i = 0; i < names.length; ++i) {
+	      var n = names[i];
+	      var priority = that._name2priority[n];
+	      if (priority == highestPriority) {
+	        highestPriorityNames.push(n);
+	      } else if (priority > highestPriority) {
+	        highestPriorityNames = [n];
+	      }
+	    }
+
+	    var colors = highestPriorityNames.map(function (n) { return that._name2color[n]; });
 	    return colors[0];
 	  }
 
@@ -29006,7 +28543,7 @@
 	module.exports = Renderer;
 
 /***/ },
-/* 23 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// d3.tip
@@ -29335,7 +28872,7 @@
 
 
 /***/ },
-/* 24 */
+/* 19 */
 /***/ function(module, exports) {
 
 	var FlatMultiset = function () {
@@ -29401,22 +28938,585 @@
 	module.exports = FlatMultiset;
 
 /***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var d3 = __webpack_require__(3);
+
+	var CoordsConverter = function () {
+	  var that = this;
+
+	  this.invertAll = function (point) {
+	    return that.invertTransition(that.invertZoom(point));
+	  };
+
+	  this.invertTransition = function (point) {
+	    return that._transitionTransform.invert(point);
+	  };
+
+	  this.invertZoom = function (point) {
+	    return that._zoomTransform.invert(point);
+	  };
+
+	  this.applyTransition = function (point) {
+	    return that._transitionTransform.apply(point);
+	  };
+
+	  this.applyZoom = function (point) {
+	    return that._zoomTransform.apply(point);
+	  };
+
+	  this.applyAll = function (point) {
+	    return that.applyZoom(that.applyTransition(point));
+	  };
+
+	  this.setZoomTransform = function (transform) {
+	    that._zoomTransform = transform;
+	  };
+
+	  this.setViewportSize = function (size) {
+	    that._viewportSize = size;
+
+	    if (that._domain) {
+	      that._updateTransitionTransform();
+	    }
+	  };
+
+	  this.setDomain = function(bounds) {
+	    that._domain = bounds;
+
+	    if (that._viewportSize) {
+	      that._updateTransitionTransform();
+	    }
+	  };
+
+	  this._updateTransitionTransform = function() {
+	    var xm = that._domain.xMin;
+	    var ym = that._domain.yMin;
+	    var XM = that._domain.xMax;
+	    var YM = that._domain.yMax;
+
+	    var boundsWidth = XM - xm;
+	    var boundsHeight = YM - ym;
+
+	    var viewportWidth = that._viewportSize[0];
+	    var viewportHeight = that._viewportSize[1];
+
+	    var scale = 0.9 * Math.min(viewportWidth / boundsWidth, viewportHeight / boundsHeight);
+
+	    var xMid = (xm + XM) / 2;
+	    var yMid = (ym + YM) / 2;
+	    var vxMid = viewportWidth / 2;
+	    var vyMid = viewportHeight / 2;
+
+	    var xTranslation = vxMid - scale * xMid;
+	    var yTranslation = vyMid - scale * yMid;
+
+	    that._transitionTransform = d3.zoomIdentity.translate(xTranslation, yTranslation).scale(scale);
+	  };
+	};
+
+	module.exports = CoordsConverter;
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Cache = __webpack_require__(22);
+	var TileIndexer = __webpack_require__(24);
+	var TileScheduler = __webpack_require__(25);
+	var d3 = __webpack_require__(3);
+	var $ = __webpack_require__(1);
+
+	var TileDrawer = function (renderer, converter, svg) {
+	  var that = this;
+
+	  var cache = new Cache(1000,
+	    function (x, y, z) { return x+','+y+','+z; },
+	    function (x, y, z) { return $.getJSON($SCRIPT_ROOT + 'points!'+x+'!'+y+'!'+z); });
+	  var indexer = new TileIndexer();
+	  var scheduler = new TileScheduler(removeTiles);
+
+	  var zoom_ = d3.zoom()
+	    .scaleExtent([1, Infinity])
+	    .on("zoom", function() { doZoom(d3.event.transform); });
+
+	  svg.call(zoom_);
+
+	  this.init = function (size, dataBounds) {
+	    that._size = size;
+	    that._maxZoomLevel = dataBounds.maxDepth;
+
+	    converter.setViewportSize(size);
+	    converter.setDomain(dataBounds.range);
+	    indexer.setBounds(dataBounds.range);
+
+	    that.zoom(d3.zoomIdentity);
+	  };
+
+	  this.zoom = function (transform) {
+	    zoom_.transform(svg, transform);
+	  };
+
+	  this.resize = function (size) {
+	    that._size = size;
+
+	    converter.setViewportSize(size);
+	  };
+
+	  this.centerOn = function(point) {
+	    var size = that._size;
+
+	    var screenCenter = [size[0] / 2, size[1] / 2];
+	    var pointCoords = converter.applyTransition(point);
+
+	    var scale = Math.pow(2, that._maxZoomLevel);
+	    var newTransform = d3.zoomIdentity
+	      .translate(screenCenter[0] - scale * pointCoords[0], screenCenter[1] - scale * pointCoords[1])
+	      .scale(scale);
+
+	    that.zoom(newTransform);
+	  };
+
+	  // this.select = function (ids) {
+	  //   renderer.select(ids);
+	  // };
+
+	  function doZoom(transform) {
+	    converter.setZoomTransform(transform);
+	    renderer.setZoomTransform(transform);
+
+	    var tl = converter.invertAll([0, 0]);
+	    var br = converter.invertAll(that._size);
+	    var level = getZoomLevel(transform.k);
+	    var range = indexer.getTileRange([tl, br], level);
+
+	    draw(range, level);
+	  }
+
+	  function draw (range, level) {
+	    var requested = embed(range, level);
+	    var needed = scheduler.replace(requested.map(function (t) { return t.toString(); }));
+
+	    needed.forEach(drawTile);
+	  };
+
+	  function drawTile (tile) {
+	    var args = tile.split(',');
+	    return cache.get(args[0], args[1], args[2])
+	      .then(function (points) {
+	        if (scheduler.isExpecting(tile) && !renderer.has(tile)) {
+	          renderer.add(tile, points, 0);
+	          scheduler.finish(tile);
+	          // console.log('Drawn ' + tile);
+	        } else {
+	          scheduler.dismiss(tile);
+	        }
+	      });
+	  };
+
+	  function embed (range, level) {
+	    var embedded = [];
+
+	    for (var i = range[0][0]; i <= range[1][0]; i++) {
+	      for (var j = range[0][1]; j <= range[1][1]; j++) {
+	        embedded.push([i, j, level]);
+	      }
+	    }
+
+	    return embedded;
+	  };
+
+	  function removeTiles(tiles) {
+	    tiles.forEach(function (t) {
+	      if (renderer.has(t)) {
+	        renderer.remove(t);
+	        // console.log('Removed ' + t);
+	      }
+	    });
+	  };
+
+	  function getZoomLevel(scale) {
+	    return Math.max(0, Math.floor(Math.log2(scale)));
+	  };
+	};
+
+	module.exports = TileDrawer;
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var LRUCache = __webpack_require__(23),
+	    $ = __webpack_require__(1);
+
+	var Cache = function (size, key, getter) {
+	  var that = this;
+
+	  var cache = new LRUCache(size, Number.MAX_SAFE_INTEGER); // don't expire cache
+
+	  this.get = function () {
+	    var k = key.apply(null, arguments);
+	    var item = cache.get(k);
+
+	    if (item) {
+	      return item; // it's a promise
+	    } else {
+	      var request = new $.Deferred(); // create a promise and place it in cache
+
+	      cache.set(k, request.promise());
+
+	      getter.apply(null, arguments)
+	        .done(function (res) {
+	          request.resolve(res);
+	        });
+
+	      return request.promise();
+	    }
+	  };
+	};
+
+	module.exports = Cache;
+
+/***/ },
+/* 23 */
+/***/ function(module, exports) {
+
+	// Generated by CoffeeScript 1.10.0
+	(function() {
+	  var DoubleLinkedList, LRUCache, createNode;
+
+	  createNode = function(data, pre, next) {
+	    return {
+	      data: data,
+	      pre: pre,
+	      next: next
+	    };
+	  };
+
+	  DoubleLinkedList = (function() {
+	    function DoubleLinkedList() {
+	      this.headNode = this.tailNode = null;
+	    }
+
+	    DoubleLinkedList.prototype.remove = function(node) {
+	      if (node.pre) {
+	        node.pre.next = node.next;
+	      } else {
+	        this.headNode = node.next;
+	      }
+	      if (node.next) {
+	        return node.next.pre = node.pre;
+	      } else {
+	        return this.tailNode = node.pre;
+	      }
+	    };
+
+	    DoubleLinkedList.prototype.insertBeginning = function(node) {
+	      if (this.headNode) {
+	        node.next = this.headNode;
+	        this.headNode.pre = node;
+	        return this.headNode = node;
+	      } else {
+	        return this.headNode = this.tailNode = node;
+	      }
+	    };
+
+	    DoubleLinkedList.prototype.moveToHead = function(node) {
+	      this.remove(node);
+	      return this.insertBeginning(node);
+	    };
+
+	    DoubleLinkedList.prototype.clear = function() {
+	      return this.headNode = this.tailNode = null;
+	    };
+
+	    return DoubleLinkedList;
+
+	  })();
+
+	  LRUCache = (function() {
+	    function LRUCache(capacity, maxAge) {
+	      this.capacity = capacity != null ? capacity : 10;
+	      this.maxAge = maxAge != null ? maxAge : 60000;
+	      this._linkList = new DoubleLinkedList();
+	      this.reset();
+	    }
+
+	    LRUCache.prototype.keys = function() {
+	      return Object.keys(this._hash);
+	    };
+
+	    LRUCache.prototype.values = function() {
+	      var values;
+	      values = this.keys().map((function(_this) {
+	        return function(key) {
+	          return _this.get(key);
+	        };
+	      })(this));
+	      return values.filter(function(v) {
+	        return v !== void 0;
+	      });
+	    };
+
+	    LRUCache.prototype.remove = function(key) {
+	      var node;
+	      if (this._hash[key] != null) {
+	        node = this._hash[key];
+	        this._linkList.remove(node);
+	        delete this._hash[key];
+	        if (node.data.onDispose) {
+	          node.data.onDispose.call(this, node.data.key, node.data.value);
+	        }
+	        return this.size--;
+	      }
+	    };
+
+	    LRUCache.prototype.reset = function() {
+	      this._hash = {};
+	      this.size = 0;
+	      return this._linkList.clear();
+	    };
+
+	    LRUCache.prototype.set = function(key, value, onDispose) {
+	      var node;
+	      node = this._hash[key];
+	      if (node) {
+	        node.data.value = value;
+	        node.data.onDispose = onDispose;
+	        return this._refreshNode(node);
+	      } else {
+	        if (this.size === this.capacity) {
+	          this.remove(this._linkList.tailNode.data.key);
+	        }
+	        node = createNode({
+	          key: key,
+	          value: value,
+	          onDispose: onDispose
+	        });
+	        node.data.lastVisitTime = Date.now();
+	        this._linkList.insertBeginning(node);
+	        this._hash[key] = node;
+	        this.size++;
+	      }
+	    };
+
+	    LRUCache.prototype.get = function(key) {
+	      var node;
+	      node = this._hash[key];
+	      if (!node) {
+	        return void 0;
+	      }
+	      if (this._isExpiredNode(node)) {
+	        this.remove(key);
+	        return void 0;
+	      }
+	      this._refreshNode(node);
+	      return node.data.value;
+	    };
+
+	    LRUCache.prototype._refreshNode = function(node) {
+	      node.data.lastVisitTime = Date.now();
+	      return this._linkList.moveToHead(node);
+	    };
+
+	    LRUCache.prototype._isExpiredNode = function(node) {
+	      return Date.now() - node.data.lastVisitTime > this.maxAge;
+	    };
+
+	    LRUCache.prototype.has = function(key) {
+	      return this._hash[key] != null;
+	    };
+
+	    return LRUCache;
+
+	  })();
+
+	  if (typeof module === 'object' && module.exports) {
+	    module.exports = LRUCache;
+	  } else {
+	    this.LRUCache = LRUCache;
+	  }
+
+	}).call(this);
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports) {
+
+	var TileIndexer = function () {
+	  var that = this;
+
+	  this.getTileRange = function (pointRange, level) {
+	    var tl = pointRange[0];
+	    var br = pointRange[1];
+
+	    var tlXIndex = Math.max(Math.floor(xFloatIndex(tl[0], level)), 0);
+	    var tlYIndex = Math.max(Math.floor(yFloatIndex(tl[1], level)), 0);
+
+	    var brXIndex = Math.min(Math.ceil(xFloatIndex(br[0], level)), maxIndex(level));
+	    var brYIndex = Math.min(Math.ceil(yFloatIndex(br[1], level)), maxIndex(level));
+
+	    return [[tlXIndex, tlYIndex], [brXIndex, brYIndex]];
+	  };
+
+	  this.setBounds = function (bounds) {
+	    that._bounds = bounds;
+	  };
+
+	  function xFloatIndex (x, level) {
+	    var factor = (x - that._bounds.xMin) / (that._bounds.xMax - that._bounds.xMin);
+	    return factor * (maxIndex(level) + 1);
+	  };
+
+	  function yFloatIndex (y, level) {
+	    var factor = (y - that._bounds.yMin) / (that._bounds.yMax - that._bounds.yMin);
+	    return factor * (maxIndex(level) + 1);
+	  };
+
+	  function maxIndex (level) {
+	    return Math.pow(2, level) - 1;
+	  };
+	};
+
+	module.exports = TileIndexer;
+
+/***/ },
 /* 25 */
+/***/ function(module, exports) {
+
+	var TileScheduler = function (removeCallback) { // the argument is a function to call when a tile is no longer needed
+	  var that = this;
+
+	  this._past = [];
+	  this._now = [];
+	  this._future = [];
+
+	  this.replace = function (tiles) {
+	    that._past = setUnion(that._past, that._now); // everything that was and is now is to be removed
+	    return that.add(tiles);
+	  };
+
+	  this.add = function (tiles) {
+	    that._past = setDifference(that._past, tiles); // dont remove tiles that will be needed
+	    that._future = setDifference(tiles, that._now); // also don't fetch tiles that are already there
+	    return that._future.slice(); // return which tiles need to be fetched
+	  };
+
+	  this.isExpecting = function (tile) {
+	    return that._future.indexOf(tile) >= 0;
+	  };
+
+	  this.finish = function (tile) { // signal that a tile has been used
+	    removeFromFuture(tile);
+	    addToNow(tile);
+	    cleanUpIfAllDone();
+	    // log('Finished '+ tile);
+	  };
+
+	  this.dismiss = function (tile) { // signal that a file was no longer needed by the time it arrived
+	    removeFromFuture(tile);
+	    cleanUpIfAllDone();
+	    // log('Dismissed '+ tile);
+	  };
+
+	  function addToNow(tile) {
+	    var nowIdx = that._now.indexOf(tile);
+	    if (nowIdx < 0) {
+	      that._now.push(tile);
+	    }
+	  }
+
+	  function removeFromFuture(tile) {
+	    var futureIdx = that._future.indexOf(tile);
+	    if (futureIdx >= 0) {
+	      that._future.splice(futureIdx, 1);
+	    }
+	  }
+
+	  function cleanUpIfAllDone() {
+	    if (that._future.length == 0 && that._past.length > 0) {
+	      removeCallback(that._past);
+	      that._now = setDifference(that._now, that._past);
+	      that._past = [];
+	    }
+	  }
+
+	  function log(str) {
+	    console.log(str + ': sizes: ' + that._past.length + ' (past), ' + that._now.length + ' (now), ' + that._future.length + ' (future)');
+	  }
+
+	  function setDifference(subFrom, subWhat) {
+	    return subFrom.filter(function (e) { return subWhat.indexOf(e) < 0; });
+	  }
+
+	  function setUnion(s1, s2) {
+	    var smaller = (s1.length <= s2.length)? s1 : s2;
+	    var larger  = (s1.length <= s2.length)? s2 : s1;
+
+	    return larger.concat(smaller.filter(function (e) { return larger.indexOf(e) < 0; }));
+	  }
+	};
+
+	module.exports = TileScheduler;
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Cache = __webpack_require__(22);
+	var TileScheduler = __webpack_require__(25);
+	var $ = __webpack_require__(1);
+
+	var CategoryDrawer = function (renderer) {
+	  var that = this;
+	  init();
+
+	  this.draw = function (name) {
+	    var needed = that._scheduler.add([name]);
+
+	    needed.forEach(function (name) {
+	      that._cache.get(name)
+	        .then(function (points) {
+	          console.log('point len: '+points.length);
+	          if (that._scheduler.isExpecting(name) && !renderer.has(name)) {
+	            renderer.add(name, points, 1);
+	            that._scheduler.finish(name);
+	          } else {
+	            that._scheduler.dismiss(name);
+	          }
+	        });
+	      });
+	  };
+
+	  this.remove = function (names) {
+	    names.forEach(function (n) {
+	      if (renderer.has(n)) {
+	        renderer.remove(n);
+	      }
+	    });
+	  };
+
+	  function init() {
+	    that._cache = new Cache(50,
+	      function (c) { return c; },
+	      function (c) { return $.getJSON($SCRIPT_ROOT + 'category?title='+c); });
+	    that._scheduler = new TileScheduler(that.remove);
+	  }
+	};
+
+	module.exports = CategoryDrawer;
+
+/***/ },
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var $ = __webpack_require__(1);
-	__webpack_require__(26);
+	__webpack_require__(28);
 
 	function searchTerm(term) {
 	  return $.getJSON($SCRIPT_ROOT+'search?title='+term);
-	}
-
-	function getPoint(term) {
-	  return $.getJSON($SCRIPT_ROOT+'point?title='+term);
-	}
-
-	function getCategory(term) {
-	  return $.getJSON($SCRIPT_ROOT+'category?title='+term);
 	}
 
 	var search = function (wikimap) {
@@ -29426,8 +29526,7 @@
 	        .done(function (data) {
 	          response($.map(data, function (hit) {
 	            return {
-	              value: hit.title,
-	              id: hit.id,
+	              value: hit.term,
 	              isCategory: hit.isCategory,
 	            };
 	          }));
@@ -29444,21 +29543,17 @@
 	    },
 	    select: function (event, ui) {
 	      if (ui.item.isCategory) {
-	        getCategory(ui.item.value)
-	          .done(function (categories) {
-	            if (categories.length > 0) {
-	              wikimap.select(categories[0].ids);
-	            }
-	          });
-	      } else {
-	        getPoint(ui.item.value)
-	          .done(function (points) {
-	            if (points.length > 0) {
-	              wikimap.select([points[0].id]);
-	              wikimap.centerOn(points[0].x, points[0].y);
-	            }
-	          });
+	        wikimap.selectCategory(ui.item.value);
 	      }
+	      // else {
+	      //   getPoint(ui.item.value)
+	      //     .done(function (points) {
+	      //       if (points.length > 0) {
+	      //         wikimap.select([points[0].id]);
+	      //         wikimap.centerOn(points[0].x, points[0].y);
+	      //       }
+	      //     });
+	      // }
 	    },
 	  })
 	  .autocomplete("instance")._renderItem = function(ul, item) {
@@ -29478,7 +29573,7 @@
 	module.exports = search;
 
 /***/ },
-/* 26 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -29505,12 +29600,12 @@
 			// AMD. Register as an anonymous module.
 			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 				__webpack_require__(1),
-				__webpack_require__(27),
-				__webpack_require__(28),
-				__webpack_require__(30),
-				__webpack_require__(31),
 				__webpack_require__(29),
-				__webpack_require__(33)
+				__webpack_require__(30),
+				__webpack_require__(32),
+				__webpack_require__(33),
+				__webpack_require__(31),
+				__webpack_require__(35)
 			], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
@@ -30166,7 +30261,7 @@
 
 
 /***/ },
-/* 27 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30193,12 +30288,12 @@
 			// AMD. Register as an anonymous module.
 			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 				__webpack_require__(1),
-				__webpack_require__(28),
 				__webpack_require__(30),
-				__webpack_require__(31),
 				__webpack_require__(32),
-				__webpack_require__(29),
-				__webpack_require__(33)
+				__webpack_require__(33),
+				__webpack_require__(34),
+				__webpack_require__(31),
+				__webpack_require__(35)
 			], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
@@ -30845,7 +30940,7 @@
 
 
 /***/ },
-/* 28 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30866,7 +30961,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -30896,7 +30991,7 @@
 
 
 /***/ },
-/* 29 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;( function( factory ) {
@@ -30919,7 +31014,7 @@
 
 
 /***/ },
-/* 30 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30943,7 +31038,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31423,14 +31518,14 @@
 
 
 /***/ },
-/* 31 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;( function( factory ) {
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31469,7 +31564,7 @@
 
 
 /***/ },
-/* 32 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31490,7 +31585,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31524,7 +31619,7 @@
 
 
 /***/ },
-/* 33 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31546,7 +31641,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(29) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals

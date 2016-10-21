@@ -6,6 +6,7 @@
 #include "bounds.hpp"
 #include "node.hpp"
 #include "indexer.hpp"
+#include "datapoint.hpp"
 
 class PartitionTree {
 public:
@@ -16,14 +17,14 @@ public:
 
     ~PartitionTree();
 
-    void insert(const Point2D& p, const Data& data);
+    Index insert(const Datapoint& dp);
 
     Datapoints getDatapoints(const Index& index) const;
 
     Bounds getBounds() const { return root_->getBounds(); }
 
     int getMaxDepth() const { return root_->getMaxDepth(); }
-    int getDepthAtPoint(const Point2D& p) const { return root_->getDepthAtPoint(p); }
+    int getDepthAtPoint(const Point& p) const { return root_->getDepthAtPoint(p); }
 
 private:
     Node* root_;

@@ -16,8 +16,8 @@ std::vector<T> to_std_vector(const py::list& iterable) {
 
 class ZoomWrapper {
 public:
-    ZoomWrapper(const py::list& points, const py::list& data, int pointsPerTile)
-    : zoom_(std::make_shared<Zoom>(to_std_vector<Point2D>(points), to_std_vector<Data>(data), pointsPerTile))
+    ZoomWrapper(const py::list& datapoints, int pointsPerTile)
+    : zoom_(std::make_shared<Zoom>(to_std_vector<Datapoint>(datapoints), pointsPerTile))
     { }
 
     Datapoints getDatapoints(const Index& index) const {
@@ -32,57 +32,43 @@ public:
         return zoom_->getMaxDepth();
     }
 
+    Index getIndexById(int id) const {
+        return zoom_->getIndexById(id);
+    }
+
 private:
     std::shared_ptr<Zoom> zoom_;
 };
 
 
 BOOST_PYTHON_MODULE(libzoompy) {
-    py::class_<Points2D>("Points2D")
-        .def(py::vector_indexing_suite<Points2D>());
-
-    py::class_<Points3D>("Points3D")
-        .def(py::vector_indexing_suite<Points3D>());
-
     py::class_<Datapoints>("Datapoints")
         .def(py::vector_indexing_suite<Datapoints>());
 
-    py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, const py::list&, int>())
+    py::class_<ZoomWrapper, boost::noncopyable>("Zoom", py::init<const py::list&, int>())
         .def("getDatapoints", &ZoomWrapper::getDatapoints)
         .def("getMaxDepth", &ZoomWrapper::getMaxDepth)
+        .def("getIndexById", &ZoomWrapper::getIndexById)
         .def("getBounds", &ZoomWrapper::getBounds);
 
-    py::class_<Data>("Data", py::init<int, const std::string&>())
-        .def_readwrite("id", &Data::id)
-        .def_readwrite("name", &Data::name)
-        .def("__eq__", &Data::operator ==);
-
-    py::class_<Datapoint>("Datapoint", py::init<const Point3D&, const Data&>())
-        .def_readwrite("point", &Datapoint::point)
-        .def_readwrite("data", &Datapoint::data)
+    py::class_<Datapoint>("Datapoint", py::init<double, double, int>())
+        .def(py::init<const Point&, int>())
+        .def_readwrite("p", &Datapoint::p)
+        .def_readwrite("id", &Datapoint::id)
         .def("__eq__", &Datapoint::operator ==);
 
-    py::class_<Point2D>("Point2D", py::init<double, double>())
-        .def(py::init<double, double>())
-        .def_readwrite("x", &Point2D::x)
-        .def_readwrite("y", &Point2D::y)
-        .def("__eq__", &Point2D::operator ==);
+    py::class_<Point>("Point", py::init<double, double>())
+        .def_readwrite("x", &Point::x)
+        .def_readwrite("y", &Point::y)
+        .def("__eq__", &Point::operator ==);
 
-    py::class_<Point3D>("Point3D", py::init<double, double, double>())
-        .def(py::init<double, double, double>())
-        .def_readwrite("x", &Point3D::x)
-        .def_readwrite("y", &Point3D::y)
-        .def_readwrite("z", &Point3D::z)
-        .def("to2D", &Point3D::to2D)
-        .def("__eq__", &Point3D::operator ==);
-
-    py::class_<Range>("Range", py::init<const Point2D&, const Point2D&>())
+    py::class_<Range>("Range", py::init<const Point&, const Point&>())
         .def_readwrite("topLeft", &Range::topLeft)
         .def_readwrite("bottomRight", &Range::bottomRight);
 
     py::class_<Index>("Index", py::init<int, int, int>())
         .def_readwrite("x", &Index::x)
         .def_readwrite("y", &Index::y)
-        .def_readwrite("level", &Index::level)
+        .def_readwrite("z", &Index::z)
         .def("__eq__", &Index::operator ==);
 }

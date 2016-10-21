@@ -1,5 +1,5 @@
 from flask import jsonify
-from models import Point2D, Range, Index
+from models import Point, Range, Index
 
 def serializeRange(range_):
     tl = range_.topLeft
@@ -7,7 +7,7 @@ def serializeRange(range_):
     return { 'xMin': tl.x, 'yMin': tl.y, 'xMax': br.x, 'yMax': br.y }
 
 def serializeDatapoints(datapoints):
-    return [{ 'x': d.point.x, 'y': d.point.y, 'z': d.point.z, 'id': d.data.id, 'name': d.data.name } for d in datapoints]
+    return [{ 'x': d.x, 'y': d.y, 'z': d.z, 'id': d.id, 'title': d.title } for d in datapoints]
 
 def deserializeRange(xMin, yMin, xMax, yMax):
     tl = Point2D(xMin, yMin)
@@ -18,4 +18,7 @@ def deserializeIndex(xIndex, yIndex, zoomLevel):
     return Index(xIndex, yIndex, zoomLevel)
 
 def serializeIndex(index):
-    return [index.x, index.y, index.level]
+    return [index.x, index.y, index.z]
+
+def serializeTerms(terms):
+    return [{ 'term': t.term, 'isCategory': t.isCategory } for t in terms]

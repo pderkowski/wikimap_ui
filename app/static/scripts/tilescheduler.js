@@ -5,26 +5,29 @@ var TileScheduler = function (removeCallback) { // the argument is a function to
   this._now = [];
   this._future = [];
 
-  this.schedule = function (tiles) {
+  this.replace = function (tiles) {
     that._past = setUnion(that._past, that._now); // everything that was and is now is to be removed
-    that._past = setDifference(that._past, tiles); // unless it is also one of the requested tiles
+    return that.add(tiles);
+  };
+
+  this.add = function (tiles) {
+    that._past = setDifference(that._past, tiles); // dont remove tiles that will be needed
     that._future = setDifference(tiles, that._now); // also don't fetch tiles that are already there
-    // log('Scheduled ' + tiles);
-    return that._future.slice();
+    return that._future.slice(); // return which tiles need to be fetched
   };
 
   this.isExpecting = function (tile) {
     return that._future.indexOf(tile) >= 0;
   };
 
-  this.finish = function (tile) { // signal that a tile has been processed
+  this.finish = function (tile) { // signal that a tile has been used
     removeFromFuture(tile);
     addToNow(tile);
     cleanUpIfAllDone();
     // log('Finished '+ tile);
   };
 
-  this.dismiss = function (tile) {
+  this.dismiss = function (tile) { // signal that a file was no longer needed by the time it arrived
     removeFromFuture(tile);
     cleanUpIfAllDone();
     // log('Dismissed '+ tile);

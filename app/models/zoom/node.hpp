@@ -3,38 +3,13 @@
 #include "bounds.hpp"
 #include "children.hpp"
 #include <vector>
-
-struct Data {
-    explicit Data(int id, const std::string& name)
-    : id(id), name(name)
-    { }
-
-    int id;
-    std::string name;
-
-    bool operator == (const Data& other) const {
-        return id == other.id && name == other.name;
-    }
-};
-
-struct Datapoint {
-    Datapoint(const Point3D& point, const Data& data)
-    : point(point), data(data)
-    { }
-
-    Point3D point;
-    Data data;
-
-    bool operator == (const Datapoint& other) const {
-        return point == other.point && data == other.data;
-    }
-};
-
-typedef std::vector<Datapoint> Datapoints;
+#include "datapoint.hpp"
+#include "point.hpp"
+#include "index.hpp"
 
 class Node {
 public:
-    Node(const Bounds& bounds, int capacity);
+    Node(const Bounds& bounds, const Index& index, int capacity);
     Node(const Node& other) = delete;
     Node& operator = (const Node& other) = delete;
     ~Node();
@@ -42,25 +17,24 @@ public:
     const Children& getChildren() const { return children_; }
     Children& getChildren() { return children_; }
 
-    const Node* getChildContainingPoint(const Point2D& p) const;
-    Node* getChildContainingPoint(const Point2D& p);
+    const Node* getChildContainingPoint(const Point& p) const;
+    Node* getChildContainingPoint(const Point& p);
 
     Datapoints getDatapoints() const { return points_; }
     Bounds getBounds() const { return bounds_; }
 
     int getMaxDepth() const;
-    int getDepthAtPoint(const Point2D& p) const;
+    int getDepthAtPoint(const Point& p) const;
+
+    Index getIndex() const;
 
     bool isLeaf() const;
-    bool contains(const Point2D& p) const;
+    bool contains(const Point& p) const;
 
-    void insert(const Point2D& p, const Data& data);
+    Index insert(const Datapoint& d);
 
 private:
-    void insert(const Datapoint& d);
-
-    Node* prepareInsert(const Point2D& p);
-    void doInsert(const Datapoint& d);
+    Node* prepareInsert(const Point& p);
 
     bool isFull() const;
 
@@ -70,6 +44,8 @@ private:
 
     Bounds bounds_;
     Datapoints points_;
+
+    Index index_;
 
     int capacity_;
 };
