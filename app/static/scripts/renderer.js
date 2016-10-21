@@ -18,7 +18,7 @@ var Renderer = function(svg, converter, hackScale) {
       d3.selectAll(".dot")
         .attr("r", function(p) { return getR(p.z); });
 
-      d3.selectAll(".label")
+      d3.selectAll(".wikimap-label")
         .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); });
 
       d3.select('.labels')
@@ -52,7 +52,7 @@ var Renderer = function(svg, converter, hackScale) {
       .filter(function (p) { return removed.has(p.id); })
       .remove();
 
-    d3.selectAll('.label')
+    d3.selectAll('.wikimap-label')
       .filter(function (p) { return removed.has(p.id); })
       .remove();
 
@@ -67,7 +67,6 @@ var Renderer = function(svg, converter, hackScale) {
   };
 
   function getFontSize() {
-    console.log('here');
     var base = 10;
     return hackScale * base / that._lastScale;
   }
@@ -94,13 +93,13 @@ var Renderer = function(svg, converter, hackScale) {
   function addLabels(points) {
     var maxLength = 15;
 
-    var selection = d3.select('.labels')
+    d3.select('.labels')
       .style("font-size", getFontSize()+"px")
-      .selectAll('.label')
+      .selectAll('.wikimap-label')
       .data(points, function (p) { return p.id; })
       .enter() // add new points
       .append("text")
-      .classed("label", true)
+      .classed("wikimap-label", true)
       .text(function(p) {
         if (p.title.length <= maxLength) {
           return p.title;
