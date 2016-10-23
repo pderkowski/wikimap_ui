@@ -1,9 +1,4 @@
-#selections-container {
-  position: absolute;
-  bottom: 24px; left: 24px;
-}
-
-.selections-close-button {
+.selections-button {
   padding: 0;
   border: none;
   background: none;
@@ -22,3 +17,15 @@
   opacity: 1;
 }
 
+#selections-container {
+  position: absolute;
+  bottom: 24px; left: 24px;
+}
+
+.selection-visible {
+  color: #000;
+}
+
+.selection-hidden {
+  color: #999;
+}

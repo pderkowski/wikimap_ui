@@ -78,6 +78,16 @@ var Wikimap = function () {
     selections.remove(name);
   };
 
+  this.hideCategory = function (name) {
+    categories.remove(name);
+    selections.hide(name);
+  };
+
+  this.showCategory = function (name) {
+    categories.draw(name);
+    selections.show(name);
+  }
+
   function loadBounds() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
   }
