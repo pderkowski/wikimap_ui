@@ -43,10 +43,10 @@ var search = function (wikimap) {
     },
   })
   .autocomplete("instance")._renderItem = function(ul, item) {
-    var html = "<div><span class=label>"+ item.label+"</span>";
+    var html = "<div><span class=search-label>"+ item.label+"</span>";
 
     if (item.isCategory) {
-      html += "<span class=description>category</span>";
+      html += "<span class=search-description>category</span>";
     }
     html += "</div>";
 
