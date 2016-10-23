@@ -7,6 +7,7 @@
     <link href="static/node_modules/jquery-ui/themes/base/all.css" rel="stylesheet" type="text/css">
     <link href="static/search.css" rel="stylesheet" type="text/css">
     <link href="static/scatter.css" rel="stylesheet" type="text/css">
+    <link href="static/selections.css" rel="stylesheet" type="text/css">
 
     <script type=text/javascript>
       $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
@@ -17,6 +18,9 @@
       <input id="search-box" type="search" class="search rounded" placeholder="Search...">
     </div>
     <div id="container"></div>
+    <div id="selections-container">
+      <ul id="selections-list"></ul>
+    </div>
     <script src="static/scripts/dist/app.bundle.js" charset="utf-8"></script>
   </body>
 </html>

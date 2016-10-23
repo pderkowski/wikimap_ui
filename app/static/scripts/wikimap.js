@@ -5,6 +5,7 @@ var Renderer = require('./renderer');
 var CoordsConverter = require('./coordsconverter');
 var TileDrawer = require('./tiledrawer');
 var CategoryDrawer = require('./categorydrawer');
+var SelectionBoxDrawer = require('./selectionboxdrawer');
 
 function getRealSize () {
   var displayWidth = document.getElementById('container').offsetWidth;
@@ -55,6 +56,7 @@ var Wikimap = function () {
   var renderer = new Renderer(hackSvg, converter, hackScale);
   var tiles = new TileDrawer(renderer, converter, hackSvg);
   var categories = new CategoryDrawer(renderer);
+  var selections = new SelectionBoxDrawer(this);
 
   this.start = function () {
     return loadBounds()
@@ -68,6 +70,12 @@ var Wikimap = function () {
 
   this.selectCategory = function (name) {
     categories.draw(name);
+    selections.add(name);
+  };
+
+  this.removeCategory = function (name) {
+    categories.remove(name);
+    selections.remove(name);
   };
 
   function loadBounds() {

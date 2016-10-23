@@ -1,5 +1,4 @@
 var Cache = require('./cache');
-var TileScheduler = require('./tilescheduler');
 var $ = require('jquery');
 
 var CategoryDrawer = function (renderer) {
@@ -7,35 +6,24 @@ var CategoryDrawer = function (renderer) {
   init();
 
   this.draw = function (name) {
-    var needed = that._scheduler.add([name]);
-
-    needed.forEach(function (name) {
-      that._cache.get(name)
-        .then(function (points) {
-          console.log('point len: '+points.length);
-          if (that._scheduler.isExpecting(name) && !renderer.has(name)) {
-            renderer.add(name, points, 1);
-            that._scheduler.finish(name);
-          } else {
-            that._scheduler.dismiss(name);
-          }
-        });
+    that._cache.get(name)
+      .then(function (points) {
+        if (!renderer.has(name)) {
+          renderer.add(name, points, 1);
+        }
       });
   };
 
-  this.remove = function (names) {
-    names.forEach(function (n) {
-      if (renderer.has(n)) {
-        renderer.remove(n);
-      }
-    });
+  this.remove = function (name) {
+    if (renderer.has(name)) {
+      renderer.remove(name);
+    }
   };
 
   function init() {
     that._cache = new Cache(50,
       function (c) { return c; },
       function (c) { return $.getJSON($SCRIPT_ROOT + 'category?title='+c); });
-    that._scheduler = new TileScheduler(that.remove);
   }
 };
 
