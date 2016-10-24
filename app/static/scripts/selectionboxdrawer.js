@@ -1,8 +1,8 @@
-function createButton (iconName, handler) {
+function createButton (iconClasses, handler) {
   var div = document.createElement('div');
 
-  var html = '<button type=button class="selections-button selection-visible">';
-  html += '<span class="octicon ' + iconName + '"></span>';
+  var html = '<button type=button class="selections-button">';
+  html += '<div class="' + iconClasses + '"></div>';
   html += "</button>";
 
   div.innerHTML = html;
@@ -12,6 +12,31 @@ function createButton (iconName, handler) {
   return button;
 };
 
+function createLabel (label) {
+  var div = document.createElement('div');
+  div.classList.add("selection-label");
+  div.innerHTML = label;
+  return div;
+}
+
+/* From Modernizr */
+var transitionEvent = (function () {
+  var t;
+  var el = document.createElement('fakeelement');
+  var transitions = {
+    'transition':'transitionend',
+    'OTransition':'oTransitionEnd',
+    'MozTransition':'transitionend',
+    'WebkitTransition':'webkitTransitionEnd'
+  }
+
+  for(t in transitions){
+    if(el.style[t] !== undefined ){
+      return transitions[t];
+    }
+  }
+})();
+
 var SelectionNode = function (name) {
   var that = this;
 
@@ -19,15 +44,19 @@ var SelectionNode = function (name) {
   this._visible = true;
 
   this._node = document.createElement("li");
-  this._text = document.createTextNode(name);
-  this._closeButton = createButton("octicon-x", function () { that._fire("close"); });
-  this._visibilityButton = createButton("octicon-eye", function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
+  this._text = createLabel(name);
+  this._buttons = document.createElement("div"); this._buttons.classList.add("selection-button-container");
+  this._closeButton = createButton("octicon octicon-x selection-icon", function () { that._fire("close"); });
+  this._visibilityButton = createButton("octicon octicon-eye selection-icon", function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
+  this._colorButton = createButton("selection-icon selection-color-icon", function () { that._fire("color"); });
 
   this._events = Object.create(null);
 
   this._node.appendChild(this._text);
-  this._node.appendChild(this._closeButton);
-  this._node.appendChild(this._visibilityButton);
+  this._node.appendChild(this._buttons);
+  this._buttons.appendChild(this._closeButton);
+  this._buttons.appendChild(this._visibilityButton);
+  this._buttons.appendChild(this._colorButton);
 
   setTimeout(function() {
     that._node.classList.add("show");
@@ -40,14 +69,12 @@ SelectionNode.prototype.getElement = function () {
 
 SelectionNode.prototype.hide = function () {
   this._visible = false;
-  this._visibilityButton.classList.remove("selection-visible");
   this._visibilityButton.classList.add("selection-hidden");
 };
 
 SelectionNode.prototype.show = function () {
   this._visible = true;
   this._visibilityButton.classList.remove("selection-hidden");
-  this._visibilityButton.classList.add("selection-visible");
 };
 
 SelectionNode.prototype.bind = function (eventName, callback) {
@@ -60,8 +87,6 @@ SelectionNode.prototype._fire = function (eventName) {
   }
 };
 
-
-
 var SelectionBoxDrawer = function (wikimap) {
   var that = this;
 
@@ -73,16 +98,32 @@ var SelectionBoxDrawer = function (wikimap) {
       nodes.push(node);
       var list = document.getElementById('selections-list');
       list.appendChild(node.getElement());
+
+      if (nodes.length == 1) {
+        list.classList.add("show");
+      }
     }
   };
 
   this.remove = function (name) {
     var index = getIndex(name);
     if (index >= 0) {
-      var node = nodes[index];
-      nodes.splice(index, 1);
-      var list = document.getElementById('selections-list');
-      list.removeChild(node.getElement());
+      var node = nodes[index].getElement();
+
+      node.addEventListener(transitionEvent, function () {
+        node.removeEventListener(transitionEvent, arguments.callee);
+
+        var list = document.getElementById('selections-list');
+
+        list.removeChild(node);
+        nodes.splice(index, 1);
+
+        if (nodes.length == 0) {
+          list.classList.remove("show");
+        }
+      });
+
+      node.classList.remove("show");
     }
   };
 
