@@ -8,13 +8,14 @@
     <link href="static/search.css" rel="stylesheet" type="text/css">
     <link href="static/scatter.css" rel="stylesheet" type="text/css">
     <link href="static/selections.css" rel="stylesheet" type="text/css">
-    <link href="static/node_modules/octicons/build/font/octicons.css" rel="stylesheet" type="text/css">
+    <link href="static/icons.css" rel="stylesheet" type="text/css">
 
     <script type=text/javascript>
       $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     </script>
   </head>
   <body>
+    {% include 'icons.svg' %}
     <div id="search-container">
       <input id="search-box" type="search" class="search rounded" placeholder="Search...">
     </div>

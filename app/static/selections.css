@@ -1,19 +1,6 @@
-.selection-button-container {
+#selections-container {
   position: absolute;
-  right: 0px;
-  top: 50%;
-  margin-top: -8px;
-}
-
-.selections-button {
-  padding: 0;
-  border: none;
-  background: none;
-  width: 16px;
-  height: 16px;
-  float: right;
-  margin-right: 5px;
-  position: relative;
+  bottom: 24px; left: 24px;
 }
 
 #selections-list {
@@ -43,7 +30,7 @@
   transition: all 0.5s ease-out 0s;
   opacity: 0;
   height: 0;
-  padding: 6px 8px;
+  margin: 6px 8px;
   position: relative;
   font: bold 12px Arial, Helvetica, Sans-serif;
   color: #222;
@@ -55,12 +42,22 @@
   height: 16px;
 }
 
-#selections-container {
+.selection-button-container {
   position: absolute;
-  bottom: 24px; left: 24px;
+  right: 0px;
+  top: 50%;
+  margin-top: -8px;
 }
 
 .selections-button {
+  padding: 0;
+  border: none;
+  background: none;
+  width: 16px;
+  height: 16px;
+  float: right;
+  margin-left: 3px;
+  position: relative;
   color: #222;
 }
 
@@ -68,31 +65,11 @@
   color: #aaa;
 }
 
-.selection-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin: -8px 0 0 -8px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.selection-color-icon {
-  width: 14px;
-  height: 14px;
-  -webkit-border-radius: 7px;
-  -moz-border-radius: 7px;
-  border-radius: 7px;
-  padding: 1px;
-  border: 1px;
-  background: #222;
-}
-
 .selection-label {
   line-height: 16px;
   width: 75%;
   display: inline-block;
-  /*vertical-align: middle;*/
+  /*vertical-align: middle;*/,
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;

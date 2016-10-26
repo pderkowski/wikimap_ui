@@ -82,7 +82,7 @@ var TileDrawer = function (renderer, converter, svg) {
     return cache.get(args[0], args[1], args[2])
       .then(function (points) {
         if (scheduler.isExpecting(tile) && !renderer.has(tile)) {
-          renderer.add(tile, points, 0);
+          renderer.add(tile, points, 0, "#777");
           scheduler.finish(tile);
           // console.log('Drawn ' + tile);
         } else {

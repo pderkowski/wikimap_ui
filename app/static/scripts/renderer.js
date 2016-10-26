@@ -26,9 +26,9 @@ var Renderer = function(svg, converter, hackScale) {
     }
   };
 
-  this.add = function(name, points, priority) {
+  this.add = function(name, points, priority, color) {
     that._renderedPoints.add(name, getPointIds(points));
-    that._name2color[name] = chooseColor();
+    that._name2color[name] = color;
     that._name2priority[name] = priority;
 
     addPoints(points);
@@ -64,6 +64,15 @@ var Renderer = function(svg, converter, hackScale) {
     d3.selectAll(".dot")
       .attr("cx", function(p) { return converter.applyTransition([p.x, p.y])[0]; })
       .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
+  };
+
+  this.changeColor = function (name, color) {
+    that._name2color[name] = color;
+
+    var updated = d3.set(that._renderedPoints.getElements(name));
+
+    updateFill(d3.selectAll('dot')
+      .filter(function (p) { return updated.has(p.id); }));
   };
 
   function getFontSize() {
@@ -169,10 +178,6 @@ var Renderer = function(svg, converter, hackScale) {
 
   function getPointIds(points) {
     return points.map(function (p) { return p.id; });
-  }
-
-  function chooseColor() {
-    return '#' + Math.floor(Math.random()*16777215).toString(16);
   }
 };
 

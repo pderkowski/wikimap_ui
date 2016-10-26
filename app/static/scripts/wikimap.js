@@ -69,8 +69,9 @@ var Wikimap = function () {
   };
 
   this.selectCategory = function (name) {
-    categories.draw(name);
-    selections.add(name);
+    var color = chooseColor();
+    categories.draw(name, color);
+    selections.add(name, color);
   };
 
   this.removeCategory = function (name) {
@@ -86,7 +87,12 @@ var Wikimap = function () {
   this.showCategory = function (name) {
     categories.draw(name);
     selections.show(name);
-  }
+  };
+
+  this.changeColor = function (name, color) {
+    categories.changeColor(name, color);
+    selections.changeColor(name, color);
+  };
 
   function loadBounds() {
     return $.getJSON($SCRIPT_ROOT + 'bounds');
@@ -109,6 +115,10 @@ var Wikimap = function () {
         resizable.zoom(d3.zoomIdentity);
       });
     };
+  }
+
+  function chooseColor() {
+    return '#' + Math.floor(Math.random()*16777215).toString(16);
   }
 };
 

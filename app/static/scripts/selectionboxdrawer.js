@@ -1,8 +1,10 @@
-function createButton (iconClasses, handler) {
+var icons = require('./icons');
+
+function createButton (iconHTML, handler) {
   var div = document.createElement('div');
 
   var html = '<button type=button class="selections-button">';
-  html += '<div class="' + iconClasses + '"></div>';
+  html += iconHTML;
   html += "</button>";
 
   div.innerHTML = html;
@@ -37,7 +39,7 @@ var transitionEvent = (function () {
   }
 })();
 
-var SelectionNode = function (name) {
+var SelectionNode = function (name, color) {
   var that = this;
 
   this.name = name;
@@ -46,9 +48,10 @@ var SelectionNode = function (name) {
   this._node = document.createElement("li");
   this._text = createLabel(name);
   this._buttons = document.createElement("div"); this._buttons.classList.add("selection-button-container");
-  this._closeButton = createButton("octicon octicon-x selection-icon", function () { that._fire("close"); });
-  this._visibilityButton = createButton("octicon octicon-eye selection-icon", function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
-  this._colorButton = createButton("selection-icon selection-color-icon", function () { that._fire("color"); });
+  this._closeButton = createButton(icons.close, function () { that._fire("close"); });
+  this._visibilityButton = createButton(icons.eye, function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
+  this._colorButton = createButton(icons.circle, function () { that._fire("color"); });
+  this.changeColor(color);
 
   this._events = Object.create(null);
 
@@ -77,6 +80,11 @@ SelectionNode.prototype.show = function () {
   this._visibilityButton.classList.remove("selection-hidden");
 };
 
+SelectionNode.prototype.changeColor = function (color) {
+  var icon = this._colorButton.getElementsByClassName("icon")[0];
+  icon.style.fill = color;
+};
+
 SelectionNode.prototype.bind = function (eventName, callback) {
   this._events[eventName] = callback;
 };
@@ -92,9 +100,9 @@ var SelectionBoxDrawer = function (wikimap) {
 
   var nodes = [];
 
-  this.add = function (name) {
+  this.add = function (name, color) {
     if (getIndex(name) < 0){
-      var node = createSelectionNode(name);
+      var node = createSelectionNode(name, color);
       nodes.push(node);
       var list = document.getElementById('selections-list');
       list.appendChild(node.getElement());
@@ -139,17 +147,25 @@ var SelectionBoxDrawer = function (wikimap) {
     if (index >= 0) {
       nodes[index].show();
     }
-  }
+  };
+
+  this.changeColor = function (name, color) {
+    var index = getIndex(name);
+    if (index >= 0) {
+      nodes[index].changeColor(color);
+    }
+  };
 
   function getIndex(name) {
     return nodes.map(function (n) { return n.name; }).indexOf(name);
   }
 
-  function createSelectionNode(name) {
-    var node = new SelectionNode(name);
+  function createSelectionNode(name, color) {
+    var node = new SelectionNode(name, color);
     node.bind("close", function () { wikimap.removeCategory(name); });
     node.bind("hide", function () { wikimap.hideCategory(name); });
     node.bind("show", function () { wikimap.showCategory(name); });
+    node.bind("color", function () { that.changeColor(name, "#999"); })
     return node;
   }
 };
