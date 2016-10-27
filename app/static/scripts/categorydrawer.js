@@ -5,11 +5,11 @@ var CategoryDrawer = function (renderer) {
   var that = this;
   init();
 
-  this.draw = function (name, color) {
+  this.draw = function (name) {
     that._cache.get(name)
       .then(function (points) {
         if (!renderer.has(name)) {
-          renderer.add(name, points, 1, color);
+          renderer.add(name, points, 1);
         }
       });
   };
@@ -20,9 +20,9 @@ var CategoryDrawer = function (renderer) {
     }
   };
 
-  this.changeColor = function (name, color) {
+  this.changeColor = function (name) {
     if (renderer.has(name)) {
-      renderer.changeColor(name, color);
+      renderer.changeColor(name);
     }
   };
 

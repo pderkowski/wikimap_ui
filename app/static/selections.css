@@ -49,22 +49,6 @@
   margin-top: -8px;
 }
 
-.selections-button {
-  padding: 0;
-  border: none;
-  background: none;
-  width: 16px;
-  height: 16px;
-  float: right;
-  margin-left: 3px;
-  position: relative;
-  color: #222;
-}
-
-.selections-button.selection-hidden {
-  color: #aaa;
-}
-
 .selection-label {
   line-height: 16px;
   width: 75%;

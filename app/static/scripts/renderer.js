@@ -2,7 +2,7 @@ var d3 = require('d3');
 var d3tip = require('d3-tip');
 var FlatMultiset = require('./flatmultiset');
 
-var Renderer = function(svg, converter, hackScale) {
+var Renderer = function(svg, converter, hackScale, colors) {
   var that = this;
 
   init();
@@ -26,9 +26,8 @@ var Renderer = function(svg, converter, hackScale) {
     }
   };
 
-  this.add = function(name, points, priority, color) {
+  this.add = function(name, points, priority) {
     that._renderedPoints.add(name, getPointIds(points));
-    that._name2color[name] = color;
     that._name2priority[name] = priority;
 
     addPoints(points);
@@ -42,7 +41,6 @@ var Renderer = function(svg, converter, hackScale) {
   this.remove = function(name) {
     var ids = that._renderedPoints.getElements(name);
     that._renderedPoints.remove(name);
-    delete that._name2color[name];
     delete that._name2priority[name];
 
     var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
@@ -66,12 +64,10 @@ var Renderer = function(svg, converter, hackScale) {
       .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
   };
 
-  this.changeColor = function (name, color) {
-    that._name2color[name] = color;
-
+  this.changeColor = function (name) {
     var updated = d3.set(that._renderedPoints.getElements(name));
 
-    updateFill(d3.selectAll('dot')
+    updateFill(d3.selectAll('.dot')
       .filter(function (p) { return updated.has(p.id); }));
   };
 
@@ -132,7 +128,6 @@ var Renderer = function(svg, converter, hackScale) {
       .classed("labels", true);
 
     that._renderedPoints = new FlatMultiset();
-    that._name2color = Object.create(null);
     that._name2priority = Object.create(null);
     that._lastScale = 1;
 
@@ -147,8 +142,7 @@ var Renderer = function(svg, converter, hackScale) {
   }
 
   function updateFill(selection) {
-    selection
-      .style('fill', function (p) { return getColor(p.id); });
+    selection.style('fill', function (p) { return getColor(p.id); });
   }
 
   function getColor(id) {
@@ -166,8 +160,8 @@ var Renderer = function(svg, converter, hackScale) {
       }
     }
 
-    var colors = highestPriorityNames.map(function (n) { return that._name2color[n]; });
-    return colors[0];
+    var candidates = highestPriorityNames.map(function (n) { return colors.get(n); });
+    return candidates[0];
   }
 
   function getR(z) {

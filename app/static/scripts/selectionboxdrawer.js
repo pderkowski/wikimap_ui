@@ -1,18 +1,5 @@
-var icons = require('./icons');
-
-function createButton (iconHTML, handler) {
-  var div = document.createElement('div');
-
-  var html = '<button type=button class="selections-button">';
-  html += iconHTML;
-  html += "</button>";
-
-  div.innerHTML = html;
-
-  var button = div.childNodes[0];
-  button.addEventListener('click', handler);
-  return button;
-};
+var Button = require('./controls/button');
+var Icons = require('./controls/icons');
 
 function createLabel (label) {
   var div = document.createElement('div');
@@ -48,18 +35,18 @@ var SelectionNode = function (name, color) {
   this._node = document.createElement("li");
   this._text = createLabel(name);
   this._buttons = document.createElement("div"); this._buttons.classList.add("selection-button-container");
-  this._closeButton = createButton(icons.close, function () { that._fire("close"); });
-  this._visibilityButton = createButton(icons.eye, function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
-  this._colorButton = createButton(icons.circle, function () { that._fire("color"); });
-  this.changeColor(color);
+  this._closeButton = new Button(Icons.close); this._closeButton.addHandler(function () { that._fire("close") });
+  this._visibilityButton = new Button(Icons.eye); this._visibilityButton.addHandler(function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
+  this._colorButton = new Button(Icons.circle); this._colorButton.addHandler(function () { that._fire("color"); });
+  this._colorButton.changeColor(color);
 
   this._events = Object.create(null);
 
   this._node.appendChild(this._text);
   this._node.appendChild(this._buttons);
-  this._buttons.appendChild(this._closeButton);
-  this._buttons.appendChild(this._visibilityButton);
-  this._buttons.appendChild(this._colorButton);
+  this._buttons.appendChild(this._closeButton.getElement());
+  this._buttons.appendChild(this._visibilityButton.getElement());
+  this._buttons.appendChild(this._colorButton.getElement());
 
   setTimeout(function() {
     that._node.classList.add("show");
@@ -72,17 +59,16 @@ SelectionNode.prototype.getElement = function () {
 
 SelectionNode.prototype.hide = function () {
   this._visible = false;
-  this._visibilityButton.classList.add("selection-hidden");
+  this._visibilityButton.addClass("controls-deactivated");
 };
 
 SelectionNode.prototype.show = function () {
   this._visible = true;
-  this._visibilityButton.classList.remove("selection-hidden");
+  this._visibilityButton.removeClass("controls-deactivated");
 };
 
 SelectionNode.prototype.changeColor = function (color) {
-  var icon = this._colorButton.getElementsByClassName("icon")[0];
-  icon.style.fill = color;
+  this._colorButton.changeColor(color);
 };
 
 SelectionNode.prototype.bind = function (eventName, callback) {
@@ -165,7 +151,7 @@ var SelectionBoxDrawer = function (wikimap) {
     node.bind("close", function () { wikimap.removeCategory(name); });
     node.bind("hide", function () { wikimap.hideCategory(name); });
     node.bind("show", function () { wikimap.showCategory(name); });
-    node.bind("color", function () { that.changeColor(name, "#999"); })
+    node.bind("color", function () { wikimap.changeColor(name, "#999"); })
     return node;
   }
 };

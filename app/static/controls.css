@@ -1,0 +1,15 @@
+.controls-button {
+  padding: 0;
+  border: none;
+  background: none;
+  width: 16px;
+  height: 16px;
+  float: right;
+  margin-left: 3px;
+  position: relative;
+  color: #222;
+}
+
+.controls-deactivated {
+  color: #bbb;
+}

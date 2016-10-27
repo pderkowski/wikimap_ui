@@ -6,6 +6,7 @@ var CoordsConverter = require('./coordsconverter');
 var TileDrawer = require('./tiledrawer');
 var CategoryDrawer = require('./categorydrawer');
 var SelectionBoxDrawer = require('./selectionboxdrawer');
+var ColorMap = require('./colormap');
 
 function getRealSize () {
   var displayWidth = document.getElementById('container').offsetWidth;
@@ -52,8 +53,9 @@ var Wikimap = function () {
     .attr("width", getVirtualSize(hackScale)[0])
     .attr("height", getVirtualSize(hackScale)[1]);
 
+  var colors = new ColorMap();
   var converter = new CoordsConverter();
-  var renderer = new Renderer(hackSvg, converter, hackScale);
+  var renderer = new Renderer(hackSvg, converter, hackScale, colors);
   var tiles = new TileDrawer(renderer, converter, hackSvg);
   var categories = new CategoryDrawer(renderer);
   var selections = new SelectionBoxDrawer(this);
@@ -69,12 +71,14 @@ var Wikimap = function () {
   };
 
   this.selectCategory = function (name) {
-    var color = chooseColor();
-    categories.draw(name, color);
+    var color = colors.chooseRandom();
+    colors.set(name, color);
+    categories.draw(name);
     selections.add(name, color);
   };
 
   this.removeCategory = function (name) {
+    colors.remove(name)
     categories.remove(name);
     selections.remove(name);
   };
@@ -90,7 +94,8 @@ var Wikimap = function () {
   };
 
   this.changeColor = function (name, color) {
-    categories.changeColor(name, color);
+    colors.set(name, color);
+    categories.changeColor(name);
     selections.changeColor(name, color);
   };
 
@@ -115,10 +120,6 @@ var Wikimap = function () {
         resizable.zoom(d3.zoomIdentity);
       });
     };
-  }
-
-  function chooseColor() {
-    return '#' + Math.floor(Math.random()*16777215).toString(16);
   }
 };
 

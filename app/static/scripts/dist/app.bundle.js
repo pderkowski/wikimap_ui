@@ -46,7 +46,7 @@
 
 	var $ = __webpack_require__(1);
 	var Wikimap = __webpack_require__(2);
-	var search = __webpack_require__(27);
+	var search = __webpack_require__(31);
 
 	$(document).ready(function() {
 	  var wikimap = new Wikimap();
@@ -10291,6 +10291,8 @@
 	var CoordsConverter = __webpack_require__(20);
 	var TileDrawer = __webpack_require__(21);
 	var CategoryDrawer = __webpack_require__(26);
+	var SelectionBoxDrawer = __webpack_require__(27);
+	var ColorMap = __webpack_require__(30);
 
 	function getRealSize () {
 	  var displayWidth = document.getElementById('container').offsetWidth;
@@ -10337,10 +10339,12 @@
 	    .attr("width", getVirtualSize(hackScale)[0])
 	    .attr("height", getVirtualSize(hackScale)[1]);
 
+	  var colors = new ColorMap();
 	  var converter = new CoordsConverter();
-	  var renderer = new Renderer(hackSvg, converter, hackScale);
+	  var renderer = new Renderer(hackSvg, converter, hackScale, colors);
 	  var tiles = new TileDrawer(renderer, converter, hackSvg);
 	  var categories = new CategoryDrawer(renderer);
+	  var selections = new SelectionBoxDrawer(this);
 
 	  this.start = function () {
 	    return loadBounds()
@@ -10353,7 +10357,32 @@
 	  };
 
 	  this.selectCategory = function (name) {
+	    var color = colors.chooseRandom();
+	    colors.set(name, color);
 	    categories.draw(name);
+	    selections.add(name, color);
+	  };
+
+	  this.removeCategory = function (name) {
+	    colors.remove(name)
+	    categories.remove(name);
+	    selections.remove(name);
+	  };
+
+	  this.hideCategory = function (name) {
+	    categories.remove(name);
+	    selections.hide(name);
+	  };
+
+	  this.showCategory = function (name) {
+	    categories.draw(name);
+	    selections.show(name);
+	  };
+
+	  this.changeColor = function (name, color) {
+	    colors.set(name, color);
+	    categories.changeColor(name);
+	    selections.changeColor(name, color);
 	  };
 
 	  function loadBounds() {
@@ -28365,7 +28394,7 @@
 	var d3tip = __webpack_require__(18);
 	var FlatMultiset = __webpack_require__(19);
 
-	var Renderer = function(svg, converter, hackScale) {
+	var Renderer = function(svg, converter, hackScale, colors) {
 	  var that = this;
 
 	  init();
@@ -28381,7 +28410,7 @@
 	      d3.selectAll(".dot")
 	        .attr("r", function(p) { return getR(p.z); });
 
-	      d3.selectAll(".label")
+	      d3.selectAll(".wikimap-label")
 	        .attr("y", function(p) { return converter.applyTransition([+p.x, +p.y])[1] + 1.05 * getR(p.z); });
 
 	      d3.select('.labels')
@@ -28391,7 +28420,6 @@
 
 	  this.add = function(name, points, priority) {
 	    that._renderedPoints.add(name, getPointIds(points));
-	    that._name2color[name] = chooseColor();
 	    that._name2priority[name] = priority;
 
 	    addPoints(points);
@@ -28405,7 +28433,6 @@
 	  this.remove = function(name) {
 	    var ids = that._renderedPoints.getElements(name);
 	    that._renderedPoints.remove(name);
-	    delete that._name2color[name];
 	    delete that._name2priority[name];
 
 	    var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
@@ -28415,7 +28442,7 @@
 	      .filter(function (p) { return removed.has(p.id); })
 	      .remove();
 
-	    d3.selectAll('.label')
+	    d3.selectAll('.wikimap-label')
 	      .filter(function (p) { return removed.has(p.id); })
 	      .remove();
 
@@ -28429,8 +28456,14 @@
 	      .attr("cy", function(p) { return converter.applyTransition([p.x, p.y])[1]; });
 	  };
 
+	  this.changeColor = function (name) {
+	    var updated = d3.set(that._renderedPoints.getElements(name));
+
+	    updateFill(d3.selectAll('.dot')
+	      .filter(function (p) { return updated.has(p.id); }));
+	  };
+
 	  function getFontSize() {
-	    console.log('here');
 	    var base = 10;
 	    return hackScale * base / that._lastScale;
 	  }
@@ -28457,13 +28490,13 @@
 	  function addLabels(points) {
 	    var maxLength = 15;
 
-	    var selection = d3.select('.labels')
+	    d3.select('.labels')
 	      .style("font-size", getFontSize()+"px")
-	      .selectAll('.label')
+	      .selectAll('.wikimap-label')
 	      .data(points, function (p) { return p.id; })
 	      .enter() // add new points
 	      .append("text")
-	      .classed("label", true)
+	      .classed("wikimap-label", true)
 	      .text(function(p) {
 	        if (p.title.length <= maxLength) {
 	          return p.title;
@@ -28487,7 +28520,6 @@
 	      .classed("labels", true);
 
 	    that._renderedPoints = new FlatMultiset();
-	    that._name2color = Object.create(null);
 	    that._name2priority = Object.create(null);
 	    that._lastScale = 1;
 
@@ -28502,8 +28534,7 @@
 	  }
 
 	  function updateFill(selection) {
-	    selection
-	      .style('fill', function (p) { return getColor(p.id); });
+	    selection.style('fill', function (p) { return getColor(p.id); });
 	  }
 
 	  function getColor(id) {
@@ -28521,8 +28552,8 @@
 	      }
 	    }
 
-	    var colors = highestPriorityNames.map(function (n) { return that._name2color[n]; });
-	    return colors[0];
+	    var candidates = highestPriorityNames.map(function (n) { return colors.get(n); });
+	    return candidates[0];
 	  }
 
 	  function getR(z) {
@@ -28533,10 +28564,6 @@
 
 	  function getPointIds(points) {
 	    return points.map(function (p) { return p.id; });
-	  }
-
-	  function chooseColor() {
-	    return '#' + Math.floor(Math.random()*16777215).toString(16);
 	  }
 	};
 
@@ -29466,7 +29493,6 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Cache = __webpack_require__(22);
-	var TileScheduler = __webpack_require__(25);
 	var $ = __webpack_require__(1);
 
 	var CategoryDrawer = function (renderer) {
@@ -29474,35 +29500,30 @@
 	  init();
 
 	  this.draw = function (name) {
-	    var needed = that._scheduler.add([name]);
-
-	    needed.forEach(function (name) {
-	      that._cache.get(name)
-	        .then(function (points) {
-	          console.log('point len: '+points.length);
-	          if (that._scheduler.isExpecting(name) && !renderer.has(name)) {
-	            renderer.add(name, points, 1);
-	            that._scheduler.finish(name);
-	          } else {
-	            that._scheduler.dismiss(name);
-	          }
-	        });
+	    that._cache.get(name)
+	      .then(function (points) {
+	        if (!renderer.has(name)) {
+	          renderer.add(name, points, 1);
+	        }
 	      });
 	  };
 
-	  this.remove = function (names) {
-	    names.forEach(function (n) {
-	      if (renderer.has(n)) {
-	        renderer.remove(n);
-	      }
-	    });
+	  this.remove = function (name) {
+	    if (renderer.has(name)) {
+	      renderer.remove(name);
+	    }
+	  };
+
+	  this.changeColor = function (name) {
+	    if (renderer.has(name)) {
+	      renderer.changeColor(name);
+	    }
 	  };
 
 	  function init() {
 	    that._cache = new Cache(50,
 	      function (c) { return c; },
 	      function (c) { return $.getJSON($SCRIPT_ROOT + 'category?title='+c); });
-	    that._scheduler = new TileScheduler(that.remove);
 	  }
 	};
 
@@ -29512,8 +29533,257 @@
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var Button = __webpack_require__(28);
+	var Icons = __webpack_require__(29);
+
+	function createLabel (label) {
+	  var div = document.createElement('div');
+	  div.classList.add("selection-label");
+	  div.innerHTML = label;
+	  return div;
+	}
+
+	/* From Modernizr */
+	var transitionEvent = (function () {
+	  var t;
+	  var el = document.createElement('fakeelement');
+	  var transitions = {
+	    'transition':'transitionend',
+	    'OTransition':'oTransitionEnd',
+	    'MozTransition':'transitionend',
+	    'WebkitTransition':'webkitTransitionEnd'
+	  }
+
+	  for(t in transitions){
+	    if(el.style[t] !== undefined ){
+	      return transitions[t];
+	    }
+	  }
+	})();
+
+	var SelectionNode = function (name, color) {
+	  var that = this;
+
+	  this.name = name;
+	  this._visible = true;
+
+	  this._node = document.createElement("li");
+	  this._text = createLabel(name);
+	  this._buttons = document.createElement("div"); this._buttons.classList.add("selection-button-container");
+	  this._closeButton = new Button(Icons.close); this._closeButton.addHandler(function () { that._fire("close") });
+	  this._visibilityButton = new Button(Icons.eye); this._visibilityButton.addHandler(function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
+	  this._colorButton = new Button(Icons.circle); this._colorButton.addHandler(function () { that._fire("color"); });
+	  this._colorButton.changeColor(color);
+
+	  this._events = Object.create(null);
+
+	  this._node.appendChild(this._text);
+	  this._node.appendChild(this._buttons);
+	  this._buttons.appendChild(this._closeButton.getElement());
+	  this._buttons.appendChild(this._visibilityButton.getElement());
+	  this._buttons.appendChild(this._colorButton.getElement());
+
+	  setTimeout(function() {
+	    that._node.classList.add("show");
+	  }, 10);
+	};
+
+	SelectionNode.prototype.getElement = function () {
+	  return this._node;
+	};
+
+	SelectionNode.prototype.hide = function () {
+	  this._visible = false;
+	  this._visibilityButton.addClass("controls-deactivated");
+	};
+
+	SelectionNode.prototype.show = function () {
+	  this._visible = true;
+	  this._visibilityButton.removeClass("controls-deactivated");
+	};
+
+	SelectionNode.prototype.changeColor = function (color) {
+	  this._colorButton.changeColor(color);
+	};
+
+	SelectionNode.prototype.bind = function (eventName, callback) {
+	  this._events[eventName] = callback;
+	};
+
+	SelectionNode.prototype._fire = function (eventName) {
+	  if (eventName in this._events) {
+	    this._events[eventName]();
+	  }
+	};
+
+	var SelectionBoxDrawer = function (wikimap) {
+	  var that = this;
+
+	  var nodes = [];
+
+	  this.add = function (name, color) {
+	    if (getIndex(name) < 0){
+	      var node = createSelectionNode(name, color);
+	      nodes.push(node);
+	      var list = document.getElementById('selections-list');
+	      list.appendChild(node.getElement());
+
+	      if (nodes.length == 1) {
+	        list.classList.add("show");
+	      }
+	    }
+	  };
+
+	  this.remove = function (name) {
+	    var index = getIndex(name);
+	    if (index >= 0) {
+	      var node = nodes[index].getElement();
+
+	      node.addEventListener(transitionEvent, function () {
+	        node.removeEventListener(transitionEvent, arguments.callee);
+
+	        var list = document.getElementById('selections-list');
+
+	        list.removeChild(node);
+	        nodes.splice(index, 1);
+
+	        if (nodes.length == 0) {
+	          list.classList.remove("show");
+	        }
+	      });
+
+	      node.classList.remove("show");
+	    }
+	  };
+
+	  this.hide = function (name) {
+	    var index = getIndex(name);
+	    if (index >= 0) {
+	      nodes[index].hide();
+	    }
+	  };
+
+	  this.show = function (name) {
+	    var index = getIndex(name);
+	    if (index >= 0) {
+	      nodes[index].show();
+	    }
+	  };
+
+	  this.changeColor = function (name, color) {
+	    var index = getIndex(name);
+	    if (index >= 0) {
+	      nodes[index].changeColor(color);
+	    }
+	  };
+
+	  function getIndex(name) {
+	    return nodes.map(function (n) { return n.name; }).indexOf(name);
+	  }
+
+	  function createSelectionNode(name, color) {
+	    var node = new SelectionNode(name, color);
+	    node.bind("close", function () { wikimap.removeCategory(name); });
+	    node.bind("hide", function () { wikimap.hideCategory(name); });
+	    node.bind("show", function () { wikimap.showCategory(name); });
+	    node.bind("color", function () { wikimap.changeColor(name, "#999"); })
+	    return node;
+	  }
+	};
+
+	module.exports = SelectionBoxDrawer;
+
+/***/ },
+/* 28 */
+/***/ function(module, exports) {
+
+	var Button = function (icon, userClasses) {
+	  var that = this;
+
+	  var div = document.createElement('div');
+	  var classes = ["controls-button"].concat(userClasses || []);
+	  var html = '<button type=button  class="' + classes.join(' ') + '">';
+	  html += icon;
+	  html += "</button>";
+
+	  div.innerHTML = html;
+
+	  this._element = div.childNodes[0];
+	  this._element.addEventListener('click', function () { if (that._handler) { that._handler(this); } });
+	};
+
+	Button.prototype.getElement = function () {
+	  return this._element;
+	};
+
+	Button.prototype.addHandler = function (handler) {
+	  this._handler = handler;
+	};
+
+	Button.prototype.changeColor = function (color) {
+	  var icon = this._element.getElementsByClassName("icon")[0];
+	  icon.style.fill = color;
+	};
+
+	Button.prototype.addClass = function (className) {
+	  this._element.classList.add(className);
+	};
+
+	Button.prototype.removeClass = function (className) {
+	  this._element.classList.remove(className);
+	};
+
+	module.exports = Button;
+
+/***/ },
+/* 29 */
+/***/ function(module, exports) {
+
+	var eyeIcon = '<svg class="icon icon-eye stretch-to-fit"><use xlink:href="#icon-eye"></use></svg>';
+	var closeIcon = '<svg class="icon icon-cross stretch-to-fit"><use xlink:href="#icon-cross2"></use></svg>';
+	var circleIcon = '<svg class="icon icon-record stretch-to-fit"><use xlink:href="#icon-circle"></use></svg>';
+
+	module.exports.eye = eyeIcon;
+	module.exports.close = closeIcon;
+	module.exports.circle = circleIcon;
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+	var ColorMap = function () {
+	  var that = this;
+
+	  var name2colors = Object.create(null);
+
+	  this.get = function (name) {
+	    return name2colors[name];
+	  };
+
+	  this.set = function (name, color) {
+	    name2colors[name] = color;
+	  };
+
+	  this.remove = function (name, color) {
+	    if (name in name2colors) {
+	      delete name2colors[name];
+	    }
+	  };
+
+	  this.chooseRandom = function () {
+	    return '#' + Math.floor(Math.random()*16777215).toString(16);
+	  }
+	};
+
+	module.exports = ColorMap;
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var $ = __webpack_require__(1);
-	__webpack_require__(28);
+	__webpack_require__(32);
 
 	function searchTerm(term) {
 	  return $.getJSON($SCRIPT_ROOT+'search?title='+term);
@@ -29557,10 +29827,10 @@
 	    },
 	  })
 	  .autocomplete("instance")._renderItem = function(ul, item) {
-	    var html = "<div><span class=label>"+ item.label+"</span>";
+	    var html = "<div><span class=search-label>"+ item.label+"</span>";
 
 	    if (item.isCategory) {
-	      html += "<span class=description>category</span>";
+	      html += "<span class=search-description>category</span>";
 	    }
 	    html += "</div>";
 
@@ -29573,7 +29843,7 @@
 	module.exports = search;
 
 /***/ },
-/* 28 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -29600,12 +29870,12 @@
 			// AMD. Register as an anonymous module.
 			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 				__webpack_require__(1),
-				__webpack_require__(29),
-				__webpack_require__(30),
-				__webpack_require__(32),
 				__webpack_require__(33),
-				__webpack_require__(31),
-				__webpack_require__(35)
+				__webpack_require__(34),
+				__webpack_require__(36),
+				__webpack_require__(37),
+				__webpack_require__(35),
+				__webpack_require__(39)
 			], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
@@ -30261,7 +30531,7 @@
 
 
 /***/ },
-/* 29 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30288,12 +30558,12 @@
 			// AMD. Register as an anonymous module.
 			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 				__webpack_require__(1),
-				__webpack_require__(30),
-				__webpack_require__(32),
-				__webpack_require__(33),
 				__webpack_require__(34),
-				__webpack_require__(31),
-				__webpack_require__(35)
+				__webpack_require__(36),
+				__webpack_require__(37),
+				__webpack_require__(38),
+				__webpack_require__(35),
+				__webpack_require__(39)
 			], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
@@ -30940,7 +31210,7 @@
 
 
 /***/ },
-/* 30 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -30961,7 +31231,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(35) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -30991,7 +31261,7 @@
 
 
 /***/ },
-/* 31 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;( function( factory ) {
@@ -31014,7 +31284,7 @@
 
 
 /***/ },
-/* 32 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31038,7 +31308,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(35) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31518,14 +31788,14 @@
 
 
 /***/ },
-/* 33 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;( function( factory ) {
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(35) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31564,7 +31834,7 @@
 
 
 /***/ },
-/* 34 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31585,7 +31855,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(35) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
@@ -31619,7 +31889,7 @@
 
 
 /***/ },
-/* 35 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -31641,7 +31911,7 @@
 		if ( true ) {
 
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(31) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(1), __webpack_require__(35) ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		} else {
 
 			// Browser globals
