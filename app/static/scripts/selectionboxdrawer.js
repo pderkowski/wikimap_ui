@@ -110,6 +110,8 @@ var SelectionBoxDrawer = function (wikimap) {
         var list = document.getElementById('selections-list');
 
         list.removeChild(node);
+
+        index = getIndex(name) // index could have changed if some other callback finished during this one
         nodes.splice(index, 1);
 
         if (nodes.length == 0) {
