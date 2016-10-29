@@ -11,9 +11,9 @@
   opacity: 0;
   overflow: hidden;
 
-  -webkit-border-radius: 20px;
-  -moz-border-radius: 20px;
-  border-radius: 20px;
+  -webkit-border-radius: 14px;
+  -moz-border-radius: 14px;
+  border-radius: 14px;
   border-width: 1px;
   background: #fff;
   border-color: #000;
@@ -30,7 +30,7 @@
   transition: all 0.5s ease-out 0s;
   opacity: 0;
   height: 0;
-  margin: 6px 8px;
+  padding: 6px 8px;
   position: relative;
   font: bold 12px Arial, Helvetica, Sans-serif;
   color: #222;
@@ -44,9 +44,13 @@
 
 .selection-button-container {
   position: absolute;
-  right: 0px;
+  right: 6px;
   top: 50%;
   margin-top: -8px;
+}
+
+.selection-button-container .controls-button {
+  margin-left: 3px;
 }
 
 .selection-label {

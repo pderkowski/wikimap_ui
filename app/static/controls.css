@@ -4,12 +4,55 @@
   background: none;
   width: 16px;
   height: 16px;
-  float: right;
-  margin-left: 3px;
   position: relative;
   color: #222;
 }
 
 .controls-deactivated {
   color: #bbb;
+}
+
+.controls-colorpalette {
+  -webkit-border-radius: 14px;
+  -moz-border-radius: 14px;
+  border-radius: 14px;
+  border-width: 1px;
+  background: #fff;
+  border-color: #000;
+  border-style: solid;
+
+  box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
+
+  max-width: 250px;
+  padding: 6px;
+}
+
+.controls-colorpalette.show {
+  display: inline-block;
+}
+
+.controls-colorpalette .controls-button {
+  float: left;
+}
+
+.controls-colorpalette .controls-button.first {
+  clear: left;
+}
+
+#palette {
+  position: absolute;
+  opacity: 0;
+
+  transition: visibility 0s 0.3s, opacity 0.3s ease-in;
+
+  visibility: hidden;
+}
+
+#palette.show {
+  opacity: 1;
+  visibility: visible;
+  transition-property: opacity, left, top;
+  transition-duration: 0.3s, 0.3s, 0.3s;
+  transition-timing-function: ease-out, linear, linear;
+  transition-delay: 0s;
 }

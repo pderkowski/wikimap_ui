@@ -1,11 +1,16 @@
 var Button = require('./controls/button');
 var Icons = require('./controls/icons');
+var ColorPalette = require('./controls/colorpalette');
 
 function createLabel (label) {
   var div = document.createElement('div');
   div.classList.add("selection-label");
   div.innerHTML = label;
   return div;
+}
+
+function chooseRandomColor() {
+  return '#' + Math.floor(Math.random()*16777215).toString(16);
 }
 
 /* From Modernizr */
@@ -35,8 +40,8 @@ var SelectionNode = function (name, color) {
   this._node = document.createElement("li");
   this._text = createLabel(name);
   this._buttons = document.createElement("div"); this._buttons.classList.add("selection-button-container");
-  this._closeButton = new Button(Icons.close); this._closeButton.addHandler(function () { that._fire("close") });
   this._visibilityButton = new Button(Icons.eye); this._visibilityButton.addHandler(function () { if (that._visible) { that._fire("hide"); } else { that._fire("show"); } });
+  this._closeButton = new Button(Icons.close); this._closeButton.addHandler(function () { that._fire("close"); });
   this._colorButton = new Button(Icons.circle); this._colorButton.addHandler(function () { that._fire("color"); });
   this._colorButton.changeColor(color);
 
@@ -44,9 +49,9 @@ var SelectionNode = function (name, color) {
 
   this._node.appendChild(this._text);
   this._node.appendChild(this._buttons);
-  this._buttons.appendChild(this._closeButton.getElement());
-  this._buttons.appendChild(this._visibilityButton.getElement());
   this._buttons.appendChild(this._colorButton.getElement());
+  this._buttons.appendChild(this._visibilityButton.getElement());
+  this._buttons.appendChild(this._closeButton.getElement());
 
   setTimeout(function() {
     that._node.classList.add("show");
@@ -85,6 +90,10 @@ var SelectionBoxDrawer = function (wikimap) {
   var that = this;
 
   var nodes = [];
+
+  this._palette = new ColorPalette(document.getElementById("palette"), Array.apply(null, Array(24)).map(function(item, index){
+    return chooseRandomColor();
+  }), 6);
 
   this.add = function (name, color) {
     if (getIndex(name) < 0){
@@ -153,7 +162,17 @@ var SelectionBoxDrawer = function (wikimap) {
     node.bind("close", function () { wikimap.removeCategory(name); });
     node.bind("hide", function () { wikimap.hideCategory(name); });
     node.bind("show", function () { wikimap.showCategory(name); });
-    node.bind("color", function () { wikimap.changeColor(name, "#999"); })
+    node.bind("color", function () {
+      that._palette.show({
+        my: "left bottom",
+        at: "right+4 bottom+1",
+        of: nodes[getIndex(name)].getElement()
+      });
+
+      that._palette.setHandler(function (selectedColor) {
+        wikimap.changeColor(name, selectedColor);
+      });
+    });
     return node;
   }
 };

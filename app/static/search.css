@@ -16,9 +16,9 @@
   color: #777;
   width: 250px;
   padding: 6px 15px 6px 35px;
-  -webkit-border-radius: 20px;
-  -moz-border-radius: 20px;
-  border-radius: 20px;
+  -webkit-border-radius: 14px;
+  -moz-border-radius: 14px;
+  border-radius: 14px;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
   -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
@@ -69,24 +69,24 @@
 }
 
 .ui-autocomplete.ui-menu .ui-menu-item:first-child .ui-menu-item-wrapper {
-  -webkit-border-radius: 20px 20px 0 0;
-  -moz-border-radius: 20px 20px 0 0;
-  border-radius: 20px 20px 0 0;
+  -webkit-border-radius: 14px 14px 0 0;
+  -moz-border-radius: 14px 14px 0 0;
+  border-radius: 14px 14px 0 0;
   border-width: 1px 1px 0;
   box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
 }
 
 .ui-autocomplete.ui-menu .ui-menu-item:last-child .ui-menu-item-wrapper {
-  -webkit-border-radius: 0 0 20px 20px;
-  -moz-border-radius: 0 0 20px 20px;
-  border-radius: 0 0 20px 20px;
+  -webkit-border-radius: 0 0 14px 14px;
+  -moz-border-radius: 0 0 14px 14px;
+  border-radius: 0 0 14px 14px;
   border-width: 0 1px 1px;
 }
 
 .ui-autocomplete.ui-menu .ui-menu-item:only-child .ui-menu-item-wrapper {
-  -webkit-border-radius: 20px;
-  -moz-border-radius: 20px;
-  border-radius: 20px;
+  -webkit-border-radius: 14px;
+  -moz-border-radius: 14px;
+  border-radius: 14px;
   border-width: 1px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) inset;
 }
