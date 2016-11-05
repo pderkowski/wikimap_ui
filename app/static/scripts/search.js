@@ -29,7 +29,7 @@ var search = function (wikimap) {
     },
     select: function (event, ui) {
       if (ui.item.isCategory) {
-        wikimap.selectCategory(ui.item.value);
+        wikimap.addCategory(ui.item.value);
       }
       // else {
       //   getPoint(ui.item.value)

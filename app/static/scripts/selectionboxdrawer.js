@@ -170,7 +170,7 @@ var SelectionBoxDrawer = function (wikimap) {
       });
 
       that._palette.setHandler(function (selectedColor) {
-        wikimap.changeColor(name, selectedColor);
+        wikimap.changeCategoryColor(name, selectedColor);
       });
     });
     return node;

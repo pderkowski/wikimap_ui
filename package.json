@@ -17,8 +17,7 @@
     "jquery": "~3.1.1",
     "jquery-ui": "~1.12.1",
     "d3": "~4.2.6",
-    "d3-tip": "~0.7.1",
-    "element-resize-detector": "~1.1.9"
+    "d3-tip": "~0.7.1"
   },
   "devDependencies": {
     "webpack": "~1.13.2"

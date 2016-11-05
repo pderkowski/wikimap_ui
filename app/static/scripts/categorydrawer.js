@@ -1,15 +1,11 @@
-var Cache = require('./cache');
-var $ = require('jquery');
-
-var CategoryDrawer = function (renderer) {
+var CategoryDrawer = function (data, renderer) {
   var that = this;
-  init();
 
-  this.draw = function (name) {
-    that._cache.get(name)
+  this.add = function (name, color) {
+    data.getCategory(name)
       .then(function (points) {
         if (!renderer.has(name)) {
-          renderer.add(name, points, 1);
+          renderer.add(name, points, 1, color);
         }
       });
   };
@@ -20,17 +16,21 @@ var CategoryDrawer = function (renderer) {
     }
   };
 
-  this.changeColor = function (name) {
+  this.hide = function (name) {
     if (renderer.has(name)) {
-      renderer.changeColor(name);
+      renderer.hide(name);
     }
   };
 
-  function init() {
-    that._cache = new Cache(50,
-      function (c) { return c; },
-      function (c) { return $.getJSON($SCRIPT_ROOT + 'category?title='+c); });
-  }
+  this.show = function (name) {
+    renderer.show(name);
+  };
+
+  this.changeColor = function (name, color) {
+    if (renderer.has(name)) {
+      renderer.changeColor(name, color);
+    }
+  };
 };
 
 module.exports = CategoryDrawer;

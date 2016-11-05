@@ -1,4 +1,4 @@
-var TileScheduler = function (removeCallback) { // the argument is a function to call when a tile is no longer needed
+var Scheduler = function (removeCallback) { // the argument is a function to call when a tile is no longer needed
   var that = this;
 
   this._past = [];
@@ -71,4 +71,4 @@ var TileScheduler = function (removeCallback) { // the argument is a function to
   }
 };
 
-module.exports = TileScheduler;
+module.exports = Scheduler;

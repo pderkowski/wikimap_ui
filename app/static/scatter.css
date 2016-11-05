@@ -7,7 +7,7 @@ rect {
   fill: transparent;
 }
 
-#container {
+#canvas-container {
   position: absolute;
   position: fixed;
   top: 16px; left: 16px; bottom: 16px; right: 16px;
@@ -15,29 +15,29 @@ rect {
   display: inline-block;
 }
 
-.background {
+.canvas-background {
   fill: #fff;
 }
 
-.frame {
+.canvas-frame {
   shape-rendering: crispEdges;
   stroke: #000;
   stroke-width: 1;
 }
 
-.labels {
+.canvas-labels {
   text-anchor: middle;
   font-family: Verdana, Geneva, sans-serif;
   pointer-events: none;
 }
 
-.svg-content {
+.canvas-content {
   display: inline-block;
   position: absolute;
-  top: 0;
+/*  top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 100%;*/
 }
 
 .dot {
