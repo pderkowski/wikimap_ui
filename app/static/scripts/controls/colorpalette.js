@@ -38,18 +38,18 @@ ColorPalette.prototype.setHandler = function (handler) { // handler expects colo
 };
 
 ColorPalette.prototype.hide = function () {
-  this._element.classList.remove("show");
+  this._element.classList.remove("controls-show");
 
   $(document).off("mousedown");
   $(this._element).off("blur");
 };
 
 ColorPalette.prototype.isVisible = function () {
-  return this._element.classList.contains("show");
+  return this._element.classList.contains("controls-show");
 };
 
 ColorPalette.prototype.show = function (position) {
-  this._element.classList.add("show");
+  this._element.classList.add("controls-show");
 
   this._hideOnClickOutside();
 

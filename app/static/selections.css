@@ -3,7 +3,7 @@
   bottom: 24px; left: 24px;
 }
 
-#selections-list {
+.controls-list {
   list-style-type: none;
   width: 250px;
   padding: 0;
@@ -22,11 +22,11 @@
   box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
 }
 
-#selections-list.show {
+.controls-list.controls-show {
   opacity: 1;
 }
 
-#selections-list li {
+.controls-list li {
   transition: all 0.5s ease-out 0s;
   opacity: 0;
   height: 0;
@@ -37,23 +37,23 @@
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
 
-#selections-list li.show {
+.controls-list li.controls-show {
   opacity: 1;
   height: 16px;
 }
 
-.selection-button-container {
+.controls-button-container {
   position: absolute;
   right: 6px;
   top: 50%;
   margin-top: -8px;
 }
 
-.selection-button-container .controls-button {
+.controls-button-container .controls-button {
   margin-left: 3px;
 }
 
-.selection-label {
+.controls-label {
   line-height: 16px;
   width: 75%;
   display: inline-block;

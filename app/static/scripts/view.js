@@ -2,10 +2,10 @@ var CategoryDrawer = require('./categorydrawer');
 var TileDrawer = require('./tiledrawer');
 var Renderer = require('./renderer');
 
-var View = function (canvas, converters, data) {
+var View = function (canvas, converters, data, color) {
   var renderer = new Renderer(canvas, converters);
   var categoryDrawer = new CategoryDrawer(data, renderer);
-  var tileDrawer = new TileDrawer(data, renderer);
+  var tileDrawer = new TileDrawer(data, renderer, color);
 
   this.setZoom = function (transform) {
     renderer.setZoom(transform);
@@ -33,6 +33,10 @@ var View = function (canvas, converters, data) {
     categoryDrawer.remove(name);
   };
 
+  this.hasCategory = function (name) {
+    return categoryDrawer.has(name);
+  };
+
   this.showCategory = function (name) {
     categoryDrawer.show(name);
   };
@@ -41,8 +45,24 @@ var View = function (canvas, converters, data) {
     categoryDrawer.hide(name);
   };
 
+  this.hasUnselectedPoints = function () {
+    return tileDrawer.isEnabled();
+  };
+
+  this.showUnselectedPoints = function () {
+    tileDrawer.enable();
+  };
+
+  this.hideUnselectedPoints = function () {
+    tileDrawer.disable();
+  };
+
   this.changeCategoryColor = function (name, color) {
     categoryDrawer.changeColor(name, color);
+  };
+
+  this.changeUnselectedPointsColor = function (color) {
+    tileDrawer.changeColor(color);
   };
 
   function enumerateTiles(tlIdx, brIdx, zoomLevel) {

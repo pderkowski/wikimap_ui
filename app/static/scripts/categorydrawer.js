@@ -26,10 +26,12 @@ var CategoryDrawer = function (data, renderer) {
     renderer.show(name);
   };
 
+  this.has = function (name) {
+    return renderer.has(name);
+  };
+
   this.changeColor = function (name, color) {
-    if (renderer.has(name)) {
-      renderer.changeColor(name, color);
-    }
+    renderer.changeColor(name, color);
   };
 };
 
