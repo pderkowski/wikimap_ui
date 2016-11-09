@@ -48,7 +48,6 @@ var TileDrawer = function (data, renderer, color) {
 
   this.enable = function () {
     that._enabled = true;
-    console.log(register.getNeeded());
     that.draw(register.getNeeded());
   };
 

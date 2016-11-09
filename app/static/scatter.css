@@ -34,6 +34,8 @@ rect {
 .canvas-content {
   display: inline-block;
   position: absolute;
+  text-rendering: optimizeSpeed;
+  /*shape-rendering: optimizeSpeed;*/
 /*  top: 0;
   left: 0;
   width: 100%;
