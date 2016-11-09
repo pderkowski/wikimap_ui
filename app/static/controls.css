@@ -43,10 +43,12 @@
 }
 
 .controls-button-container {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  margin-top: -8px;
+  float: right;
+  overflow: hidden;
+/*  position: absolute;
+  right: 6px;*/
+/*  top: 50%;
+  margin-top: -8px;*/
 }
 
 .controls-button-container .controls-button {
@@ -71,6 +73,12 @@
   height: 16px;
   position: relative;
   color: #222;
+  display: block;
+  float: left;
+}
+
+.controls-button.first {
+  clear: left;
 }
 
 .controls-deactivated {
@@ -96,14 +104,14 @@
   display: inline-block;
 }
 
-.controls-colorpalette .controls-button {
+/*.controls-colorpalette .controls-button {
   float: left;
 }
 
 .controls-colorpalette .controls-button.first {
   clear: left;
 }
-
+*/
 #palette {
   position: absolute;
   opacity: 0;
