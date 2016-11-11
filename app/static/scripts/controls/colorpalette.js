@@ -7,7 +7,8 @@ var ColorPalette = function (element, colors, columns) {
   var that = this;
 
   this._element = element;
-  this._element.classList.add("controls-colorpalette");
+  this._element.className = "my rounded hidden animated colorpalette with-shadow";
+  // this._element.classList.add("controls-animated");
 
   var buttons = colors.map(function (c) {
     var button = new Button(Icons.circle);
@@ -38,18 +39,20 @@ ColorPalette.prototype.setHandler = function (handler) { // handler expects colo
 };
 
 ColorPalette.prototype.hide = function () {
-  this._element.classList.remove("controls-show");
+  this._element.classList.add("hide");
+  this._element.classList.remove("show");
 
   $(document).off("mousedown");
   $(this._element).off("blur");
 };
 
 ColorPalette.prototype.isVisible = function () {
-  return this._element.classList.contains("controls-show");
+  return this._element.classList.contains("show");
 };
 
 ColorPalette.prototype.show = function (position) {
-  this._element.classList.add("controls-show");
+  this._element.classList.add("show");
+  this._element.classList.remove("hide");
 
   this._hideOnClickOutside();
 

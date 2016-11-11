@@ -3,7 +3,7 @@ var Icons = require('./icons');
 
 function createLabel(label) {
   var div = document.createElement('div');
-  div.classList.add("controls-label");
+  div.className = "my label";
   div.innerHTML = label;
   return div;
 }
@@ -16,12 +16,12 @@ var ListItem = function (label) {
 
   this._node.appendChild(this._label);
   setTimeout(function () {
-    that._node.classList.add("controls-show");
+    that._node.classList.add("show");
   }, 10)
 
   function createNode() {
     var node = document.createElement("li");
-    node.classList.add("controls-list-item");
+    node.className = "my hidden animated list-item";
     return node;
   }
 };
@@ -40,7 +40,8 @@ var SelectionListItem = function (label, color) {
   ListItem.call(this, label);
 
   this._buttons = document.createElement("div");
-  this._buttons.classList.add("controls-button-container");
+  this._buttons.className = "my button-container";
+
   this.visibilityButton = new Button(Icons.eye);
   this.closeButton = new Button(Icons.close);
   this.colorButton = new Button(Icons.circle);
@@ -56,11 +57,11 @@ SelectionListItem.prototype = Object.create(ListItem.prototype);
 SelectionListItem.prototype.constructor = SelectionListItem;
 
 SelectionListItem.prototype.hide = function () {
-  this.visibilityButton.addClass("controls-deactivated");
+  this.visibilityButton.addClass("deactivated");
 };
 
 SelectionListItem.prototype.show = function () {
-  this.visibilityButton.removeClass("controls-deactivated");
+  this.visibilityButton.removeClass("deactivated");
 };
 
 SelectionListItem.prototype.changeColor = function (color) {

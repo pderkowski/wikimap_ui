@@ -26,7 +26,7 @@ var List = function (parent) {
 
   function createNode() {
     var node = document.createElement("ul");
-    node.classList.add("controls-list");
+    node.className = "my rounded animated list with-shadow";
     parent.appendChild(node);
     return node;
   }
@@ -41,17 +41,14 @@ List.prototype.addItem = function (name, item) {
   this._items.push(item);
 
   this._node.appendChild(item.node());
-
-  if (this._items.length == 1) {
-    this._node.classList.add("controls-show");
-  }
 };
 
 List.prototype.removeItem = function (name) {
   this._removeItemAfterTransition(name); // register end-of-transition listener
 
   var item = this.getItem(name).node();
-  item.classList.remove("controls-show"); // start transition
+  item.classList.add("hide");
+  item.classList.remove("show"); // start transition
 };
 
 List.prototype.hasItem = function (name) {
@@ -78,10 +75,6 @@ List.prototype._removeItemAfterTransition = function (name) {
     var index = that._getIndex(name);
     that._names.splice(index, 1);
     that._items.splice(index, 1);
-
-    if (that._items.length == 0) {
-      that._node.classList.remove("controls-show");
-    }
   });
 };
 

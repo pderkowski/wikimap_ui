@@ -3,46 +3,72 @@
   bottom: 24px; left: 24px;
 }
 
-.controls-list {
-  list-style-type: none;
-  width: 250px;
-  padding: 0;
-  margin: 0;
-  opacity: 0;
-  overflow: hidden;
-
+.my.rounded {
   -webkit-border-radius: 14px;
   -moz-border-radius: 14px;
   border-radius: 14px;
   border-width: 1px;
-  background: #fff;
   border-color: #000;
   border-style: solid;
+}
 
+.my.with-shadow {
   box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
 }
 
-.controls-list.controls-show {
-  opacity: 1;
+.my.animated {
+  transition: all 0.4s linear 0s;
 }
 
-.controls-list li {
-  transition: all 0.5s ease-out 0s;
+.my.animated.hidden {
+  transition: none;
+}
+
+.my.animated.hidden.hide {
+  transition: all 0.4s linear, visibility 0s 0.4s;
+}
+
+.my.animated.hidden.show {
+  transition-property: opacity, left, top;
+  transition-duration: 0.4s;
+  transition-timing-function: linear;
+  transition-delay: 0s;
+}
+
+.my.hidden {
   opacity: 0;
+  visibility: hidden;
+}
+
+.my.hidden.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.my.list {
+  list-style-type: none;
+  width: 250px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.my.list-item {
   height: 0;
   padding: 6px 8px;
   position: relative;
   font: bold 12px Arial, Helvetica, Sans-serif;
   color: #222;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.controls-list li.controls-show {
-  opacity: 1;
+.my.list-item.show {
   height: 16px;
 }
 
-.controls-button-container {
+.my.button-container {
   float: right;
   overflow: hidden;
 /*  position: absolute;
@@ -51,11 +77,11 @@
   margin-top: -8px;*/
 }
 
-.controls-button-container .controls-button {
+.my.button-container .my.button {
   margin-left: 3px;
 }
 
-.controls-label {
+.my.label {
   line-height: 16px;
   width: 75%;
   display: inline-block;
@@ -65,7 +91,7 @@
   white-space: nowrap;
 }
 
-.controls-button {
+.my.button {
   padding: 0;
   border: none;
   background: none;
@@ -77,55 +103,24 @@
   float: left;
 }
 
-.controls-button.first {
+.my.button.first {
   clear: left;
 }
 
-.controls-deactivated {
+.my.deactivated {
   color: #ccc;
 }
 
-.controls-colorpalette {
-  -webkit-border-radius: 14px;
-  -moz-border-radius: 14px;
-  border-radius: 14px;
-  border-width: 1px;
+.my.colorpalette {
   background: #fff;
-  border-color: #000;
-  border-style: solid;
-
-  box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
-
   max-width: 250px;
   padding: 6px;
 }
 
-.controls-colorpalette.controls-show {
+/*.my.colorpalette.show {
   display: inline-block;
-}
+}*/
 
-/*.controls-colorpalette .controls-button {
-  float: left;
-}
-
-.controls-colorpalette .controls-button.first {
-  clear: left;
-}
-*/
 #palette {
   position: absolute;
-  opacity: 0;
-
-  transition: visibility 0s 0.3s, opacity 0.3s ease-in;
-
-  visibility: hidden;
-}
-
-#palette.controls-show {
-  opacity: 1;
-  visibility: visible;
-  transition-property: opacity, left, top;
-  transition-duration: 0.3s, 0.3s, 0.3s;
-  transition-timing-function: ease-out, linear, linear;
-  transition-delay: 0s;
 }

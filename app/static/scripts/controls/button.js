@@ -1,11 +1,10 @@
-var Button = function (icon, userClasses) {
+var Button = function (icon) {
   var that = this;
 
   this._enabled = true;
 
   var div = document.createElement('div');
-  var classes = ["controls-button"].concat(userClasses || []);
-  var html = '<button type=button  class="' + classes.join(' ') + '">';
+  var html = '<button type=button  class="my button">';
   html += icon;
   html += "</button>";
 
@@ -39,14 +38,14 @@ Button.prototype.removeClass = function (className) {
 Button.prototype.disable = function () {
   if (this._enabled) {
     this._enabled = false;
-    this.addClass("controls-deactivated");
+    this.addClass("deactivated");
   }
 };
 
 Button.prototype.enable = function () {
   if (!this._enabled) {
     this._enabled = true;
-    this.removeClass("controls-deactivated");
+    this.removeClass("deactivated");
   }
 };
 
