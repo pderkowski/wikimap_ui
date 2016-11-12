@@ -3,6 +3,12 @@
   bottom: 24px; left: 24px;
 }
 
+.my.in-top-right-corner {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
 .my.rounded {
   -webkit-border-radius: 14px;
   -moz-border-radius: 14px;
@@ -29,10 +35,12 @@
 }
 
 .my.animated.hidden.show {
-  transition-property: opacity, left, top;
+  transition: all 0.4s linear 0s;
+
+/*  transition-property: opacity, left, top;
   transition-duration: 0.4s;
   transition-timing-function: linear;
-  transition-delay: 0s;
+  transition-delay: 0s;*/
 }
 
 .my.hidden {
@@ -71,10 +79,6 @@
 .my.button-container {
   float: right;
   overflow: hidden;
-/*  position: absolute;
-  right: 6px;*/
-/*  top: 50%;
-  margin-top: -8px;*/
 }
 
 .my.button-container .my.button {
@@ -85,7 +89,6 @@
   line-height: 16px;
   width: 75%;
   display: inline-block;
-  /*vertical-align: middle;*/,
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -117,9 +120,9 @@
   padding: 6px;
 }
 
-/*.my.colorpalette.show {
-  display: inline-block;
-}*/
+.my.panel {
+  background: #fff;
+}
 
 #palette {
   position: absolute;

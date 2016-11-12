@@ -3,7 +3,7 @@ var d3 = require('d3');
 // This class "controls" what is "viewed" by zooming, centering and resizing the "view".
 // It is also responsible for setting and maintaining the "view" parts of the converters,
 // that is calling the setViewboxSize and setZoom methods.
-var ViewController = function (canvas, converters, view) {
+var ViewController = function (canvas, converters, view, interface) {
   var that = this;
 
   // the way zoom works in d3 is:
@@ -28,6 +28,8 @@ var ViewController = function (canvas, converters, view) {
   bindZoomBehaviorTo(canvas.content, zoomBehavior);
 
   bindResizeHandlerTo(window, applyResize);
+
+  bindDotClickHandlerTo(canvas.dots, interface.showDetails);
 
   applyResize();
 
@@ -88,6 +90,17 @@ var ViewController = function (canvas, converters, view) {
     }
 
     element.addEventListener("resize", resizeThrottler, false);
+  }
+
+  function bindDotClickHandlerTo(selection, handler) {
+    selection.on("click", function (p) {
+      if (d3.event.defaultPrevented) {
+        return;
+      }
+
+      var selection = d3.select(d3.event.target); // we listen on a group of dots, this gets the specific dot
+      handler(selection.datum());
+    });
   }
 };
 

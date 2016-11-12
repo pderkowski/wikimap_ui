@@ -6,6 +6,7 @@ var ViewController = require('./viewcontroller');
 var SelectionController = require('./selectioncontroller');
 var Search = require('./search');
 var Colors = require('./colors');
+var Details = require('./details');
 
 var Wikimap = function () {
   var that = this;
@@ -51,6 +52,15 @@ var Wikimap = function () {
         that._selections.showUnselectedPoints();
       }
     },
+
+    showDetails: function (dot) {
+      that._details.set(dot);
+      that._details.show();
+    },
+
+    hideDetails: function () {
+      that._details.hide();
+    }
   };
 
   this.start = function () {
@@ -62,8 +72,9 @@ var Wikimap = function () {
     return that._data.init()
       .then(function () {
         that._view = new View(that._canvas, that._converters, that._data, that._colors.getDefault());
-        that._viewController = new ViewController(that._canvas, that._converters, that._view);
+        that._viewController = new ViewController(that._canvas, that._converters, that._view, interface);
         that._selections = new SelectionController(interface, that._colors);
+        that._details = new Details();
         Search(interface);
       });
   };
