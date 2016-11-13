@@ -10,7 +10,7 @@
 }
 
 #search-box {
-  background: url(images/search-dark.png) no-repeat 10px 6px #fff;
+  background: url(../images/search-dark.png) no-repeat 10px 6px #fff;
   border: 1px solid #000;
   font: bold 12px Arial, Helvetica, Sans-serif;
   color: #777;
