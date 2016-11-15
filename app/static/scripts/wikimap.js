@@ -6,7 +6,7 @@ var ViewController = require('./viewcontroller');
 var SelectionController = require('./selectioncontroller');
 var Search = require('./search');
 var Colors = require('./colors');
-var Details = require('./details');
+var PointInfo = require('components/pointinfo');
 
 var Wikimap = function () {
   var that = this;
@@ -54,12 +54,12 @@ var Wikimap = function () {
     },
 
     showDetails: function (dot) {
-      that._details.set(dot);
-      that._details.show();
+      that._pointInfo.title = dot.title;
+      that._pointInfo.show = true;
     },
 
     hideDetails: function () {
-      that._details.hide();
+      that._pointInfo.show = false;
     }
   };
 
@@ -68,13 +68,13 @@ var Wikimap = function () {
     that._canvas = new Canvas();
     that._converters = new Converters();
     that._data = new Data(that._converters);
+    that._pointInfo = new PointInfo({ el: '#pointinfo-container' });
 
     return that._data.init()
       .then(function () {
         that._view = new View(that._canvas, that._converters, that._data, that._colors.getDefault());
         that._viewController = new ViewController(that._canvas, that._converters, that._view, interface);
         that._selections = new SelectionController(interface, that._colors);
-        that._details = new Details();
         Search(interface);
       });
   };
