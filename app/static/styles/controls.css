@@ -35,7 +35,7 @@
 }
 
 .my.animated.hidden.show {
-  transition: all 0.4s linear 0s;
+  transition: opacity 0.4s linear 0s;
 
 /*  transition-property: opacity, left, top;
   transition-duration: 0.4s;

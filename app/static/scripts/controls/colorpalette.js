@@ -1,13 +1,13 @@
 var Button = require('./button');
 var Icons = require('./icons');
-var $ = require('jquery');
 require('jquery-ui/ui/position');
 
 var ColorPalette = function (element, colors, columns) {
   var that = this;
 
   this._element = element;
-  this._element.className = "my rounded hidden animated colorpalette with-shadow";
+  this._$element = $(this._element);
+  this._element.className = "my rounded hidden animated shaded colorpalette";
   // this._element.classList.add("controls-animated");
 
   var buttons = colors.map(function (c) {
@@ -43,7 +43,7 @@ ColorPalette.prototype.hide = function () {
   this._element.classList.remove("show");
 
   $(document).off("mousedown");
-  $(this._element).off("blur");
+  this._$element.off("blur");
 };
 
 ColorPalette.prototype.isVisible = function () {
@@ -56,17 +56,15 @@ ColorPalette.prototype.show = function (position) {
 
   this._hideOnClickOutside();
 
-  $(this._element).attr("tabindex", -1); // required to focus div
-  $(this._element).focus();
+  this._$element.attr("tabindex", -1); // required to focus div
+  this._$element.focus();
 
-  $(this._element).position(position);
+  this._$element.position(position);
 };
 
 ColorPalette.prototype._isTarget = function (e) {
-  var element = $(this._element);
-
-  return (element.is(e.target) // the target of the click is the element...
-    || element.has(e.target).length !== 0); // ... or a descendant of the element
+  return (this._$element.is(e.target) // the target of the click is the element...
+    || this._$element.has(e.target).length !== 0); // ... or a descendant of the element
 };
 
 ColorPalette.prototype._hideOnClickOutside = function () {
@@ -80,7 +78,7 @@ ColorPalette.prototype._hideOnClickOutside = function () {
     }
   });
 
-  $(this._element).on("blur", function (e) { // hide if lost focus
+  this._$element.on("blur", function (e) { // hide if lost focus
     that.hide();
   });
 };
