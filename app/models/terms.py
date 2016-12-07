@@ -54,7 +54,7 @@ class Index(object):
     def _addData(self, dataPath, extractor):
         print 'Adding data from {}'.format(dataPath)
 
-        writer = self._index.writer()
+        writer = self._index.writer(procs=4, limitmb=1024, multisegment=True)
 
         with codecs.open(dataPath, 'r', encoding='utf8') as file:
             for line in file:
@@ -63,7 +63,7 @@ class Index(object):
                 writer.add_document(key=key, dataKey=dataKey)
 
         cPickle.dump(self._data, open(self._storagePath, 'wb'))
-        writer.commit(optimize=True)
+        writer.commit()
 
     def _storeData(self, value):
         self._data.append(value)
@@ -79,7 +79,7 @@ class Index(object):
 class TermIndex(Index):
     def __init__(self, idxPath, pointsPath, categoriesPath):
         super(TermIndex, self).__init__(idxPath)
-        self._schema = Schema(key=NGRAMWORDS(minsize=1), dataKey=STORED)
+        self._schema = Schema(key=NGRAMWORDS(minsize=2), dataKey=STORED)
         self._parser = SimpleParser('key', self._schema)
         self._pointsPath = pointsPath
         self._categoriesPath = categoriesPath

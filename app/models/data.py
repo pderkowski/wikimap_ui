@@ -1,13 +1,16 @@
 import random
+import os
 from flask import current_app
 from terms import TermIndex
 from datapoints import Datapoints
 from categories import Categories
 
 class Data(object):
-    def __init__(self, datapointsPath, categoriesPath):
-        termIdxPath = 'term.idx'
-        datapointsDbPath = 'datapoints.db'
+    def __init__(self, dataPath):
+        datapointsPath = os.path.join(dataPath, 'visualizedPoints')
+        categoriesPath = os.path.join(dataPath, 'visualizedCategories')
+        termIdxPath = os.path.join(dataPath, 'term.idx')
+        datapointsDbPath = os.path.join(dataPath, 'datapoints.db')
 
         self._loadDatapoints(datapointsDbPath, datapointsPath)
         self._loadCategories(categoriesPath)

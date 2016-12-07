@@ -3,7 +3,7 @@ from app import createApp
 import argparse
 import os
 
-app = createApp('points', 'categories')
+app = createApp('data')
 
 # def main():
 #     # parser = argparse.ArgumentParser()
@@ -19,4 +19,4 @@ app = createApp('points', 'categories')
 #     #     print 'Could not open "{}".'.format(args.data_path)
 
 if __name__=="__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

@@ -1,11 +1,11 @@
 import os
 from flask import Flask
 
-def createApp(pointsPath, categoriesPath):
+def createApp(dataPath):
     app = Flask(__name__)
 
     from app.models.data import Data
-    app.data = Data(pointsPath, categoriesPath)
+    app.data = Data(dataPath)
 
     from app.controllers import bp
     app.register_blueprint(bp)
