@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from utils import MyEncoder
 
 def createApp(dataPath):
     app = Flask(__name__)
@@ -11,5 +12,6 @@ def createApp(dataPath):
     app.register_blueprint(bp)
 
     app.secret_key = os.urandom(24)
+    app.json_encoder = MyEncoder
 
     return app

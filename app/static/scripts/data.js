@@ -1,5 +1,4 @@
 var Cache = require('./cache');
-var $ = require('jquery');
 
 var Data = function (converters) {
   var that = this;
@@ -15,7 +14,7 @@ var Data = function (converters) {
   this.init = function () {
     return $.getJSON($SCRIPT_ROOT + 'bounds')
       .then(function (db) {
-        var dataBounds = [[db.range.xMin, db.range.yMin], [db.range.xMax, db.range.yMax]];
+        var dataBounds = [[db.xMin, db.yMin], [db.xMax, db.yMax]];
         converters.setDataBounds(dataBounds);
       });
   };
