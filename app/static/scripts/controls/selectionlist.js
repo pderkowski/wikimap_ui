@@ -1,4 +1,5 @@
 var ColorPalette = require('./colorpalette');
+var Data = require('../data');
 
 /* From Modernizr */
 var transitionEvent = (function () {
@@ -78,12 +79,12 @@ List.prototype._removeItemAfterTransition = function (name) {
   });
 };
 
-var SelectionList = function (parent, colors) {
+var SelectionList = function (parent) {
   var that = this;
 
   List.call(this, parent);
 
-  this.palette = new ColorPalette(document.getElementById("palette"), colors, 4);
+  this.palette = new ColorPalette(document.getElementById("palette"), Data.Colors.getValues(), 4);
 };
 
 SelectionList.prototype = Object.create(List.prototype);

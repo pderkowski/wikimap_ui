@@ -1,10 +1,11 @@
 var SelectionList = require('./controls/selectionlist');
 var SelectionListItem = require('./controls/selectionlistitem');
+var Data = require('./data');
 
-var SelectionController = function (wikimap, colors) {
+var SelectionController = function (wikimap) {
   var that = this;
 
-  var list = new SelectionList(document.getElementById("selections-container"), colors.getValues());
+  var list = new SelectionList(document.getElementById("selections-container"));
   var unselectedPointsLabel = "Unselected points";
   list.addItem(unselectedPointsLabel, createUnselectedPointsSelectionItem());
 
@@ -65,7 +66,7 @@ var SelectionController = function (wikimap, colors) {
   }
 
   function createUnselectedPointsSelectionItem() {
-    var item = new SelectionListItem("<i>"+unselectedPointsLabel+"</i>", colors.getDefault());
+    var item = new SelectionListItem("<i>"+unselectedPointsLabel+"</i>", Data.Colors.getDefault());
     item.colorButton.addHandler(function () {
       list.showPaletteAt(unselectedPointsLabel);
       list.palette.setHandler(function (selectedColor) {

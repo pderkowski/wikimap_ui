@@ -1,4 +1,5 @@
 var Cache = require('./cache');
+var Colors = require('./colors');
 
 var Bounds = function () {
   function url() { return $SCRIPT_ROOT + 'bounds'; }
@@ -68,5 +69,6 @@ module.exports = {
   Tile: new Tile(),
   Category: new Category(),
   Point: new Point(),
-  Term: new Term()
+  Term: new Term(),
+  Colors: new Colors()
 };

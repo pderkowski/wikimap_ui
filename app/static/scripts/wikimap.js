@@ -5,7 +5,6 @@ var View = require('./view');
 var ViewController = require('./viewcontroller');
 var SelectionController = require('./selectioncontroller');
 var Search = require('./search');
-var Colors = require('./colors');
 var PointInfo = require('components/pointinfo');
 
 var Wikimap = function () {
@@ -13,13 +12,13 @@ var Wikimap = function () {
 
   var interface = {
     addCategorySelection: function (name) {
-      var color = that._colors.pick();
+      var color = Data.Colors.pick();
       that._view.addCategorySelection(name, color);
       that._selectionMenu.add(name, color);
     },
 
     addPointSelection: function (name) {
-      var color = that._colors.pick();
+      var color = Data.Colors.pick();
       that._view.addPointSelection(name, color);
       that._selectionMenu.add(name, color);
     },
@@ -70,7 +69,6 @@ var Wikimap = function () {
   };
 
   this.start = function () {
-    that._colors = new Colors();
     that._canvas = new Canvas();
     that._converters = new Converters();
     that._pointInfo = new PointInfo({ el: '#pointinfo-container' });
@@ -78,9 +76,9 @@ var Wikimap = function () {
     return Data.Bounds.get()
       .then(function (bounds) {
         that._converters.setDataBounds(bounds);
-        that._view = new View(that._canvas, that._converters, that._colors.getDefault());
+        that._view = new View(that._canvas, that._converters);
         that._viewController = new ViewController(that._canvas, that._converters, that._view, interface);
-        that._selectionMenu = new SelectionController(interface, that._colors);
+        that._selectionMenu = new SelectionController(interface);
         Search(interface);
       });
   };

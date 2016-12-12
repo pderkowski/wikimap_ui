@@ -8,12 +8,12 @@ var Data = require('./data');
 // can be made, so that when the data finally arrives from the server it may no longer be needed.
 // The second one is expensive, so we want to avoid doing it needlessly.
 // These reasons make drawing a tile somewhat more complicated.
-var TileDrawer = function (renderer, color) {
+var TileDrawer = function (renderer) {
   var that = this;
 
   var register = new Register();
 
-  this._color = color;
+  this._color = Data.Colors.getDefault();
   this._enabled = true;
 
   this.draw = function (tiles) {
