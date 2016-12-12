@@ -1,11 +1,20 @@
-var CategoryDrawer = function (data, renderer) {
+var SelectionDrawer = function (data, renderer) {
   var that = this;
 
-  this.add = function (name, color) {
-    data.getCategory(name)
+  this.addCategory = function (name, color) {
+    data.Category.get(name)
       .then(function (points) {
         if (!renderer.has(name)) {
           renderer.add(name, points, 1, color);
+        }
+      });
+  };
+
+  this.addPoint = function (name, color) {
+    data.Point.get(name)
+      .then(function (point) {
+        if (!renderer.has(name)) {
+          renderer.add(name, [point], 2, color);
         }
       });
   };
@@ -35,4 +44,4 @@ var CategoryDrawer = function (data, renderer) {
   };
 };
 
-module.exports = CategoryDrawer;
+module.exports = SelectionDrawer;

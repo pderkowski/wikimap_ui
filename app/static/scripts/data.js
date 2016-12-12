@@ -1,32 +1,72 @@
 var Cache = require('./cache');
 
-var Data = function (converters) {
-  var that = this;
+var Bounds = function () {
+  function url() { return $SCRIPT_ROOT + 'bounds'; }
 
-  var tileCache = new Cache(1000,
+  this.get = function () { return $.getJSON(url()); };
+};
+
+var Tile = function () {
+  function url(x, y, z) {
+    return $SCRIPT_ROOT + 'points!'+x+'!'+y+'!'+z
+  }
+
+  var cache = new Cache(1000,
     function (x, y, z) { return x+','+y+','+z; },
-    function (x, y, z) { return $.getJSON($SCRIPT_ROOT + 'points!'+x+'!'+y+'!'+z); });
+    function (x, y, z) { return $.getJSON(url(x, y, z)); });
 
-  var categoryCache = new Cache(50,
-    function (c) { return c; },
-    function (c) { return $.getJSON($SCRIPT_ROOT + 'category?title='+c); });
-
-  this.init = function () {
-    return $.getJSON($SCRIPT_ROOT + 'bounds')
-      .then(function (db) {
-        var dataBounds = [[db.xMin, db.yMin], [db.xMax, db.yMax]];
-        converters.setDataBounds(dataBounds);
-      });
-  };
-
-  this.getTile = function (tile) {
-    var args = tile.split(',');
-    return tileCache.get(args[0], args[1], args[2]);
-  };
-
-  this.getCategory = function (category) {
-    return categoryCache.get(category);
+  this.get = function (name) {
+    var args = name.split(',');
+    return cache.get(args[0], args[1], args[2]);
   };
 };
 
-module.exports = Data;
+var Category = function () {
+  function url(c) {
+    return $SCRIPT_ROOT + 'category?title=' + c;
+  }
+
+  var cache = new Cache(50,
+    function (c) { return c; },
+    function (c) { return $.getJSON(url(c)); });
+
+  this.get = function (name) {
+    return cache.get(name);
+  };
+};
+
+var Point = function () {
+  function url(p) {
+    return $SCRIPT_ROOT + 'point?title=' + p;
+  }
+
+  var cache = new Cache(100,
+    function (p) { return p; },
+    function (p) { return $.getJSON(url(p)); });
+
+  this.get = function (name) {
+    return cache.get(name);
+  };
+};
+
+var Term = function () {
+  function url(t) {
+    return $SCRIPT_ROOT+'search?title='+t;
+  }
+
+  var cache = new Cache(1000,
+    function (t) { return t; },
+    function (t) { return $.getJSON(url(t)); });
+
+  this.get = function (name) {
+    return cache.get(name);
+  };
+};
+
+module.exports = {
+  Bounds: new Bounds(),
+  Tile: new Tile(),
+  Category: new Category(),
+  Point: new Point(),
+  Term: new Term()
+};

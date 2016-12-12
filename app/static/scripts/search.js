@@ -1,14 +1,10 @@
 var $ = require('jquery');
 require('jquery-ui/ui/widgets/autocomplete');
 
-function searchTerm(term) {
-  return $.getJSON($SCRIPT_ROOT+'search?title='+term);
-}
-
-var search = function (wikimap) {
+var search = function (wikimap, data) {
   $("#search-box").autocomplete({
     source: function(request, response) {
-      searchTerm(request.term)
+      data.Term.get(request.term)
         .done(function (data) {
           response($.map(data, function (hit) {
             return {
@@ -29,17 +25,10 @@ var search = function (wikimap) {
     },
     select: function (event, ui) {
       if (ui.item.isCategory) {
-        wikimap.addCategory(ui.item.value);
+        wikimap.addCategorySelection(ui.item.value);
+      } else {
+        wikimap.addPointSelection(ui.item.value);
       }
-      // else {
-      //   getPoint(ui.item.value)
-      //     .done(function (points) {
-      //       if (points.length > 0) {
-      //         wikimap.select([points[0].id]);
-      //         wikimap.centerOn(points[0].x, points[0].y);
-      //       }
-      //     });
-      // }
     },
   })
   .autocomplete("instance")._renderItem = function(ul, item) {

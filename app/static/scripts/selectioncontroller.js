@@ -11,7 +11,7 @@ var SelectionController = function (wikimap, colors) {
 
   this.add = function (name, color) {
     if (!list.hasItem(name)) {
-      list.addItem(name, createCategorySelectionItem(name, color));
+      list.addItem(name, createSelectionItem(name, color));
     }
   };
 
@@ -51,14 +51,14 @@ var SelectionController = function (wikimap, colors) {
     list.getItem(unselectedPointsLabel).hide();
   };
 
-  function createCategorySelectionItem(name, color) {
+  function createSelectionItem(name, color) {
     var item = new SelectionListItem(name, color);
-    item.visibilityButton.addHandler(function () { wikimap.toggleCategory(name); });
-    item.closeButton.addHandler(function () { wikimap.removeCategory(name); });
+    item.visibilityButton.addHandler(function () { wikimap.toggleSelection(name); });
+    item.closeButton.addHandler(function () { wikimap.removeSelection(name); });
     item.colorButton.addHandler(function () {
       list.showPaletteAt(name);
       list.palette.setHandler(function (selectedColor) {
-        wikimap.changeCategoryColor(name, selectedColor);
+        wikimap.changeSelectionColor(name, selectedColor);
       });
     });
     return item;

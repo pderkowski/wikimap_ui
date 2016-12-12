@@ -1,10 +1,10 @@
-var CategoryDrawer = require('./categorydrawer');
+var SelectionDrawer = require('./selectiondrawer');
 var TileDrawer = require('./tiledrawer');
 var Renderer = require('./renderer');
 
 var View = function (canvas, converters, data, color) {
   var renderer = new Renderer(canvas, converters);
-  var categoryDrawer = new CategoryDrawer(data, renderer);
+  var selectionDrawer = new SelectionDrawer(data, renderer);
   var tileDrawer = new TileDrawer(data, renderer, color);
 
   this.setZoom = function (transform) {
@@ -25,24 +25,28 @@ var View = function (canvas, converters, data, color) {
     tileDrawer.redraw();
   };
 
-  this.addCategory = function (name, color) {
-    categoryDrawer.add(name, color);
+  this.addCategorySelection = function (name, color) {
+    selectionDrawer.addCategory(name, color);
   };
 
-  this.removeCategory = function (name) {
-    categoryDrawer.remove(name);
+  this.addPointSelection = function (name, color) {
+    selectionDrawer.addPoint(name, color);
   };
 
-  this.hasCategory = function (name) {
-    return categoryDrawer.has(name);
+  this.removeSelection = function (name) {
+    selectionDrawer.remove(name);
   };
 
-  this.showCategory = function (name) {
-    categoryDrawer.show(name);
+  this.hasSelection = function (name) {
+    return selectionDrawer.has(name);
   };
 
-  this.hideCategory = function (name) {
-    categoryDrawer.hide(name);
+  this.showSelection = function (name) {
+    selectionDrawer.show(name);
+  };
+
+  this.hideSelection = function (name) {
+    selectionDrawer.hide(name);
   };
 
   this.hasUnselectedPoints = function () {
@@ -57,8 +61,8 @@ var View = function (canvas, converters, data, color) {
     tileDrawer.disable();
   };
 
-  this.changeCategoryColor = function (name, color) {
-    categoryDrawer.changeColor(name, color);
+  this.changeSelectionColor = function (name, color) {
+    selectionDrawer.changeColor(name, color);
   };
 
   this.changeUnselectedPointsColor = function (color) {

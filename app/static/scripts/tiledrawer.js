@@ -62,7 +62,7 @@ var TileDrawer = function (data, renderer, color) {
 
   function drawTile (tile) {
     // console.log("requesting "+tile);
-    data.getTile(tile)
+    data.Tile.get(tile)
       .then(function (points) {
         // console.log("drawing "+tile);
         if (register.isRequested(tile)) {
