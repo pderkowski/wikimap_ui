@@ -20,6 +20,7 @@ var Wikimap = function () {
       var color = Data.Colors.pick();
       that._viewController.addPointSelection(name, color);
       that._selectionController.add(name, color);
+      that._viewController.centerOn(name);
     },
 
     removeSelection: function (name) {
@@ -64,7 +65,7 @@ var Wikimap = function () {
 
     hideDetails: function () {
       that._pointInfo.show = false;
-    }
+    },
   };
 
   this.start = function () {

@@ -1,5 +1,6 @@
 var d3 = require('d3');
 var View = require('./view');
+var Data = require('./data');
 
 // This class "controls" what is "viewed" by zooming, centering and resizing the "view".
 // It is also responsible for setting and maintaining the "view" parts of the converters,
@@ -48,18 +49,15 @@ var ViewController = function (canvas, converters, interface) {
   this.hideUnselectedPoints = this._view.hideUnselectedPoints;
   this.showUnselectedPoints = this._view.showUnselectedPoints;
 
-  // centers the view on the specified _DATA_ point, preserving current zoom
-  // this.centerOn = function (point) {
-  //   var center = canvas.getSize();
-  //   var vbPoint = converters.data2viewbox(point);
-  //   var scale = that._transform.k;
-
-  //   var newTransform = d3.zoomIdentity
-  //     .translate(center[0] - scale * vbPoint[0], center[1] - scale * vbPoint[1])
-  //     .scale(scale);
-
-  //   that.zoom(newTransform);
-  // };
+  this.centerOn = function (name) {
+    Data.Point.get(name)
+      .then(function (datapoint) {
+        var center = converters.view2viewbox([canvas.getSize()[0] / 2, canvas.getSize()[1] / 2]);
+        var point = converters.data2viewbox([datapoint.x, datapoint.y]);
+        var transform = getZoomTransform().translate(center[0] - point[0], center[1] - point[1]);
+        that.zoom(transform);
+      });
+  };
 
   function defineZoomBehavior() {
     return d3.zoom()
@@ -76,17 +74,15 @@ var ViewController = function (canvas, converters, interface) {
     that._view.setZoom(transform);
   }
 
-  function applyResize() {
-    // var oldSize = canvas.getSize();
-    // var oldCenter = [oldSize[0] / 2, oldSize[1] / 2];
-    // var centeredPoint = converters.view2data(oldCenter);
+  function getZoomTransform() {
+    return d3.zoomTransform(canvas.content.node());
+  }
 
+  function applyResize() {
     canvas.stretchToFit();
 
     var newSize = canvas.getSize();
     converters.setViewboxSize(newSize);
-
-    // that.centerOn(centeredPoint);
 
     that.resetZoom();
     that._view.redraw();
