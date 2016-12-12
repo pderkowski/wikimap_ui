@@ -1,7 +1,6 @@
 var Canvas = require('./canvas');
 var Converters = require('./converters');
 var Data = require('./data');
-var View = require('./view');
 var ViewController = require('./viewcontroller');
 var SelectionController = require('./selectioncontroller');
 var Search = require('./search');
@@ -13,48 +12,48 @@ var Wikimap = function () {
   var interface = {
     addCategorySelection: function (name) {
       var color = Data.Colors.pick();
-      that._view.addCategorySelection(name, color);
-      that._selectionMenu.add(name, color);
+      that._viewController.addCategorySelection(name, color);
+      that._selectionController.add(name, color);
     },
 
     addPointSelection: function (name) {
       var color = Data.Colors.pick();
-      that._view.addPointSelection(name, color);
-      that._selectionMenu.add(name, color);
+      that._viewController.addPointSelection(name, color);
+      that._selectionController.add(name, color);
     },
 
     removeSelection: function (name) {
-      that._view.removeSelection(name);
-      that._selectionMenu.remove(name);
+      that._viewController.removeSelection(name);
+      that._selectionController.remove(name);
     },
 
     toggleSelection: function (name) {
-      if (that._view.hasSelection(name)) {
-        that._view.hideSelection(name);
-        that._selectionMenu.hide(name);
+      if (that._viewController.hasSelection(name)) {
+        that._viewController.hideSelection(name);
+        that._selectionController.hide(name);
       } else {
-        that._view.showSelection(name);
-        that._selectionMenu.show(name);
+        that._viewController.showSelection(name);
+        that._selectionController.show(name);
       }
     },
 
     changeSelectionColor: function (name, color) {
-      that._view.changeSelectionColor(name, color);
-      that._selectionMenu.changeColor(name, color);
+      that._viewController.changeSelectionColor(name, color);
+      that._selectionController.changeColor(name, color);
     },
 
     changeUnselectedPointsColor: function (color) {
-      that._view.changeUnselectedPointsColor(color);
-      that._selectionMenu.changeUnselectedPointsColor(color);
+      that._viewController.changeUnselectedPointsColor(color);
+      that._selectionController.changeUnselectedPointsColor(color);
     },
 
     toggleUnselectedPoints: function () {
-      if (that._view.hasUnselectedPoints()) {
-        that._view.hideUnselectedPoints();
-        that._selectionMenu.hideUnselectedPoints();
+      if (that._viewController.hasUnselectedPoints()) {
+        that._viewController.hideUnselectedPoints();
+        that._selectionController.hideUnselectedPoints();
       } else {
-        that._view.showUnselectedPoints();
-        that._selectionMenu.showUnselectedPoints();
+        that._viewController.showUnselectedPoints();
+        that._selectionController.showUnselectedPoints();
       }
     },
 
@@ -76,9 +75,8 @@ var Wikimap = function () {
     return Data.Bounds.get()
       .then(function (bounds) {
         that._converters.setDataBounds(bounds);
-        that._view = new View(that._canvas, that._converters);
-        that._viewController = new ViewController(that._canvas, that._converters, that._view, interface);
-        that._selectionMenu = new SelectionController(interface);
+        that._viewController = new ViewController(that._canvas, that._converters, interface);
+        that._selectionController = new SelectionController(interface);
         Search(interface);
       });
   };

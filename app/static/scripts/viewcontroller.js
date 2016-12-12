@@ -1,10 +1,13 @@
 var d3 = require('d3');
+var View = require('./view');
 
 // This class "controls" what is "viewed" by zooming, centering and resizing the "view".
 // It is also responsible for setting and maintaining the "view" parts of the converters,
 // that is calling the setViewboxSize and setZoom methods.
-var ViewController = function (canvas, converters, view, interface) {
+var ViewController = function (canvas, converters, interface) {
   var that = this;
+
+  this._view = new View(canvas, converters);
 
   // the way zoom works in d3 is:
   // - zoomBehavior is created with d3.zoom()
@@ -33,6 +36,18 @@ var ViewController = function (canvas, converters, view, interface) {
 
   applyResize();
 
+  this.addCategorySelection = this._view.addCategorySelection;
+  this.addPointSelection = this._view.addPointSelection;
+  this.removeSelection = this._view.removeSelection;
+  this.hasSelection = this._view.hasSelection;
+  this.hideSelection = this._view.hideSelection;
+  this.showSelection = this._view.showSelection;
+  this.changeSelectionColor = this._view.changeSelectionColor;
+  this.changeUnselectedPointsColor = this._view.changeUnselectedPointsColor;
+  this.hasUnselectedPoints = this._view.hasUnselectedPoints;
+  this.hideUnselectedPoints = this._view.hideUnselectedPoints;
+  this.showUnselectedPoints = this._view.showUnselectedPoints;
+
   // centers the view on the specified _DATA_ point, preserving current zoom
   // this.centerOn = function (point) {
   //   var center = canvas.getSize();
@@ -58,7 +73,7 @@ var ViewController = function (canvas, converters, view, interface) {
 
   function applyZoom(transform) {
     converters.setZoom(transform);
-    view.setZoom(transform);
+    that._view.setZoom(transform);
   }
 
   function applyResize() {
@@ -74,7 +89,7 @@ var ViewController = function (canvas, converters, view, interface) {
     // that.centerOn(centeredPoint);
 
     that.resetZoom();
-    view.redraw();
+    that._view.redraw();
   }
 
   function bindResizeHandlerTo(element, handler) {
