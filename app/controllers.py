@@ -42,7 +42,7 @@ def getPoint():
 @bp.route('/details')
 def getDetails():
     title = request.args.get('title')
-    datapoint = g.data.getDatapointsByTitle(title)
+    datapoint = g.data.getDatapointByTitle(title)
     return jsonify(prepareDatapoints([datapoint])[0])
 
 @bp.route('/category')

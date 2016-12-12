@@ -59,8 +59,13 @@ var Wikimap = function () {
     },
 
     showDetails: function (dot) {
-      that._pointInfo.title = dot.title;
-      that._pointInfo.show = true;
+      Data.Details.get(dot.title)
+        .then(function (details) {
+          console.log(details);
+          that._pointInfo.title = details.title;
+          that._pointInfo.neighbors = details.highDimNeighs;
+          that._pointInfo.show = true;
+        });
     },
 
     hideDetails: function () {

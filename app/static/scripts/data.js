@@ -71,7 +71,7 @@ var Details = function () {
 
   var cache = new Cache(100,
     function (p) { return p; },
-    function (p) { return $.getJSON(url(t)); });
+    function (p) { return $.getJSON(url(p)); });
 
   this.get = function (name) {
     return cache.get(name);
