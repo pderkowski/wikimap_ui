@@ -1,8 +1,10 @@
-var SelectionDrawer = function (data, renderer) {
+var Data = require('./data');
+
+var SelectionDrawer = function (renderer) {
   var that = this;
 
   this.addCategory = function (name, color) {
-    data.Category.get(name)
+    Data.Category.get(name)
       .then(function (points) {
         if (!renderer.has(name)) {
           renderer.add(name, points, 1, color);
@@ -11,7 +13,7 @@ var SelectionDrawer = function (data, renderer) {
   };
 
   this.addPoint = function (name, color) {
-    data.Point.get(name)
+    Data.Point.get(name)
       .then(function (point) {
         if (!renderer.has(name)) {
           renderer.add(name, [point], 2, color);

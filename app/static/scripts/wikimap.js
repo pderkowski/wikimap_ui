@@ -78,10 +78,10 @@ var Wikimap = function () {
     return Data.Bounds.get()
       .then(function (bounds) {
         that._converters.setDataBounds(bounds);
-        that._view = new View(that._canvas, that._converters, Data, that._colors.getDefault());
+        that._view = new View(that._canvas, that._converters, that._colors.getDefault());
         that._viewController = new ViewController(that._canvas, that._converters, that._view, interface);
         that._selectionMenu = new SelectionController(interface, that._colors);
-        Search(interface, Data);
+        Search(interface);
       });
   };
 };

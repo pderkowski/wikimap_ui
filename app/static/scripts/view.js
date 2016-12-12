@@ -2,10 +2,10 @@ var SelectionDrawer = require('./selectiondrawer');
 var TileDrawer = require('./tiledrawer');
 var Renderer = require('./renderer');
 
-var View = function (canvas, converters, data, color) {
+var View = function (canvas, converters, color) {
   var renderer = new Renderer(canvas, converters);
-  var selectionDrawer = new SelectionDrawer(data, renderer);
-  var tileDrawer = new TileDrawer(data, renderer, color);
+  var selectionDrawer = new SelectionDrawer(renderer);
+  var tileDrawer = new TileDrawer(renderer, color);
 
   this.setZoom = function (transform) {
     renderer.setZoom(transform);

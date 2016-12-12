@@ -1,5 +1,5 @@
 var Register = require('./register');
-
+var Data = require('./data');
 // The class that manages fetching and drawing the tiles.
 // Drawing a tile may involve:
 // - fetching the data from the server if it is not cached
@@ -8,7 +8,7 @@ var Register = require('./register');
 // can be made, so that when the data finally arrives from the server it may no longer be needed.
 // The second one is expensive, so we want to avoid doing it needlessly.
 // These reasons make drawing a tile somewhat more complicated.
-var TileDrawer = function (data, renderer, color) {
+var TileDrawer = function (renderer, color) {
   var that = this;
 
   var register = new Register();
@@ -62,7 +62,7 @@ var TileDrawer = function (data, renderer, color) {
 
   function drawTile (tile) {
     // console.log("requesting "+tile);
-    data.Tile.get(tile)
+    Data.Tile.get(tile)
       .then(function (points) {
         // console.log("drawing "+tile);
         if (register.isRequested(tile)) {

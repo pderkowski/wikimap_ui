@@ -1,10 +1,10 @@
-var $ = require('jquery');
+var Data = require('./data');
 require('jquery-ui/ui/widgets/autocomplete');
 
-var search = function (wikimap, data) {
+var search = function (wikimap) {
   $("#search-box").autocomplete({
     source: function(request, response) {
-      data.Term.get(request.term)
+      Data.Term.get(request.term)
         .done(function (data) {
           response($.map(data, function (hit) {
             return {
