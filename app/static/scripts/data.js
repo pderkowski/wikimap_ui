@@ -27,7 +27,7 @@ var Category = function () {
     return $SCRIPT_ROOT + 'category?title=' + c;
   }
 
-  var cache = new Cache(50,
+  var cache = new Cache(100,
     function (c) { return c; },
     function (c) { return $.getJSON(url(c)); });
 
@@ -64,11 +64,26 @@ var Term = function () {
   };
 };
 
+var Details = function () {
+  function url(p) {
+    return $SCRIPT_ROOT+'details?title='+p;
+  }
+
+  var cache = new Cache(100,
+    function (p) { return p; },
+    function (p) { return $.getJSON(url(t)); });
+
+  this.get = function (name) {
+    return cache.get(name);
+  };
+};
+
 module.exports = {
   Bounds: new Bounds(),
   Tile: new Tile(),
   Category: new Category(),
   Point: new Point(),
   Term: new Term(),
-  Colors: new Colors()
+  Colors: new Colors(),
+  Details: new Details()
 };
