@@ -229,10 +229,12 @@ var Renderer = function(canvas, converters) {
     for (var i = 0; i < names.length; ++i) {
       var n = names[i];
       var priority = that._name2priority[n];
+
       if (priority == highestPriority) {
         highestPriorityNames.push(n);
       } else if (priority > highestPriority) {
         highestPriorityNames = [n];
+        highestPriority = priority;
       }
     }
 
