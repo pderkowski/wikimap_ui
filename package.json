@@ -17,8 +17,7 @@
     "d3-tip": "~0.7.1",
     "jquery": "~3.1.1",
     "jquery-ui": "^1.12.1",
-    "js-lru-cache": "~0.1.10",
-    "vue": "^2.0.5"
+    "js-lru-cache": "~0.1.10"
   },
   "devDependencies": {
     "css-loader": "^0.25.0",

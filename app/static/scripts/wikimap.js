@@ -4,7 +4,7 @@ var Data = require('./data');
 var ViewController = require('./viewcontroller');
 var SelectionController = require('./selectioncontroller');
 var Search = require('./search');
-var PointInfo = require('components/pointinfo');
+var PointInfo = require('controls/pointinfo');
 
 var Wikimap = function () {
   var that = this;
@@ -62,21 +62,20 @@ var Wikimap = function () {
       Data.Details.get(dot.title)
         .then(function (details) {
           console.log(details);
-          that._pointInfo.title = details.title;
-          that._pointInfo.neighbors = details.highDimNeighs;
-          that._pointInfo.show = true;
+          that._pointInfo.setData(details);
+          that._pointInfo.show();
         });
     },
 
     hideDetails: function () {
-      that._pointInfo.show = false;
+      that._pointInfo.hide();
     },
   };
 
   this.start = function () {
     that._canvas = new Canvas();
     that._converters = new Converters();
-    that._pointInfo = new PointInfo({ el: '#pointinfo-container' });
+    that._pointInfo = new PointInfo($('#pointinfo-container'));
 
     return Data.Bounds.get()
       .then(function (bounds) {

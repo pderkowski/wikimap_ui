@@ -10,11 +10,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        loader: 'babel',
-        exclude: /node_modules/
-      },
-      {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file',
         options: {
@@ -33,9 +28,6 @@ module.exports = {
   resolve: {
     root: [
       path.resolve('.')
-    ],
-    alias: {
-      vue: 'vue/dist/vue.js'
-    }
+    ]
   }
 };
