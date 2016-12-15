@@ -27,7 +27,6 @@ rect {
 
 .canvas-labels {
   text-anchor: middle;
-  font-family: Verdana, Geneva, sans-serif;
   pointer-events: none;
 }
 

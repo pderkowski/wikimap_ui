@@ -1,6 +1,11 @@
-#selections-container {
+body {
+  font-family: 'Open Sans', sans-serif;
+}
+
+.my.in-bottom-left-corner {
   position: absolute;
-  bottom: 24px; left: 24px;
+  bottom: 24px;
+  left: 24px;
 }
 
 .my.in-top-right-corner {
@@ -22,70 +27,32 @@
   box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
 }
 
-.my.animated {
-  transition: all 0.4s linear 0s;
-}
-
-.my.animated.hidden {
-  transition: none;
-}
-
-.my.animated.hidden.hide {
-  transition: all 0.4s linear, visibility 0s 0.4s;
-}
-
-.my.animated.hidden.show {
-  transition: opacity 0.4s linear 0s;
-
-/*  transition-property: opacity, left, top;
-  transition-duration: 0.4s;
-  transition-timing-function: linear;
-  transition-delay: 0s;*/
-}
-
-.my.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.my.hidden.show {
-  opacity: 1;
-  visibility: visible;
-}
-
 .my.list {
   list-style-type: none;
   width: 250px;
-  padding: 0;
+  padding: 6px 8px;
   margin: 0;
-  overflow: hidden;
   background: #fff;
 }
 
 .my.list-item {
-  height: 0;
-  padding: 6px 8px;
+  /*padding: 6px 8px;*/
   position: relative;
-  font: bold 12px Arial, Helvetica, Sans-serif;
+  /*font: bold 12px Arial, Helvetica, Sans-serif;*/
   color: #222;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.my.list-item.show {
   height: 16px;
 }
 
 .my.button-container {
   float: right;
-  overflow: hidden;
 }
 
-.my.button-container .my.button {
+.my.button-container > * {
   margin-left: 3px;
 }
 
-.my.label {
+.my.item-label {
   line-height: 16px;
   width: 75%;
   display: inline-block;
@@ -94,7 +61,7 @@
   white-space: nowrap;
 }
 
-.my.button {
+.my.button,.my.colorpicker {
   padding: 0;
   border: none;
   background: none;
@@ -102,12 +69,10 @@
   height: 16px;
   position: relative;
   color: #222;
-  display: block;
-  float: left;
+  display: inline-block;
 }
 
-.my.button.first {
-  clear: left;
+.my-button {
 }
 
 .my.deactivated {
@@ -115,15 +80,62 @@
 }
 
 .my.colorpalette {
+  z-index: 2;
   background: #fff;
-  max-width: 250px;
   padding: 6px;
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  -webkit-transform: translate(-50%, -100%);
+  -moz-transform: translate(-50%, -100%);
+  transform: translate(-50%, -100%);
+}
+
+.my.colorpalette-row, .my.button-container {
+  white-space: nowrap;
+  height: 16px
 }
 
 .my.panel {
   background: #fff;
 }
 
-#palette {
+.my.with-bottom-arrow {
+  z-index: 2;
   position: absolute;
+  background: #fff;
+  border: 1px solid #000;
+}
+.my.with-bottom-arrow:after, .my.with-bottom-arrow:before {
+  top: 100%;
+  left: 50%;
+  border: solid transparent;
+  content: " ";
+  position: absolute;
+  pointer-events: none;
+}
+
+.my.with-bottom-arrow:after {
+  border-color: rgba(255, 255, 255, 0);
+  border-top-color: #fff;
+  border-width: 8px;
+  margin-left: -8px;
+}
+
+.my.with-bottom-arrow:before {
+  border-color: rgba(0, 0, 0, 0);
+  border-top-color: #000;
+  border-width: 9px;
+  margin-left: -9px;
+}
+
+.my.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+  width: 100%;
+  height: 100%;
 }

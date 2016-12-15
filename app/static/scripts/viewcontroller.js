@@ -62,6 +62,7 @@ var ViewController = function (canvas, converters, interface) {
   function defineZoomBehavior() {
     return d3.zoom()
       .scaleExtent([1, Infinity])
+      .on("start", emitMousedown) // poor man's event propagation
       .on("zoom", function() { applyZoom(d3.event.transform); });
   }
 
@@ -112,6 +113,10 @@ var ViewController = function (canvas, converters, interface) {
       var selection = d3.select(d3.event.target); // we listen on a group of dots, this gets the specific dot
       handler(selection.datum());
     });
+  }
+
+  function emitMousedown () {
+    $(canvas.content.node()).trigger("mousedown");
   }
 };
 

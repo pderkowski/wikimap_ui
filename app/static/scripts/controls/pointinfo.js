@@ -1,13 +1,14 @@
-var PointInfo = function (hook) {
-  var that = this;
+var Dismissable = require('./dismissable');
+var Control = require('./control');
 
-  this._$panel = $('<div class="my hidden rounded shaded panel in-top-right-corner">');
-  this._$header = $('<h1>').appendTo(this._$panel);
-  this._$list = $('<ul>').appendTo(this._$panel);
+var PointInfo = function (options) {
+  var that = Control($('<div class="my hidden rounded shaded panel in-top-right-corner">'), options)
+  that = Dismissable(that);
 
-  this._$panel.appendTo(hook);
+  that._$header = $('<h1>').appendTo(that.$);
+  that._$list = $('<ul class="my list">').appendTo(that.$);
 
-  this.setData = function (data) {
+  that.setData = function (data) {
     that._$header.text(data.title);
     that._$list.empty();
     data.highDimNeighs.forEach(function (n) {
@@ -15,15 +16,16 @@ var PointInfo = function (hook) {
     });
   };
 
-  this.show = function () {
-    that._$panel.removeClass('hide');
-    that._$panel.addClass('show');
+  that.show = function () {
+    that.$.removeClass('hidden');
+    that.onClickOutside(that.hide);
   };
 
-  this.hide = function () {
-    that._$panel.removeClass('show');
-    that._$panel.addClass('hide');
+  that.hide = function () {
+    that.$.addClass('hidden');
   };
+
+  return that;
 };
 
 module.exports = PointInfo;
