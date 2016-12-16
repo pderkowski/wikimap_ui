@@ -4,11 +4,13 @@ var ColorPicker = require('./colorpicker');
 var Control = require('./control');
 var Data = require('../data');
 
-var MenuItem = function (label, color) {
-  var that = Control($('<li>').classify('menu-item'), {});
+var MenuItem = function (label, color, options) {
+  var that = Control($('<li>').classify('menu-item'), options);
 
   var $label = $('<div>').classify('item-label').text(label || "").appendTo(that.$);
   var $buttons = $('<div>').classify('button-container').appendTo(that.$);
+
+  $label.addTooltipIfOverflows();
 
   that.toggleButton = Button({ icon: Icons.eye });
   that.toggleButton.$.click(function () { that.$.trigger('toggle', [$label.text()]); });
@@ -33,9 +35,8 @@ var SelectionMenu = function (options) {
 
   that.add = function (name, color) {
     if (!items[name]) {
-      var item = new MenuItem(name, color);
+      var item = MenuItem(name, color, { hook: that.$ });
       items[name] = item;
-      that.$.append(item.$);
     }
   };
 
@@ -46,12 +47,11 @@ var SelectionMenu = function (options) {
     }
   };
 
-  var unselectedPoints = new MenuItem('Unselected points', Data.Colors.getDefault());
+  var unselectedPoints = MenuItem('Unselected points', Data.Colors.getDefault(), { hook: that.$ });
   unselectedPoints.removeButton.disable();
   unselectedPoints.$
     .on('toggle', function (event) { event.stopPropagation(); that.$.trigger('toggleUnselected'); })
-    .on('color', function (event, name, color) { event.stopPropagation(); that.$.trigger('colorUnselected', [color]); })
-    .appendTo(that.$);
+    .on('color', function (event, name, color) { event.stopPropagation(); that.$.trigger('colorUnselected', [color]); });
 
   return that;
 };

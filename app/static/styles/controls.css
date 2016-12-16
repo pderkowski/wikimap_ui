@@ -2,34 +2,9 @@ body {
   font-family: 'Open Sans', sans-serif;
 }
 
-.my.in-bottom-left-corner {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-}
-
-.my.in-top-right-corner {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-}
-
-.my.rounded {
-  -webkit-border-radius: 14px;
-  -moz-border-radius: 14px;
-  border-radius: 14px;
-  border-width: 1px;
-  border-color: #000;
-  border-style: solid;
-}
-
-.my.shaded {
-  box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
-}
 
 .my.list {
   list-style-type: none;
-  width: 250px;
   padding: 6px 8px;
   margin: 0;
   background: #fff;
@@ -44,21 +19,19 @@ body {
   height: 16px;
 }
 
+.my.item-label {
+  line-height: 16px;
+  width: 75%;
+  display: inline-block;
+}
+
+
 .my.button-container {
   float: right;
 }
 
 .my.button-container > * {
   margin-left: 3px;
-}
-
-.my.item-label {
-  line-height: 16px;
-  width: 75%;
-  display: inline-block;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 .my.button,.my.colorpicker {
@@ -72,12 +45,6 @@ body {
   display: inline-block;
 }
 
-.my-button {
-}
-
-.my.deactivated {
-  color: #ccc;
-}
 
 .my.colorpalette {
   z-index: 2;
@@ -96,8 +63,63 @@ body {
   height: 16px
 }
 
+
 .my.panel {
   background: #fff;
+  margin: 0;
+}
+
+
+.my.tabs {
+  font-size: 12px;
+}
+
+.my.tab-list a {
+  padding: 4px 8px;
+}
+
+.my.tab-list.nav-justified {
+  table-layout: fixed;
+  display: table;
+}
+
+.my.tab-list.nav-justified li {
+  width: 100%;
+}
+
+.my.tab-content {
+  padding: 0px 8px;
+}
+
+.my.table.with-custom-columns {
+  /*table-layout: fixed;*/
+}
+
+.my.table-header {
+  border-bottom: 1px solid #000;
+}
+
+.my.table-cell {
+  border: 0;
+}
+
+.my.table-cell, .my.table-header {
+  padding: 4px 0px 0px 8px;
+}
+
+.my.table-cell:last-child, .my.table-header:last-child {
+  padding-right: 8px;
+}
+
+
+.my.pointinfo-header {
+  text-align: center;
+}
+
+.my.with-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .my.with-bottom-arrow {
@@ -106,6 +128,7 @@ body {
   background: #fff;
   border: 1px solid #000;
 }
+
 .my.with-bottom-arrow:after, .my.with-bottom-arrow:before {
   top: 100%;
   left: 50%;
@@ -129,10 +152,65 @@ body {
   margin-left: -9px;
 }
 
+
+.my.in-bottom-left-corner {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+}
+
+.my.in-top-right-corner {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+
+.my.rounded {
+  -webkit-border-radius: 14px;
+  -moz-border-radius: 14px;
+  border-radius: 14px;
+  border-width: 1px;
+  border-color: #000;
+  border-style: solid;
+}
+
+.my.shaded {
+  box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
+}
+
+.my.deactivated {
+  color: #ccc;
+}
+
+.my.expanding {
+  max-width: 1px;
+  width: 100%;
+}
+
+.my.shrinking {
+  white-space: nowrap;
+  width: 1px;
+}
+
+.my.narrow {
+  width: 150px;
+}
+
+.my.normal-width {
+  width: 250px;
+}
+
+.my.quite-wide {
+  width: 300px;
+}
+
+.my.wide {
+  width: 350px;
+}
+
 .my.icon {
   display: inline-block;
-  width: 1em;
-  height: 1em;
   stroke-width: 0;
   stroke: currentColor;
   fill: currentColor;

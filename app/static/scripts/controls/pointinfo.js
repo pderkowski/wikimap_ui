@@ -7,12 +7,13 @@ var PointInfo = function (options) {
   var that = Control($('<div>').classify('pointinfo'), options)
   that = Dismissable(that);
 
-  var $header = $('<h1>').appendTo(that.$);
+  var $header = $('<h3>').classify('pointinfo-header').appendTo(that.$);
+  var tabTitles = ['Word embeddings', 't-SNE mappings'];
 
   var tabs = Tabs({ hook: that.$ });
-  tabs.add('Nearest word embeddings');
-  tabs.add('Nearest t-SNE mappings');
-  tabs.show('Nearest word embeddings');
+  tabs.add(tabTitles[0]);
+  tabs.add(tabTitles[1]);
+  tabs.show(tabTitles[0]);
 
   that.setData = function (data) {
     $header.text(data.title);
@@ -24,13 +25,14 @@ var PointInfo = function (options) {
     var embeddingsTable = createTable(data.highDimNeighs, data.highDimDists.map(trim));
     var tsneTable = createTable(data.lowDimNeighs, data.lowDimDists.map(trim));
 
-    tabs.get('Nearest word embeddings').empty().append(embeddingsTable.$);
-    tabs.get('Nearest t-SNE mappings').empty().append(tsneTable.$);
+    tabs.get(tabTitles[0]).empty().append(embeddingsTable.$);
+    tabs.get(tabTitles[1]).empty().append(tsneTable.$);
   };
 
   that.show = function () {
     that.$.removeClass('hidden');
     that.onClickOutside(that.hide);
+    $('td,th', tabs.$).addTooltipIfOverflows();
   };
 
   that.hide = function () {
@@ -41,6 +43,8 @@ var PointInfo = function (options) {
     var table = Table({ });
     table.addColumn('Title', titles);
     table.addColumn('Distance', distances);
+    $('td:first-child,th:first-child', table.$).classify('first-column');
+    $('td:last-child,th:last-child', table.$).classify('last-column');
     return table
   }
 

@@ -18,8 +18,9 @@ var Table = function (options) {
     return $('tbody tr', that.$);
   }
 
+
   function addTitle(title) {
-    $('<th>').text(title).appendTo(titles());
+    $('<th>').classify('table-header').text(title).appendTo(titles());
   }
 
   function ensureNumberOfRows(column) {
@@ -33,7 +34,7 @@ var Table = function (options) {
   function addCells(column) {
     var $rows = rows();
     for (var i = 0; i < column.length; i++) {
-      $('<td>').text(column[i]).appendTo($rows.eq(i));
+      var $el = $('<td>').classify('table-cell').text(column[i]).appendTo($rows.eq(i));
     }
   }
 

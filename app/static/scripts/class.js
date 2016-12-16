@@ -10,21 +10,27 @@ var Leaf = function (klass) {
 // - list: then it contains names that are mapped recursively
 // This allows for creating an alias for a potentially long list of classes.
 var classMap = Object.create(null);
-classMap['table'] = Leaf('my table');
+classMap['table'] = Leaf('my table with-custom-columns');
+classMap['table-header'] = Leaf('my table-header');
+classMap['table-cell'] = Leaf('my table-cell');
+classMap['first-column'] = Leaf('my expanding with-ellipsis');
+classMap['last-column'] = Leaf('my shrinking');
+classMap['colorpicker'] = Leaf('my colorpicker');
 classMap['palette'] = Leaf('my rounded hidden shaded colorpalette with-bottom-arrow');
 classMap['palette-row'] = Leaf('my colorpalette-row');
-classMap['colorpicker'] = Leaf('my colorpicker');
-classMap['pointinfo'] = Leaf('my hidden rounded shaded panel in-top-right-corner');
-classMap['clearfix'] = Leaf('clearfix');
+classMap['pointinfo'] = Leaf('my hidden rounded shaded quite-wide panel in-top-right-corner');
+classMap['pointinfo-header'] = Leaf('my pointinfo-header');
+classMap['selection-menu'] = [Leaf('my rounded shaded normal-width list in-bottom-left-corner'), 'clearfix'];
 classMap['menu-item'] = [Leaf('my list-item'), 'clearfix'];
-classMap['item-label'] = Leaf('my item-label');
+classMap['item-label'] = Leaf('my item-label with-ellipsis');
 classMap['button-container'] = [Leaf('my button-container'), 'clearfix'];
-classMap['selection-menu'] = [Leaf('my rounded shaded list in-bottom-left-corner'), 'clearfix'];
-classMap['tabs'] = Leaf('my tabs');
-classMap['tab-list'] = Leaf('nav nav-tabs');
-classMap['tab-content'] = Leaf('tab-content');
-classMap['tab-pane'] = Leaf('tab-pane');
 classMap['button'] = Leaf('my button');
+classMap['tabs'] = Leaf('my tabs');
+classMap['tab-list'] = Leaf('my tab-list nav nav-tabs nav-justified');
+classMap['tab-content'] = Leaf('my tab-content');
+classMap['tab-pane'] = Leaf('my tab-pane');
+classMap['clearfix'] = Leaf('my clearfix');
+
 
 var maxDepth = 10; // prevent accidental infinite recursions
 

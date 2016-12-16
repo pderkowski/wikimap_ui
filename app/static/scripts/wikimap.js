@@ -55,7 +55,6 @@ var Wikimap = function () {
     showDetails: function (dot) {
       Data.Details.get(dot.title)
         .then(function (details) {
-          console.log(details);
           that._pointInfo.setData(details);
           that._pointInfo.show();
         });
@@ -75,7 +74,7 @@ var Wikimap = function () {
       .then(function (bounds) {
         that._converters.setDataBounds(bounds);
         that._viewController = new ViewController(that._canvas, that._converters, that.interface);
-        that._selectionMenu = new SelectionMenu({ hook: $('#selections-container') });
+        that._selectionMenu = SelectionMenu({ hook: $('#selections-container') });
         that._selectionMenu.$
           .on('toggle', function (event, name) { that.interface.toggleSelection(name); })
           .on('toggleUnselected', function () { that.interface.toggleUnselectedPoints(); })
