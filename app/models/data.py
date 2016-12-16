@@ -14,9 +14,9 @@ class Datapoint(object):
         self.xIndex = xIndex
         self.yIndex = yIndex
         self.zIndex = zIndex
-        self.highDimNeighs = highDimNeighs
+        self.highDimNeighs = [n.replace('_', ' ') for n in highDimNeighs]
         self.highDimDists = highDimDists
-        self.lowDimNeighs = lowDimNeighs
+        self.lowDimNeighs = [n.replace('_', ' ') for n in lowDimNeighs]
         self.lowDimDists = lowDimDists
 
 class Category(object):
