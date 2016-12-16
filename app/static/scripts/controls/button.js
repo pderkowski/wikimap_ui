@@ -1,7 +1,7 @@
 var Control = require('./control');
 
 var Button = function (options) {
-  var that = Control($('<button type=button class="my button">'), options);
+  var that = Control($('<button type=button">').classify('button'), options);
 
   if (options.icon) {
     that.icon = $(options.icon).appendTo(that.$);

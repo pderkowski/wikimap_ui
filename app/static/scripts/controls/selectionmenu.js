@@ -5,10 +5,10 @@ var Control = require('./control');
 var Data = require('../data');
 
 var MenuItem = function (label, color) {
-  var that = Control($('<li class="my list-item clearfix">'), {});
+  var that = Control($('<li>').classify('menu-item'), {});
 
-  var $label = $('<div class="my item-label">').text(label || "").appendTo(that.$);
-  var $buttons = $('<div class="my button-container clearfix">').appendTo(that.$);
+  var $label = $('<div>').classify('item-label').text(label || "").appendTo(that.$);
+  var $buttons = $('<div>').classify('button-container').appendTo(that.$);
 
   that.toggleButton = Button({ icon: Icons.eye });
   that.toggleButton.$.click(function () { that.$.trigger('toggle', [$label.text()]); });
@@ -27,7 +27,7 @@ var MenuItem = function (label, color) {
 };
 
 var SelectionMenu = function (options) {
-  var that = Control($('<ul class="my rounded shaded list in-bottom-left-corner clearfix">'), options);
+  var that = Control($('<ul>').classify('selection-menu'), options);
 
   var items = Object.create(null);
 

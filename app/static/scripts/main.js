@@ -1,4 +1,4 @@
-require('bootstrap');
+require('extensions');
 var Wikimap = require('./wikimap');
 
 $(document).ready(function() {

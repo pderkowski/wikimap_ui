@@ -1,7 +1,7 @@
 var Control = require('./control');
 
 var Table = function (options) {
-  var that = Control($('<table class="my table"><thead><tr></tr></thead><tbody></tbody></table>'), options);
+  var that = Control($('<table><thead><tr></tr></thead><tbody></tbody></table>').classify('table'), options);
 
   that.addColumn = function (title, column) {
     addTitle(title);

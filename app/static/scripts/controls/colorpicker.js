@@ -4,7 +4,7 @@ var ColorPalette = require('./colorpalette');
 var Control = require('./control');
 
 var ColorPicker = function (options) {
-  var that = Control($('<div class="my colorpicker">'), options);
+  var that = Control($('<div>').classify('colorpicker'), options);
 
   var button = Button({ hook: that.$, icon: Icons.circle });
   var palette = ColorPalette({ hook: that.$ });

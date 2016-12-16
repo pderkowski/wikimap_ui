@@ -4,7 +4,7 @@ var Tabs = require('./tabs');
 var Table = require('./table');
 
 var PointInfo = function (options) {
-  var that = Control($('<div class="my hidden rounded shaded panel in-top-right-corner">'), options)
+  var that = Control($('<div>').classify('pointinfo'), options)
   that = Dismissable(that);
 
   var $header = $('<h1>').appendTo(that.$);

@@ -5,7 +5,7 @@ var Data = require('../data');
 var Control = require('./control');
 
 var ColorPalette = function (options) {
-  var that = Control($('<div class="my rounded hidden shaded colorpalette with-bottom-arrow">'), options);
+  var that = Control($('<div>').classify('palette'), options);
   that = Dismissable(that);
 
   var columns = options.columns || 4;
@@ -14,7 +14,7 @@ var ColorPalette = function (options) {
   var lastRow = null;
   for (var i = 0; i < colors.length; ++i) {
     if (i % columns == 0) {
-      lastRow = $('<div class="my colorpalette-row">').appendTo(that.$);
+      lastRow = $('<div>').classify('palette-row').appendTo(that.$);
     }
 
     var button = Button({ icon: Icons.circle, hook: lastRow });
