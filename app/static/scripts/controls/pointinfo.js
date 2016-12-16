@@ -1,19 +1,31 @@
 var Dismissable = require('./dismissable');
 var Control = require('./control');
+var Tabs = require('./tabs');
+var Table = require('./table');
 
 var PointInfo = function (options) {
   var that = Control($('<div class="my hidden rounded shaded panel in-top-right-corner">'), options)
   that = Dismissable(that);
 
-  that._$header = $('<h1>').appendTo(that.$);
-  that._$list = $('<ul class="my list">').appendTo(that.$);
+  var $header = $('<h1>').appendTo(that.$);
+
+  var tabs = Tabs({ hook: that.$ });
+  tabs.add('Nearest word embeddings');
+  tabs.add('Nearest t-SNE mappings');
+  tabs.show('Nearest word embeddings');
 
   that.setData = function (data) {
-    that._$header.text(data.title);
-    that._$list.empty();
-    data.highDimNeighs.forEach(function (n) {
-      that._$list.append($('<li>').text(n));
-    });
+    $header.text(data.title);
+
+    function trim(num) {
+      return +(num).toFixed(3);
+    }
+
+    var embeddingsTable = createTable(data.highDimNeighs, data.highDimDists.map(trim));
+    var tsneTable = createTable(data.lowDimNeighs, data.lowDimDists.map(trim));
+
+    tabs.get('Nearest word embeddings').empty().append(embeddingsTable.$);
+    tabs.get('Nearest t-SNE mappings').empty().append(tsneTable.$);
   };
 
   that.show = function () {
@@ -24,6 +36,13 @@ var PointInfo = function (options) {
   that.hide = function () {
     that.$.addClass('hidden');
   };
+
+  function createTable(titles, distances) {
+    var table = Table({ });
+    table.addColumn('Title', titles);
+    table.addColumn('Distance', distances);
+    return table
+  }
 
   return that;
 };
