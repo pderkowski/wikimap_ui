@@ -47,9 +47,9 @@ $(TESTBIN): $(ZOOMOBJECTS) $(TESTOBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(TESTBIN) $^
 
-$(ZOOMLIB): $(ZOOMOBJECTS) $(WRAPOBJECTS) boost
+$(ZOOMLIB): boost $(ZOOMOBJECTS) $(WRAPOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -l$(PYTHONVERSION) -o $(ZOOMLIB)
+	$(CXX) $(ZOOMOBJECTS) $(WRAPOBJECTS) -shared -L$(EXTERNALLIB) -lboost_python -l$(PYTHONVERSION) -Wl,-rpath=$(realpath $(EXTERNALLIB)) -o $(ZOOMLIB)
 
 js: $(JSSOURCES)
 	cd $(realpath $(JSDIR)) && \

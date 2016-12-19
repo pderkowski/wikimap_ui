@@ -8,3 +8,6 @@ bower_components/
 node_modules/
 env/
 external/boost/
+app/static/scripts/dist/
+data
+sync.py
