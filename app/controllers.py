@@ -21,16 +21,16 @@ def getBounds():
 
 @bp.route("/points!<int:xIndex>!<int:yIndex>!<int:zoomLevel>")
 def getPoints(xIndex, yIndex, zoomLevel):
-    current_app.logger.debug('Requested tile: ({},{},{}).'.format(xIndex, yIndex, zoomLevel))
+    current_app.logger.debug(u'Requested tile: ({},{},{}).'.format(xIndex, yIndex, zoomLevel))
     datapoints = g.data.getDatapointsByIndex(Index(xIndex, yIndex, zoomLevel))
-    current_app.logger.debug('Returning {} datapoints.'.format(len(datapoints)))
+    current_app.logger.debug(u'Returning {} datapoints.'.format(len(datapoints)))
     return jsonify(prepareBasicDatapoints(datapoints))
 
 @bp.route('/search')
 def search():
     term = request.args.get('title')
     similars = g.data.getSimilarTerms(term, 5)
-    current_app.logger.debug('Searching for: {}'.format(term))
+    current_app.logger.debug(u'Searching for: {}'.format(term))
     return jsonify(similars)
 
 @bp.route('/point')
@@ -48,7 +48,7 @@ def getDetails():
 @bp.route('/category')
 def getCategory():
     category = request.args.get('title')
-    current_app.logger.debug('Requested category: {}'.format(category))
+    current_app.logger.debug(u'Requested category: {}'.format(category))
     datapoints = g.data.getDatapointsByCategory(category)
-    current_app.logger.debug('Returning {} datapoints.'.format(len(datapoints)))
+    current_app.logger.debug(u'Returning {} datapoints.'.format(len(datapoints)))
     return jsonify(prepareBasicDatapoints(datapoints))
