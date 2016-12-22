@@ -1,19 +1,18 @@
 import os
-import zoom
+import shelve
 from terms import TermIndex
+from common.Zoom import ZoomIndex
 from common.SQLTableDefs import WikimapCategoriesTable, WikimapPointsTable
 from itertools import izip, repeat, imap
 from operator import itemgetter
 
 class Datapoint(object):
-    def __init__(self, id_, title, x, y, xIndex, yIndex, zIndex, highDimNeighs, highDimDists, lowDimNeighs, lowDimDists):
+    def __init__(self, id_, title, x, y, index, highDimNeighs, highDimDists, lowDimNeighs, lowDimDists):
         self.id = id_
         self.title = title.replace('_', ' ')
         self.x = x
         self.y = y
-        self.xIndex = xIndex
-        self.yIndex = yIndex
-        self.zIndex = zIndex
+        self.z = len(index)
         self.highDimNeighs = [n.replace('_', ' ') for n in highDimNeighs]
         self.highDimDists = highDimDists
         self.lowDimNeighs = [n.replace('_', ' ') for n in lowDimNeighs]
@@ -25,25 +24,26 @@ class Category(object):
         self.ids = ids
 
 class Bounds(object):
-    def __init__(self, range_):
-        self.xMin = range_.topLeft.x
-        self.yMin = range_.topLeft.y
-        self.xMax = range_.bottomRight.x
-        self.yMax = range_.bottomRight.y
+    def __init__(self, boundsTuple):
+        self.xMin = boundsTuple[0]
+        self.yMin = boundsTuple[1]
+        self.xMax = boundsTuple[2]
+        self.yMax = boundsTuple[3]
 
 class Data(object):
     def __init__(self, dataPath):
         self._datapointsPath = os.path.join(dataPath, 'wikimapPoints.db')
         self._categoriesPath = os.path.join(dataPath, 'wikimapCategories.db')
         self._termIdxPath = os.path.join(dataPath, 'term.idx')
+        self._zoomIndexPath = os.path.join(dataPath, 'zoom.idx')
+        self._metadataPath = os.path.join(dataPath, 'metadata.db')
 
-        self._zoomIndex = self._loadZoomIndex()
-        self._syncDatapointsWithZoomIndex()
-
+        self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
         self._termIndex = self._loadTermIndex()
 
     def getBounds(self):
-        return Bounds(self._zoomIndex.getBounds())
+        metadata = shelve.open(self._metadataPath, 'r')
+        return Bounds(metadata['bounds'])
 
     def getSimilarTerms(self, term, limit):
         return self._termIndex.search(term, limit)
@@ -52,8 +52,8 @@ class Data(object):
         ids = self.getCategoryByTitle(category).ids
         return self.getDatapointsByIds(ids)
 
-    def getDatapointsByIndex(self, index):
-        ids = [dp.id for dp in self._zoomIndex.getDatapoints(index)]
+    def getDatapointsByZoom(self, zoom):
+        ids = self._zoomIndex.get(zoom)
         return self.getDatapointsByIds(ids)
 
     def getDatapointsByIds(self, ids):
@@ -70,13 +70,6 @@ class Data(object):
         table = WikimapCategoriesTable(self._categoriesPath)
         return Category(*table.selectByTitle(title).next())
 
-    def _loadZoomIndex(self):
-        print 'Loading zoom index...'
-
-        table = WikimapPointsTable(self._datapointsPath)
-        points = [zoom.Datapoint(*args) for args in table.selectCoordsAndIds()]
-        return zoom.Zoom(points, 100)
-
     def _loadTermIndex(self):
         termIndex = TermIndex(self._termIdxPath)
         if termIndex.isEmpty():
@@ -88,13 +81,3 @@ class Data(object):
             categories = WikimapCategoriesTable(self._categoriesPath)
             termIndex.add(izip(imap(itemgetter(0), categories.selectTitles()), repeat(True)))
         return termIndex
-
-    def _syncDatapointsWithZoomIndex(self):
-        def getValues(ids):
-            for id_ in ids:
-                id_ = id_[0]
-                idx = self._zoomIndex.getIndexById(id_)
-                yield idx.x, idx.y, idx.z, id_
-
-        table = WikimapPointsTable(self._datapointsPath)
-        table.updateIndices(getValues(table.selectIds()))

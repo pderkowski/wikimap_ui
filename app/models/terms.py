@@ -3,6 +3,7 @@ from whoosh.qparser import SimpleParser
 import whoosh
 import urllib
 import os
+import multiprocessing
 
 class Term(object):
     def __init__(self, term, isCategory):
@@ -23,7 +24,7 @@ class TermIndex(object):
             self._create()
 
     def add(self, data):
-        with self._index.writer(procs=4, limitmb=1024, multisegment=True) as writer:
+        with self._index.writer(procs=multiprocessing.cpu_count(), limitmb=1024, multisegment=True) as writer:
             for r in data:
                 writer.add_document(term=r[0], isCategory=r[1])
 

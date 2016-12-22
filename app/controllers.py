@@ -1,5 +1,5 @@
 from flask import render_template, request, url_for, jsonify, Blueprint, current_app, g
-from models import Index
+from models import Zoom
 from adapters import prepareDatapoints, prepareBasicDatapoints, prepareBounds
 
 bp = Blueprint('routes', __name__, template_folder='templates', static_folder='static')
@@ -19,10 +19,10 @@ def getBounds():
     bounds = g.data.getBounds()
     return jsonify(prepareBounds(bounds))
 
-@bp.route("/points!<int:xIndex>!<int:yIndex>!<int:zoomLevel>")
-def getPoints(xIndex, yIndex, zoomLevel):
-    current_app.logger.debug(u'Requested tile: ({},{},{}).'.format(xIndex, yIndex, zoomLevel))
-    datapoints = g.data.getDatapointsByIndex(Index(xIndex, yIndex, zoomLevel))
+@bp.route("/points!<int:x>!<int:y>!<int:z>")
+def getPoints(x, y, z):
+    current_app.logger.debug(u'Requested tile: ({},{},{}).'.format(x, y, z))
+    datapoints = g.data.getDatapointsByZoom(Zoom(x, y, z))
     current_app.logger.debug(u'Returning {} datapoints.'.format(len(datapoints)))
     return jsonify(prepareBasicDatapoints(datapoints))
 

@@ -3,6 +3,7 @@ Flask==0.11.1
 gunicorn==19.6.0
 itsdangerous==0.24
 Jinja2==2.8
+marisa-trie==0.7.2
 MarkupSafe==0.23
 Werkzeug==0.11.10
 Whoosh==2.7.4
