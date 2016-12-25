@@ -1,6 +1,6 @@
 import os
 import shelve
-from terms import TermIndex
+from common.Terms import TermIndex
 from common.Zoom import ZoomIndex
 from common.SQLTableDefs import WikimapCategoriesTable, WikimapPointsTable
 from itertools import izip, repeat, imap
@@ -39,7 +39,7 @@ class Data(object):
         self._metadataPath = os.path.join(dataPath, 'metadata.db')
 
         self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
-        self._termIndex = self._loadTermIndex()
+        self._termIndex = TermIndex(self._termIdxPath)
 
     def getBounds(self):
         metadata = shelve.open(self._metadataPath, 'r')
@@ -69,15 +69,3 @@ class Data(object):
         title = title.replace(' ', '_')
         table = WikimapCategoriesTable(self._categoriesPath)
         return Category(*table.selectByTitle(title).next())
-
-    def _loadTermIndex(self):
-        termIndex = TermIndex(self._termIdxPath)
-        if termIndex.isEmpty():
-            print "Adding terms from ", self._datapointsPath
-            datapoints = WikimapPointsTable(self._datapointsPath)
-            termIndex.add(izip(imap(itemgetter(0), datapoints.selectTitles()), repeat(False)))
-
-            print "Adding terms from ", self._categoriesPath
-            categories = WikimapCategoriesTable(self._categoriesPath)
-            termIndex.add(izip(imap(itemgetter(0), categories.selectTitles()), repeat(True)))
-        return termIndex
