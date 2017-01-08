@@ -217,13 +217,15 @@ class PagerankTable(TableProxy):
     def create(self):
         self.execute(Query("""
             CREATE TABLE pagerank (
-                pr_id             INTEGER    NOT NULL   PRIMARY KEY,
-                pr_rank           REAL       NOT NULL
+                pr_id               INTEGER     NOT NULL   PRIMARY KEY,
+                pr_rank             REAL        NOT NULL,
+                pr_order            INTEGER     NOT NULL
             );"""))
 
     def populate(self, values):
-        self.executemany(Query("INSERT INTO pagerank VALUES (?,?)", "populating pagerank table", logStart=True), values)
+        self.executemany(Query("INSERT INTO pagerank VALUES (?,?,?)", "populating pagerank table", logStart=True), values)
         self.execute(Query('CREATE INDEX rank_idx ON pagerank(pr_rank);', "creating index rank_idx in pagerank table", logStart=True, logProgress=True))
+        self.execute(Query('CREATE UNIQUE INDEX order_idx ON pagerank(pr_order);', "creating index order_idx in pagerank table", logStart=True, logProgress=True))
 
     def selectIdsByDescendingRank(self, idsNo):
         query = Query("""
@@ -237,6 +239,10 @@ class PagerankTable(TableProxy):
                 {}""".format(idsNo), 'selecting ids by descending rank', logProgress=True)
 
         return self.select(query)
+
+    def selectOrdersByIds(self, ids):
+        ids = '(' + ','.join(map(str, ids)) + ')'
+        return self.select(Query("SELECT pr_order FROM pagerank WHERE pr_id IN {}".format(ids)))
 
 class TSNETable(TableProxy):
     def __init__(self, tsnePath):
@@ -255,6 +261,52 @@ class TSNETable(TableProxy):
 
     def selectAll(self):
         return self.select(Query("SELECT * FROM tsne"))
+
+class DegreesTable(TableProxy):
+    def __init__(self, path):
+        super(DegreesTable, self).__init__(path)
+
+    def create(self):
+        self.execute(Query("""
+            CREATE TABLE degrees (
+                deg_id          INTEGER     NOT NULL    PRIMARY KEY,
+                deg_in          INTEGER     NOT NULL,
+                deg_out         INTEGER     NOT NULL
+            );"""))
+
+    def populate(self, values):
+        self.executemany(Query("INSERT INTO degrees VALUES (?,?,?)", "populating degrees table", logStart=True), values)
+
+    def selectAll(self):
+        return self.select(Query("SELECT * FROM degrees"))
+
+    def select_degree_count(self, maxDegree=30):
+        return self.select(Query("""
+            SELECT
+                degree, count(*)
+            FROM
+                (SELECT
+                    deg_in + deg_out as "degree"
+                FROM
+                    degrees)
+            WHERE
+                degree <= {}
+            GROUP BY
+                degree
+            """.format(maxDegree)))
+
+    def selectIdsByMaxDegree(self, maxDegree):
+        return self.select(Query("""
+            SELECT
+                deg_id
+            FROM
+                (SELECT
+                    deg_id, deg_in + deg_out as "degree"
+                FROM
+                    degrees)
+            WHERE
+                degree <= {}
+            """.format(maxDegree)))
 
 class Join(TableProxy):
     def __init__(self, *tables):
