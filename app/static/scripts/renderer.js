@@ -10,6 +10,7 @@ var Renderer = function(canvas, converters) {
   this._name2color = Object.create(null);
   this._name2points = Object.create(null);
   this._lastScale = 1;
+  this._lastZ = 0;
 
   this.setZoom = function (transform) {
     canvas.activeArea.attr("transform", transform);
@@ -17,6 +18,7 @@ var Renderer = function(canvas, converters) {
     var scale = transform.k;
     if (that._lastScale != scale) {
       that._lastScale = scale; // getR and getFontSize depend on _lastScale
+      that._lastZ = Math.log2(scale);
 
       // dont scale dots
       d3.selectAll(".dot")
@@ -243,9 +245,10 @@ var Renderer = function(canvas, converters) {
   }
 
   function getR(z) {
-    var base = 6;
-    var coef = 0.8;
-    return base * Math.pow(coef, z) / that._lastScale;
+    var base = 3;
+    var step = 2;
+    var diff = Math.max(Math.min(that._lastZ - z, 2), 0);
+    return (base + diff * step) / that._lastScale;
   }
 
   function getPointIds(points) {
