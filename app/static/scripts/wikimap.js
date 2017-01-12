@@ -81,7 +81,10 @@ var Wikimap = function () {
           .on('remove', function (event, name) { that.interface.removeSelection(name); })
           .on('color', function (event, name, color) { that.interface.changeSelectionColor(name, color); })
           .on('colorUnselected', function (event, color) { that.interface.changeUnselectedPointsColor(color); });
-        Search(that.interface);
+        that._search = Search({ hook: $('#search-container') });
+        that._search.$
+          .on('categorySelected', function (event, name) { that.interface.addCategorySelection(name); })
+          .on('pointSelected', function (event, name) { that.interface.addPointSelection(name); });
       });
   };
 };

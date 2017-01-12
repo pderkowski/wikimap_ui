@@ -1,8 +1,12 @@
 var Data = require('./data');
 require('jquery-ui/ui/widgets/autocomplete');
 
-var search = function (wikimap) {
-  $("#search-box").autocomplete({
+var Control = require('./controls/control');
+
+var Search = function (options) {
+  var that = Control($('<input type="search" placeholder="Search...">').classify('search'), options);
+
+  that.$.autocomplete({
     source: function(request, response) {
       Data.Term.get(request.term)
         .done(function (data) {
@@ -17,7 +21,7 @@ var search = function (wikimap) {
     minLength: 1,
     delay: 100,
     autoFocus: true,
-    appendTo: "#search-container",
+    appendTo: '#'+options.hook.attr('id'),
     position: {
       my: "left top+8",
       at: "left bottom",
@@ -25,24 +29,28 @@ var search = function (wikimap) {
     },
     select: function (event, ui) {
       if (ui.item.isCategory) {
-        wikimap.addCategorySelection(ui.item.value);
+        that.$.trigger('categorySelected', [ui.item.value]);
       } else {
-        wikimap.addPointSelection(ui.item.value);
+        that.$.trigger('pointSelected', [ui.item.value]);
       }
     },
   })
   .autocomplete("instance")._renderItem = function(ul, item) {
-    var html = "<div><span class=search-label>"+ item.label+"</span>";
+    var div = $('<div>')
+      .append($('<span>')
+        .text(item.label)
+        .classify('search-label'));
 
     if (item.isCategory) {
-      html += "<span class=search-description>category</span>";
+      div.append($("<span>").text('category').classify('search-description'));
     }
-    html += "</div>";
 
     return $("<li>")
-      .append(html)
+      .append(div)
       .appendTo(ul);
   };
+
+  return that;
 };
 
-module.exports = search;
+module.exports = Search;

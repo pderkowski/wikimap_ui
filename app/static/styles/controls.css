@@ -2,6 +2,10 @@ body {
   font-family: 'Open Sans', sans-serif;
 }
 
+:focus {
+  outline:none;
+}
+
 
 .my.list {
   list-style-type: none;
@@ -113,6 +117,25 @@ body {
 }
 
 
+.my.search-box {
+  background: url(../images/search-dark.png) no-repeat 10px 6px #fff;
+  color: #777;
+  padding: 6px 15px 6px 35px;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.my.search-label {
+  width: 75%;
+  display: inline-block;
+  color: #222;
+}
+
+.my.search-description {
+  color: #555;
+  font-style: italic;
+  float: right;
+}
+
 .my.with-ellipsis {
   white-space: nowrap;
   overflow: hidden;
@@ -162,6 +185,11 @@ body {
   right: 24px;
 }
 
+.my.in-top-left-corner {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+}
 
 .my.rounded {
   -webkit-border-radius: 14px;
@@ -174,6 +202,8 @@ body {
 
 .my.shaded {
   box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
+  -webkit-box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
+  -moz-box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.15) inset;
 }
 
 .my.deactivated {
@@ -215,8 +245,12 @@ body {
   height: 100%;
 }
 
-.my.with-quite-small-font {
+.my.with-quite-small.font {
   font-size: 12px;
+}
+
+.my.font.bold {
+  font-weight: bold;
 }
 
 .my.btn {
