@@ -20,6 +20,7 @@ classMap['palette'] = Leaf('my rounded hidden shaded colorpalette with-bottom-ar
 classMap['palette-row'] = Leaf('my colorpalette-row');
 classMap['pointinfo'] = Leaf('my hidden rounded shaded quite-wide panel in-top-right-corner');
 classMap['pointinfo-header'] = Leaf('my pointinfo-header');
+classMap['pointinfo-content'] = Leaf('my pointinfo-content with-quite-small-font');
 classMap['selection-menu'] = [Leaf('my rounded shaded normal-width list in-bottom-left-corner'), 'clearfix'];
 classMap['menu-item'] = [Leaf('my list-item'), 'clearfix'];
 classMap['item-label'] = Leaf('my item-label with-ellipsis');
@@ -30,6 +31,8 @@ classMap['tab-list'] = Leaf('my tab-list nav nav-tabs nav-justified');
 classMap['tab-content'] = Leaf('my tab-content');
 classMap['tab-pane'] = Leaf('my tab-pane');
 classMap['clearfix'] = Leaf('my clearfix');
+classMap['button-group'] = Leaf('my btn-group btn-group-justified');
+classMap['button-grouped'] = Leaf('my btn btn-default');
 
 
 var maxDepth = 10; // prevent accidental infinite recursions

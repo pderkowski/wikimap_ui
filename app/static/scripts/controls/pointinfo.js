@@ -2,15 +2,21 @@ var Dismissable = require('./dismissable');
 var Control = require('./control');
 var Tabs = require('./tabs');
 var Table = require('./table');
+var ButtonGroup = require('./buttongroup');
 
 var PointInfo = function (options) {
   var that = Control($('<div>').classify('pointinfo'), options)
   that = Dismissable(that);
 
   var $header = $('<h3>').classify('pointinfo-header').appendTo(that.$);
+  var $content = $('<div>').classify('pointinfo-content').appendTo(that.$);
   var tabTitles = ['Word embeddings', 't-SNE mappings'];
 
-  var tabs = Tabs({ hook: that.$ });
+  var buttons = ButtonGroup({ hook: $content });
+  buttons.addButton('Show links to');
+  buttons.addButton('Show links from');
+
+  var tabs = Tabs({ hook: $content });
   tabs.add(tabTitles[0]);
   tabs.add(tabTitles[1]);
   tabs.show(tabTitles[0]);
