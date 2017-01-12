@@ -5,10 +5,12 @@ var Data = require('./data');
 // This class "controls" what is "viewed" by zooming, centering and resizing the "view".
 // It is also responsible for setting and maintaining the "view" parts of the converters,
 // that is calling the setViewboxSize and setZoom methods.
-var ViewController = function (canvas, converters, interface) {
+var ViewController = function (canvas, converters) {
   var that = this;
+  that.$ = $(this);
 
   this._view = new View(canvas, converters);
+
 
   // the way zoom works in d3 is:
   // - zoomBehavior is created with d3.zoom()
@@ -33,7 +35,7 @@ var ViewController = function (canvas, converters, interface) {
 
   bindResizeHandlerTo(window, applyResize);
 
-  bindDotClickHandlerTo(canvas.dots, interface.showDetails);
+  bindDotClickHandlerTo(canvas.dots, function (dot) { that.$.trigger('pointClicked', [dot]); });
 
   applyResize();
 
@@ -118,6 +120,8 @@ var ViewController = function (canvas, converters, interface) {
   function emitMousedown () {
     $(canvas.content.node()).trigger("mousedown");
   }
+
+  return that;
 };
 
 module.exports = ViewController;
