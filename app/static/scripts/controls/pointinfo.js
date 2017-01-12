@@ -11,10 +11,13 @@ var PointInfo = function (options) {
   var $header = $('<h3>').classify('pointinfo-header').appendTo(that.$);
   var $content = $('<div>').classify('pointinfo-content').appendTo(that.$);
   var tabTitles = ['Word embeddings', 't-SNE mappings'];
+  var buttonLabels = ['Show links to', 'Show links from'];
 
   var buttons = ButtonGroup({ hook: $content });
-  buttons.addButton('Show links to');
-  buttons.addButton('Show links from');
+  buttons.add(buttonLabels[0]);
+  buttons.add(buttonLabels[1]);
+  buttons.get(0).$.on('click', function () { console.log(buttonLabels[0] + ' ' + that.data.title); });
+  buttons.get(1).$.on('click', function () { console.log(buttonLabels[1] + ' ' + that.data.title); });
 
   var tabs = Tabs({ hook: $content });
   tabs.add(tabTitles[0]);
@@ -22,6 +25,7 @@ var PointInfo = function (options) {
   tabs.show(tabTitles[0]);
 
   that.setData = function (data) {
+    that.data = data;
     $header.text(data.title);
 
     function trim(num) {
