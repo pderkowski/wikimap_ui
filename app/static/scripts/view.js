@@ -49,6 +49,31 @@ var Point = function (renderer, id, name, color) {
 
 Point.prototype = Object.create(Selection.prototype);
 
+var Inlinks = function (renderer, id, name, color) {
+  Selection.call(this, renderer, id);
+
+  var that = this;
+  Data.Inlinks.get(name)
+    .then(function (points) {
+      that.renderer.add(id, points, 1, color);
+    });
+};
+
+Inlinks.prototype = Object.create(Selection.prototype);
+
+var Outlinks = function (renderer, id, name, color) {
+  Selection.call(this, renderer, id);
+
+  var that = this;
+  Data.Outlinks.get(name)
+    .then(function (points) {
+      that.renderer.add(id, points, 1, color);
+    });
+};
+
+Outlinks.prototype = Object.create(Selection.prototype);
+
+
 var Tiles = function (renderer, id) {
   var tileDrawer = new TileDrawer(renderer);
 
@@ -107,6 +132,18 @@ var View = function () {
   this.addPoint = function (name, color) {
     var id = getId();
     id2object[id] = new Point(that.renderer, id, name, color);
+    return id;
+  };
+
+  this.addInlinks = function (name, color) {
+    var id = getId();
+    id2object[id] = new Inlinks(that.renderer, id, name, color);
+    return id;
+  };
+
+  this.addOutlinks = function (name, color) {
+    var id = getId();
+    id2object[id] = new Outlinks(that.renderer, id, name, color);
     return id;
   };
 

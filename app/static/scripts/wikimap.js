@@ -11,6 +11,9 @@ var Wikimap = function () {
 
   that._view = new View();
   that._pointInfo = PointInfo({ hook: $('#pointinfo-container') });
+  that._pointInfo.$
+    .on('showInlinks', function (event, name) { addInlinks(name); })
+    .on('showOutlinks', function (event, name) { addOutlinks(name); });
   that._search = Search({ hook: $('#search-container') });
   that._search.$
     .on('categorySelected', function (event, name) { addCategory(name); })
@@ -37,6 +40,18 @@ var Wikimap = function () {
     var id = that._view.addPoint(name, color);
     that._selectionMenu.add(id, name, color);
     that._viewController.centerOn(name);
+  }
+
+  function addInlinks(name) {
+    var color = Data.Colors.pick();
+    var id = that._view.addInlinks(name, color);
+    that._selectionMenu.add(id, 'Links to '+name, color);
+  }
+
+  function addOutlinks(name) {
+    var color = Data.Colors.pick();
+    var id = that._view.addOutlinks(name, color);
+    that._selectionMenu.add(id, 'Links from '+name, color);
   }
 
   function initSelectionMenu() {

@@ -1,5 +1,5 @@
 from flask.json import JSONEncoder
-from models import Datapoint, Category, Bounds, Term
+from models import Datapoint, Bounds, Term
 from itertools import imap
 
 def pipe(iterator, *transforms):
@@ -48,7 +48,7 @@ class RenameColumns(object):
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
-        if isinstance(o, (Datapoint, Category, Bounds, Term)):
+        if isinstance(o, (Datapoint, Bounds, Term)):
             return o.__dict__
         else:
             return JSONEncoder.default(self, o)

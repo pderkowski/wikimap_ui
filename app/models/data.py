@@ -1,10 +1,8 @@
-import os
 import shelve
 from common.Terms import TermIndex
 from common.Zoom import ZoomIndex
-from common.SQLTableDefs import WikimapCategoriesTable, WikimapPointsTable
-from itertools import izip, repeat, imap
-from operator import itemgetter
+from common.SQLTableDefs import WikimapCategoriesTable, WikimapPointsTable, AggregatedLinksTable
+from common.Paths import paths as Path
 
 class Datapoint(object):
     def __init__(self, id_, title, x, y, index, highDimNeighs, highDimDists, lowDimNeighs, lowDimDists):
@@ -18,11 +16,6 @@ class Datapoint(object):
         self.lowDimNeighs = [n.replace('_', ' ') for n in lowDimNeighs]
         self.lowDimDists = lowDimDists
 
-class Category(object):
-    def __init__(self, title, ids):
-        self.title = title.replace('_', ' ')
-        self.ids = ids
-
 class Bounds(object):
     def __init__(self, boundsTuple):
         self.xMin = boundsTuple[0]
@@ -32,11 +25,15 @@ class Bounds(object):
 
 class Data(object):
     def __init__(self, dataPath):
-        self._datapointsPath = os.path.join(dataPath, 'wikimapPoints.db')
-        self._categoriesPath = os.path.join(dataPath, 'wikimapCategories.db')
-        self._termIdxPath = os.path.join(dataPath, 'term.idx')
-        self._zoomIndexPath = os.path.join(dataPath, 'zoom.idx')
-        self._metadataPath = os.path.join(dataPath, 'metadata.db')
+        Path.base = dataPath
+
+        self._datapointsPath = Path['wikimapPoints']()
+        self._categoriesPath = Path['wikimapCategories']()
+        self._termIdxPath = Path['termIndex']()
+        self._zoomIndexPath = Path['zoomIndex']()
+        self._metadataPath = Path['metadata']()
+        self._inlinksPath = Path['aggregatedInlinks']()
+        self._outlinksPath = Path['aggregatedOutlinks']()
 
         self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
         self._termIndex = TermIndex(self._termIdxPath)
@@ -49,7 +46,9 @@ class Data(object):
         return self._termIndex.search(term, limit)
 
     def getDatapointsByCategory(self, category):
-        ids = self.getCategoryByTitle(category).ids
+        table = WikimapCategoriesTable(self._categoriesPath)
+        title = category.replace(' ', '_')
+        ids = table.selectByTitle(title).next()[1]
         return self.getDatapointsByIds(ids)
 
     def getDatapointsByZoom(self, zoom):
@@ -65,7 +64,12 @@ class Data(object):
         table = WikimapPointsTable(self._datapointsPath)
         return Datapoint(*table.selectByTitle(title).next())
 
-    def getCategoryByTitle(self, title):
-        title = title.replace(' ', '_')
-        table = WikimapCategoriesTable(self._categoriesPath)
-        return Category(*table.selectByTitle(title).next())
+    def getInlinksByTitle(self, title):
+        datapoint = self.getDatapointByTitle(title)
+        inlinks = AggregatedLinksTable(self._inlinksPath)
+        return inlinks.get(datapoint.id)
+
+    def getOutlinksByTitle(self, title):
+        datapoint = self.getDatapointByTitle(title)
+        outlinks = AggregatedLinksTable(self._outlinksPath)
+        return outlinks.get(datapoint.id)

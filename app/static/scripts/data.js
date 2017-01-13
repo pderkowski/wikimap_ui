@@ -78,6 +78,34 @@ var Details = function () {
   };
 };
 
+var Inlinks = function () {
+  function url(p) {
+    return $SCRIPT_ROOT+'inlinks?title='+p;
+  }
+
+  var cache = new Cache(100,
+    function (p) { return p; },
+    function (p) { return $.getJSON(url(p)); });
+
+  this.get = function (name) {
+    return cache.get(name);
+  };
+};
+
+var Outlinks = function () {
+  function url(p) {
+    return $SCRIPT_ROOT+'outlinks?title='+p;
+  }
+
+  var cache = new Cache(100,
+    function (p) { return p; },
+    function (p) { return $.getJSON(url(p)); });
+
+  this.get = function (name) {
+    return cache.get(name);
+  };
+};
+
 module.exports = {
   Bounds: new Bounds(),
   Tile: new Tile(),
@@ -85,5 +113,7 @@ module.exports = {
   Point: new Point(),
   Term: new Term(),
   Colors: new Colors(),
-  Details: new Details()
+  Details: new Details(),
+  Inlinks: new Inlinks(),
+  Outlinks: new Outlinks()
 };

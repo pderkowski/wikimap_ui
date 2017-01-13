@@ -45,6 +45,22 @@ def getDetails():
     datapoint = g.data.getDatapointByTitle(title)
     return jsonify(prepareDatapoints([datapoint])[0])
 
+@bp.route('/inlinks')
+def getInlinks():
+    title = request.args.get('title')
+    linkIds = g.data.getInlinksByTitle(title)
+    datapoints = g.data.getDatapointsByIds(linkIds)
+    current_app.logger.debug(u'Returning {} datapoints.'.format(len(datapoints)))
+    return jsonify(prepareBasicDatapoints(datapoints))
+
+@bp.route('/outlinks')
+def getOutlinks():
+    title = request.args.get('title')
+    linkIds = g.data.getOutlinksByTitle(title)
+    datapoints = g.data.getDatapointsByIds(linkIds)
+    current_app.logger.debug(u'Returning {} datapoints.'.format(len(datapoints)))
+    return jsonify(prepareBasicDatapoints(datapoints))
+
 @bp.route('/category')
 def getCategory():
     category = request.args.get('title')

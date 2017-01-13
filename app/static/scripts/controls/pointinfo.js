@@ -16,8 +16,8 @@ var PointInfo = function (options) {
   var buttons = ButtonGroup({ hook: $content });
   buttons.add(buttonLabels[0]);
   buttons.add(buttonLabels[1]);
-  buttons.get(0).$.on('click', function () { console.log(buttonLabels[0] + ' ' + that.data.title); });
-  buttons.get(1).$.on('click', function () { console.log(buttonLabels[1] + ' ' + that.data.title); });
+  buttons.get(0).$.on('click', function () { that.$.trigger('showInlinks', [that.data.title]); });
+  buttons.get(1).$.on('click', function () { that.$.trigger('showOutlinks', [that.data.title]); });
 
   var tabs = Tabs({ hook: $content });
   tabs.add(tabTitles[0]);
