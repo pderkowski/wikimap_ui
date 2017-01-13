@@ -35,10 +35,6 @@ var TileDrawer = function (renderer) {
     });
   };
 
-  this.redraw = function () {
-    renderer.redrawAll();
-  };
-
   this.changeColor = function (color) {
     that._color = color;
     register.getPresent().forEach(function (t) {

@@ -2,9 +2,8 @@ var Button = require('./button');
 var Icons = require('./icons');
 var ColorPicker = require('./colorpicker');
 var Control = require('./control');
-var Data = require('../data');
 
-var MenuItem = function (label, color, options) {
+var MenuItem = function (id, label, color, options) {
   var that = Control($('<li>').classify('menu-item'), options);
 
   var $label = $('<div>').classify('item-label').text(label || "").appendTo(that.$);
@@ -13,15 +12,15 @@ var MenuItem = function (label, color, options) {
   $label.addTooltipIfOverflows();
 
   that.toggleButton = Button({ icon: Icons.eye });
-  that.toggleButton.$.click(function () { that.$.trigger('toggle', [$label.text()]); });
+  that.toggleButton.$.click(function () { that.$.trigger('toggle', [id]); });
   that.toggleButton.$.click(function () { that.toggleButton.$.toggleClass("deactivated"); });
 
   that.removeButton = Button({ icon: Icons.close });
-  that.removeButton.$.click(function () { that.$.trigger('remove', [$label.text()]); });
+  that.removeButton.$.click(function () { that.$.trigger('remove', [id]); });
 
   that.colorPicker = ColorPicker({ icon: Icons.circle });
   that.colorPicker.changeColor(color);
-  that.colorPicker.$.on('select', function (event, color) { event.stopPropagation(); that.$.trigger('color', [$label.text(), color]); });
+  that.colorPicker.$.on('select', function (event, color) { event.stopPropagation(); that.$.trigger('color', [id, color]); });
 
   $buttons.append(that.colorPicker.$, that.toggleButton.$, that.removeButton.$);
 
@@ -33,25 +32,21 @@ var SelectionMenu = function (options) {
 
   var items = Object.create(null);
 
-  that.add = function (name, color) {
-    if (!items[name]) {
-      var item = MenuItem(name, color, { hook: that.$ });
-      items[name] = item;
-    }
+  that.add = function (id, name, color) {
+    var item = MenuItem(id, name, color, { hook: that.$ });
+    items[id] = item;
   };
 
-  that.remove = function (name) {
-    if (items[name]) {
-      items[name].$.remove();
-      delete items[name];
-    }
+  that.get = function (id) {
+    return items[id];
   };
 
-  var unselectedPoints = MenuItem('Unselected points', Data.Colors.getDefault(), { hook: that.$ });
-  unselectedPoints.removeButton.disable();
-  unselectedPoints.$
-    .on('toggle', function (event) { event.stopPropagation(); that.$.trigger('toggleUnselected'); })
-    .on('color', function (event, name, color) { event.stopPropagation(); that.$.trigger('colorUnselected', [color]); });
+  that.remove = function (id) {
+    if (items[id]) {
+      items[id].$.remove();
+      delete items[id];
+    }
+  };
 
   return that;
 };

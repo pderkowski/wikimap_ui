@@ -104,4 +104,4 @@ var Converters = function () {
   }
 };
 
-module.exports = Converters;
+module.exports = new Converters();

@@ -1,16 +1,12 @@
 var d3 = require('d3');
 var View = require('./view');
 var Data = require('./data');
+var Converters = require('./converters');
 
 // This class "controls" what is "viewed" by zooming, centering and resizing the "view".
-// It is also responsible for setting and maintaining the "view" parts of the converters,
-// that is calling the setViewboxSize and setZoom methods.
-var ViewController = function (canvas, converters) {
+var ViewController = function (view) {
   var that = this;
   that.$ = $(this);
-
-  this._view = new View(canvas, converters);
-
 
   // the way zoom works in d3 is:
   // - zoomBehavior is created with d3.zoom()
@@ -23,42 +19,30 @@ var ViewController = function (canvas, converters) {
   //    * programmatically by calling object.call(zoomBehavior.transform, assignedTransform). This also fires the event.
   //      Note: this shows that a single zoomBehavior can be bound to many objects, but the zoom state is independent for every object
   this.zoom = function (transform) {
-    canvas.content.call(zoomBehavior.transform, transform);
+    view.canvas.content.call(zoomBehavior.transform, transform);
   };
 
   this.resetZoom = function () {
     that.zoom(d3.zoomIdentity);
   };
 
-  var zoomBehavior = defineZoomBehavior();
-  bindZoomBehaviorTo(canvas.content, zoomBehavior);
-
-  bindResizeHandlerTo(window, applyResize);
-
-  bindDotClickHandlerTo(canvas.dots, function (dot) { that.$.trigger('pointClicked', [dot]); });
-
-  applyResize();
-
-  this.addCategorySelection = this._view.addCategorySelection;
-  this.addPointSelection = this._view.addPointSelection;
-  this.removeSelection = this._view.removeSelection;
-  this.hasSelection = this._view.hasSelection;
-  this.hideSelection = this._view.hideSelection;
-  this.showSelection = this._view.showSelection;
-  this.changeSelectionColor = this._view.changeSelectionColor;
-  this.changeUnselectedPointsColor = this._view.changeUnselectedPointsColor;
-  this.hasUnselectedPoints = this._view.hasUnselectedPoints;
-  this.hideUnselectedPoints = this._view.hideUnselectedPoints;
-  this.showUnselectedPoints = this._view.showUnselectedPoints;
-
   this.centerOn = function (name) {
     Data.Point.get(name)
       .then(function (datapoint) {
-        var center = converters.view2viewbox([canvas.getSize()[0] / 2, canvas.getSize()[1] / 2]);
-        var point = converters.data2viewbox([datapoint.x, datapoint.y]);
+        var center = Converters.view2viewbox([view.canvas.getSize()[0] / 2, view.canvas.getSize()[1] / 2]);
+        var point = Converters.data2viewbox([datapoint.x, datapoint.y]);
         var transform = getZoomTransform().translate(center[0] - point[0], center[1] - point[1]);
         that.zoom(transform);
       });
+  };
+
+  var zoomBehavior = defineZoomBehavior();
+  bindZoomBehaviorTo(view.canvas.content, zoomBehavior);
+  bindResizeHandlerTo(window, applyResize);
+  bindDotClickHandlerTo(view.canvas.dots, function (dot) { that.$.trigger('pointClicked', [dot]); });
+
+  this.start = function () {
+    applyResize();
   };
 
   function defineZoomBehavior() {
@@ -73,22 +57,31 @@ var ViewController = function (canvas, converters) {
   }
 
   function applyZoom(transform) {
-    converters.setZoom(transform);
-    that._view.setZoom(transform);
+    Converters.setZoom(transform);
+    view.renderer.setZoom(transform);
+
+    var tlPoint = Converters.view2data([0, 0]);
+    var brPoint = Converters.view2data(view.canvas.getSize());
+    var zoomLevel = getZoomLevel(transform);
+
+    var tlIdx = Converters.data2index(tlPoint, zoomLevel);
+    var brIdx = Converters.data2index(brPoint, zoomLevel);
+    view.drawTiles(tlIdx, brIdx, zoomLevel);
   }
 
   function getZoomTransform() {
-    return d3.zoomTransform(canvas.content.node());
+    return d3.zoomTransform(view.canvas.content.node());
   }
 
   function applyResize() {
-    canvas.stretchToFit();
+    view.canvas.stretchToFit();
 
-    var newSize = canvas.getSize();
-    converters.setViewboxSize(newSize);
+    var newSize = view.canvas.getSize();
+    Converters.setViewboxSize(newSize);
 
     that.resetZoom();
-    that._view.redraw();
+    view.renderer.redrawAll();
+
   }
 
   function bindResizeHandlerTo(element, handler) {
@@ -118,7 +111,12 @@ var ViewController = function (canvas, converters) {
   }
 
   function emitMousedown () {
-    $(canvas.content.node()).trigger("mousedown");
+    $(view.canvas.content.node()).trigger("mousedown");
+  }
+
+  function getZoomLevel(transform) {
+    var scale = transform.k;
+    return Math.max(0, Math.floor(Math.log2(scale)));
   }
 
   return that;

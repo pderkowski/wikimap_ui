@@ -1,8 +1,9 @@
 var d3 = require('d3');
 var FlatMultiset = require('./flatmultiset');
 var CollisionDetector = require('./collisiondetector');
+var Converters = require('./converters');
 
-var Renderer = function(canvas, converters) {
+var Renderer = function(canvas) {
   var that = this;
 
   this._renderedPoints = new FlatMultiset();
@@ -77,8 +78,8 @@ var Renderer = function(canvas, converters) {
 
   this.redrawAll = function () {
     var all = d3.selectAll(".dot")
-      .attr("cx", function(p) { return converters.data2viewbox([p.x, p.y])[0]; })
-      .attr("cy", function(p) { return converters.data2viewbox([p.x, p.y])[1]; })
+      .attr("cx", function(p) { return Converters.data2viewbox([p.x, p.y])[0]; })
+      .attr("cy", function(p) { return Converters.data2viewbox([p.x, p.y])[1]; })
       .attr("r", function(p) { return getR(p.z); });
 
     updateFill(all);
@@ -109,8 +110,8 @@ var Renderer = function(canvas, converters) {
       .enter() // add new points
       .append("circle")
       .attr("class", "dot")
-      .attr("cx", function(p) { return converters.data2viewbox([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return converters.data2viewbox([+p.x, +p.y])[1]; })
+      .attr("cx", function(p) { return Converters.data2viewbox([+p.x, +p.y])[0]; })
+      .attr("cy", function(p) { return Converters.data2viewbox([+p.x, +p.y])[1]; })
       .attr("r", function(p) { return getR(p.z); })
       .on("mouseover", canvas.tip.show)
       .on("mouseout", canvas.tip.hide)
@@ -152,8 +153,8 @@ var Renderer = function(canvas, converters) {
     d3.select('.canvas-labels')
       .style("font-size", fontSize+"px")
       .selectAll('.wikimap-label')
-      .attr("x", function (p) { return converters.data2viewbox([+p.x, +p.y])[0]; })
-      .attr("y", function (p) { return converters.data2viewbox([+p.x, +p.y])[1] + getR(p.z) + fontSize / 6; })
+      .attr("x", function (p) { return Converters.data2viewbox([+p.x, +p.y])[0]; })
+      .attr("y", function (p) { return Converters.data2viewbox([+p.x, +p.y])[1] + getR(p.z) + fontSize / 6; })
       .attr("dy", "1em");
   }
 
