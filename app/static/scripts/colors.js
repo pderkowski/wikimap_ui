@@ -18,19 +18,19 @@ function createPickOrder(length) {
 var Colors = function () {
   var that = this;
 
-  var values =
-  ["#d25337",
-  "#dd933f",
-  "#957233",
-  "#b0ad44",
-  "#bce548",
-  "#53813b",
-  "#51b693",
-  "#6290d1",
-  "#8062cc",
-  "#c94aa8",
-  "#5d3f4d",
-  "#999999"];
+  var values = ['#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928','#a6cee3']
+  // ["#d25337",
+  // "#dd933f",
+  // "#957233",
+  // "#b0ad44",
+  // "#bce548",
+  // "#53813b",
+  // "#51b693",
+  // "#6290d1",
+  // "#8062cc",
+  // "#c94aa8",
+  // "#5d3f4d",
+  // "#999999"];
 
   var pickOrder = createPickOrder(values.length - 1);
   var lastPick = -1;
