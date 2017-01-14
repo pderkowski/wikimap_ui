@@ -48,7 +48,9 @@ var Renderer = function(canvas) {
     delete that._name2priority[name];
     delete that._name2color[name];
     delete that._name2points[name];
-    that.hide(name);
+    if (that.has(name)) {
+      that.hide(name);
+    }
   };
 
   this.hide = function (name) {
