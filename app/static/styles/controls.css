@@ -87,33 +87,39 @@ body {
   width: 100%;
 }
 
-.my.table.with-custom-columns {
-  /*table-layout: fixed;*/
+.my.tab-pane {
+  border-width: 0px 1px 1px 1px;
+  border-color: #ddd;
+  border-style: solid;
+  border-radius: 0 0 4px 4px;
 }
 
 .my.table-header {
-  border-bottom: 1px solid #000;
+  border-bottom: 1px dashed #ddd;
+  padding: 4px 0px 4px 8px;
+}
+
+.my.table-header:last-child {
+  padding-right: 8px;
 }
 
 .my.table-cell {
   border: 0;
+  padding: 2px 0px 2px 8px;
 }
 
-.my.table-cell, .my.table-header {
-  padding: 4px 0px 0px 8px;
-}
-
-.my.table-cell:last-child, .my.table-header:last-child {
+.my.table-cell:last-child {
   padding-right: 8px;
 }
 
 
 .my.pointinfo-header {
+  border-bottom: 1px solid #000;
   text-align: center;
 }
 
 .my.pointinfo-content {
-  padding: 0px 8px;
+  padding: 8px;
 }
 
 
@@ -134,6 +140,14 @@ body {
   color: #555;
   font-style: italic;
   float: right;
+}
+
+.my.panel-group {
+  margin: 0;
+}
+
+.my.panel-body {
+  padding: 8px;
 }
 
 .my.with-ellipsis {
@@ -249,10 +263,18 @@ body {
   font-size: 12px;
 }
 
+.my.with-normal.font {
+  font-size: 14px;
+}
+
 .my.font.bold {
   font-weight: bold;
 }
 
 .my.btn {
   font-size: inherit;
+}
+
+.my.clickable {
+  cursor: pointer;
 }

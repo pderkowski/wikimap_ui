@@ -10,7 +10,7 @@ var Leaf = function (klass) {
 // - list: then it contains names that are mapped recursively
 // This allows for creating an alias for a potentially long list of classes.
 var classMap = Object.create(null);
-classMap['table'] = Leaf('my table with-custom-columns');
+classMap['table'] = Leaf('my table-container with-custom-columns');
 classMap['table-header'] = Leaf('my table-header');
 classMap['table-cell'] = Leaf('my table-cell');
 classMap['first-column'] = Leaf('my expanding with-ellipsis');
@@ -36,6 +36,10 @@ classMap['button-grouped'] = Leaf('my btn btn-default');
 classMap['search'] = Leaf('my rounded shaded normal-width search-box in-top-left-corner with-quite-small bold font');
 classMap['search-label'] = Leaf('my search-label with-quite-small font with-ellipsis');
 classMap['search-description'] = Leaf('my search-description with-quite-small font');
+classMap['panel-group'] = Leaf('my panel-group');
+classMap['panel-heading'] = Leaf('my clickable panel-heading');
+classMap['panel-title'] = Leaf('my panel-title with-normal font');
+classMap['panel-body'] = Leaf('my panel-body');
 
 
 var maxDepth = 10; // prevent accidental infinite recursions

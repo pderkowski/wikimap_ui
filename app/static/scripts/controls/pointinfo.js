@@ -3,26 +3,40 @@ var Control = require('./control');
 var Tabs = require('./tabs');
 var Table = require('./table');
 var ButtonGroup = require('./buttongroup');
+var Collapse = require('./collapse');
 
 var PointInfo = function (options) {
-  var that = Control($('<div>').classify('pointinfo'), options)
+  var that = Control($('<div>').classify('pointinfo'), options);
   that = Dismissable(that);
 
-  var $header = $('<h3>').classify('pointinfo-header').appendTo(that.$);
+  var $header = $('<h4>')
+    .appendTo($('<div>').classify('pointinfo-header')
+      .appendTo(that.$));
   var $content = $('<div>').classify('pointinfo-content').appendTo(that.$);
   var tabTitles = ['Word embeddings', 't-SNE mappings'];
   var buttonLabels = ['Show links to', 'Show links from'];
 
-  var buttons = ButtonGroup({ hook: $content });
+  var buttons = ButtonGroup();
   buttons.add(buttonLabels[0]);
   buttons.add(buttonLabels[1]);
   buttons.get(0).$.on('click', function () { that.$.trigger('showInlinks', [that.data.title]); });
   buttons.get(1).$.on('click', function () { that.$.trigger('showOutlinks', [that.data.title]); });
 
-  var tabs = Tabs({ hook: $content });
+  var tabs = Tabs();
   tabs.add(tabTitles[0]);
   tabs.add(tabTitles[1]);
-  tabs.show(tabTitles[0]);
+
+  var $panelGroup = $('<div>').classify('panel-group').appendTo($content);
+
+  var buttonsCollapse = Collapse({ hook: $panelGroup });
+  buttonsCollapse.setTitle('Links');
+  buttonsCollapse.setContent(buttons.$);
+
+  var tabsCollapse = Collapse({ hook: $panelGroup });
+  tabsCollapse.setTitle('Nearest neighbors');
+  tabsCollapse.setContent(tabs.$);
+
+  tabs.show(tabTitles[0]); // apparently tabs need to be fully plugged into the DOM for this to work
 
   that.setData = function (data) {
     that.data = data;
