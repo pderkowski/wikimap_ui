@@ -7,7 +7,7 @@ var ColorPicker = function (options) {
   var that = Control($('<div>').classify('colorpicker'), options);
 
   var button = Button({ hook: that.$, icon: Icons.circle });
-  var palette = ColorPalette({ hook: that.$ });
+  var palette = ColorPalette({ hook: that.$, columns: 5 });
 
   that.$.click(function () { palette.show(); });
   palette.$.on('select', function (event, selectedColor) { event.stopPropagation(); that.changeColor(selectedColor); });
