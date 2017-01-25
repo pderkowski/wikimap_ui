@@ -16,24 +16,6 @@ var Canvas = function () {
     return [+w, +h];
   }
 
-  // function getFrameSize() {
-  //   var realSize = getRealSize();
-  //   return [realSize[0] - 1, realSize[1] - 1];
-  // }
-
-  // var getVirtualSize = getRealSize;
-
-  // var hackScale = 8;
-
-  // function getVirtualSize() {
-  //   var realSize = getRealSize();
-  //   return [hackScale * realSize[0], hackScale * realSize[1]];
-  // }
-
-  // var hackSvg = svg.append("g")
-  //   .attr("id", "hackScale")
-  //   .attr("transform", "scale(" + (1/hackScale) + ")");
-
   function attachContentTo(selection) {
     return selection
       .append("svg")
@@ -78,15 +60,6 @@ var Canvas = function () {
     selection.call(tip);
     return tip;
   }
-
-  // var zoomArea = attachZoomArea();
-
-  // function attachZoomArea(selection) {
-  //   return selection.append("rect")
-  //     .classed("canvas-zoom-area", true)
-  //     .attr("width", getVirtualSize()[0])
-  //     .attr("height", getVirtualSize()[1]);
-  // }
 
   this.container = d3.select("#canvas-container");
     this.content = attachContentTo(this.container);

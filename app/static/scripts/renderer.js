@@ -3,30 +3,34 @@ var FlatMultiset = require('./flatmultiset');
 var CollisionDetector = require('./collisiondetector');
 var Converters = require('./converters');
 
-var Renderer = function(canvas) {
+var Renderer = function (canvas) {
   var that = this;
 
   this._renderedPoints = new FlatMultiset();
   this._name2priority = Object.create(null);
   this._name2color = Object.create(null);
   this._name2points = Object.create(null);
+
   this._lastScale = 1;
   this._lastZ = 0;
 
+  this._baseFontSize = 10;
+
   this.setZoom = function (transform) {
-    canvas.activeArea.attr("transform", transform);
-
     var scale = transform.k;
+    var z = Math.log2(scale);
+
+    updatePointPositions();
+    updateLabelPositions();
+
     if (that._lastScale != scale) {
-      that._lastScale = scale; // getR and getFontSize depend on _lastScale
-      that._lastZ = Math.log2(scale);
-
-      // dont scale dots
-      d3.selectAll(".dot")
-        .attr("r", function(p) { return getR(p.z); });
-
-      updateLabelPositionsAndSizes();
+      that._lastScale = scale;
       updateLabelVisibility();
+    }
+
+    if (that._lastZ != z) {
+      that._lastZ = z;
+      updatePointSizes(z);
     }
   };
 
@@ -58,7 +62,6 @@ var Renderer = function(canvas) {
     that._renderedPoints.remove(name);
 
     var removed = d3.set(ids.filter(function (id) { return !that._renderedPoints.hasElement(id); }));
-    var updated = d3.set(ids.filter(function (id) { return  that._renderedPoints.hasElement(id); }));
 
     d3.selectAll('.dot')
       .filter(function (p) { return removed.has(p.id); })
@@ -68,9 +71,7 @@ var Renderer = function(canvas) {
       .filter(function (p) { return removed.has(p.id); })
       .remove();
 
-    updateFill(d3.selectAll('.dot')
-      .filter(function (p) { return updated.has(p.id); }));
-
+    updatePointColors();
     updateLabelVisibility();
   };
 
@@ -79,55 +80,43 @@ var Renderer = function(canvas) {
   };
 
   this.redrawAll = function () {
-    var all = d3.selectAll(".dot")
+    d3.selectAll(".dot")
       .attr("cx", function(p) { return Converters.data2viewbox([p.x, p.y])[0]; })
-      .attr("cy", function(p) { return Converters.data2viewbox([p.x, p.y])[1]; })
-      .attr("r", function(p) { return getR(p.z); });
+      .attr("cy", function(p) { return Converters.data2viewbox([p.x, p.y])[1]; });
 
-    updateFill(all);
-    updateLabelPositionsAndSizes();
+    updatePointSizes();
+    updatePointColors();
+    updateLabelPositions();
     updateLabelVisibility();
   };
 
   this.changeColor = function (name, color) {
     that._name2color[name] = color;
-
-    var updated = d3.set(that._renderedPoints.getElements(name));
-
-    updateFill(d3.selectAll('.dot')
-      .filter(function (p) { return updated.has(p.id); }));
+    updatePointColors();
   };
 
-  function getFontSize() {
-    var base = 10;
-    return base / that._lastScale;
-  }
-
   function addPoints(points) {
-    var selection = d3.select('.canvas-dots')
+    d3.select('.canvas-dots')
       .selectAll('.dot')
-      .data(points, function (p) { return p.id; });
-
-    var changed = selection
+      .data(points, function (p) { return p.id; })
       .enter() // add new points
       .append("circle")
       .attr("class", "dot")
-      .attr("cx", function(p) { return Converters.data2viewbox([+p.x, +p.y])[0]; })
-      .attr("cy", function(p) { return Converters.data2viewbox([+p.x, +p.y])[1]; })
+      .attr("cx", function(p) { return Converters.data2view([+p.x, +p.y])[0]; })
+      .attr("cy", function(p) { return Converters.data2view([+p.x, +p.y])[1]; })
       .attr("r", function(p) { return getR(p.z); })
       .on("mouseover", canvas.tip.show)
-      .on("mouseout", canvas.tip.hide)
-      .merge(selection); // merge with updated points
+      .on("mouseout", canvas.tip.hide);
 
-    updateFill(changed);
+    updatePointPositions();
+    updatePointColors();
   }
 
   function addLabels(points) {
     var maxLength = 15;
 
-    var fontSize = getFontSize();
     var labels = d3.select('.canvas-labels')
-      // .style("font-size", fontSize+"px")
+      .style("font-size", that._baseFontSize+"px")
       .selectAll('.wikimap-label')
       .data(points, function (p) { return p.id; })
       .enter(); // add new points
@@ -142,22 +131,35 @@ var Renderer = function(canvas) {
         }
       });
 
-    updateLabelPositionsAndSizes();
+    d3.select('.canvas-labels')
+      .selectAll('.wikimap-label')
+      .attr("dy", "1em");
+
+    updateLabelPositions();
     updateLabelVisibility();
   }
 
-  function updateFill(selection) {
-    selection.style('fill', function (p) { return getColor(p.id); });
+  function updatePointColors() {
+    d3.selectAll('.dot')
+      .style('fill', function (p) { return getColor(p.id); });
   }
 
-  function updateLabelPositionsAndSizes() {
-    var fontSize = getFontSize();
+  function updatePointPositions() {
+    d3.selectAll(".dot")
+      .attr("cx", function (d) { return Converters.data2view([d.x, d.y])[0]; })
+      .attr("cy", function (d) { return Converters.data2view([d.x, d.y])[1]; });
+  }
+
+  function updateLabelPositions() {
     d3.select('.canvas-labels')
-      .style("font-size", fontSize+"px")
       .selectAll('.wikimap-label')
-      .attr("x", function (p) { return Converters.data2viewbox([+p.x, +p.y])[0]; })
-      .attr("y", function (p) { return Converters.data2viewbox([+p.x, +p.y])[1] + getR(p.z) + fontSize / 6; })
-      .attr("dy", "1em");
+      .attr("x", function (p) { return Converters.data2view([+p.x, +p.y])[0]; })
+      .attr("y", function (p) { return Converters.data2view([+p.x, +p.y])[1] + getR(p.z) + that._baseFontSize / 6; });
+  }
+
+  function updatePointSizes() {
+    d3.selectAll('.dot')
+      .attr("r", function(p) { return getR(p.z); });
   }
 
   function updateLabelVisibility(debug) {
@@ -181,7 +183,7 @@ var Renderer = function(canvas) {
         .attr("y", function () { return rect.cy - rect.height / 2; })
         .attr("width", function () { return rect.width; })
         .attr("height", function () { return rect.height; })
-        .style("stroke-width", 1 / that._lastScale)
+        .style("stroke-width", 1)
         .style("stroke", "red");
     }
 
@@ -189,9 +191,10 @@ var Renderer = function(canvas) {
     d3.selectAll('.dot')
       .each(function (p) {
         // this points to the respective DOM element
+        var pos = Converters.data2view([p.x, p.y]);
         var rect = {
-          cx: this.getAttribute("cx"),
-          cy: this.getAttribute("cy"),
+          cx: pos[0],
+          cy: pos[1],
           width: 2 * this.getAttribute("r"),
           height: 2 * this.getAttribute("r"),
         };
@@ -251,7 +254,7 @@ var Renderer = function(canvas) {
     var base = 3;
     var step = 2;
     var diff = Math.max(Math.min(that._lastZ - z, 2), 0);
-    return (base + diff * step) / that._lastScale;
+    return (base + diff * step);
   }
 
   function getPointIds(points) {
