@@ -27,16 +27,10 @@ var Canvas = function () {
   function attachFrameTo(selection) {
     return selection.append("rect")
       .classed("canvas-frame", true)
-      .classed("canvas-background", true)
       .attr("x", 0.5)
       .attr("y", 0.5)
       .attr("width", getContainerSize()[0] - 1)
       .attr("height", getContainerSize()[1] - 1);
-  }
-
-  function attachActiveAreaTo(selection) {
-    return selection.append("g")
-      .classed("canvas-active-area", true);
   }
 
   function attachDotsTo(selection) {
@@ -63,11 +57,11 @@ var Canvas = function () {
 
   this.container = d3.select("#canvas-container");
     this.content = attachContentTo(this.container);
+      this.dots = attachDotsTo(this.content);
+      this.labels = attachLabelsTo(this.content);
+      this.tip = attachTipTo(this.content);
       this.frame = attachFrameTo(this.content);
-      this.activeArea = attachActiveAreaTo(this.content);
-        this.dots = attachDotsTo(this.activeArea);
-        this.labels = attachLabelsTo(this.activeArea);
-        this.tip = attachTipTo(this.activeArea);
+
 
   this.stretchToFit = function () {
     d3.select(".canvas-frame")

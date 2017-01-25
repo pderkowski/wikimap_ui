@@ -15,10 +15,6 @@ rect {
   display: inline-block;
 }
 
-.canvas-background {
-  fill: #fff;
-}
-
 .canvas-frame {
   shape-rendering: crispEdges;
   stroke: #000;

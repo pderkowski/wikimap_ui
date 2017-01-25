@@ -166,12 +166,12 @@ var Renderer = function (canvas) {
     var maxSize = getMaxRectSize();
     var collisionDetector = new CollisionDetector(maxSize);
 
-    canvas.activeArea
+    canvas.content
       .select(".debug")
       .remove();
 
     if (debug) {
-      canvas.activeArea
+      canvas.content
         .append("g")
         .classed("debug", true);
     }
