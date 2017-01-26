@@ -1,15 +1,17 @@
 var Data = require('./data');
 var View = require('./view');
-var ViewController = require('./viewcontroller');
 var Search = require('./search');
 var PointInfo = require('controls/pointinfo');
 var SelectionMenu = require('controls/selectionmenu');
 var Converters = require('./converters');
+var Window = require('./window');
 
 var Wikimap = function () {
   var that = this;
 
-  that._view = new View();
+  that._view = View();
+  that._view.$
+    .on('pointClicked', function (event, dot) { showDetails(dot); });
   that._pointInfo = PointInfo({ hook: $('#pointinfo-container') });
   that._pointInfo.$
     .on('showInlinks', function (event, name) { addInlinks(name); })
@@ -23,9 +25,9 @@ var Wikimap = function () {
     .on('toggle', function (event, id) { that._view.toggle(id); })
     .on('remove', function (event, id) { that._view.remove(id); that._selectionMenu.remove(id); })
     .on('color', function (event, id, color) { that._view.changeColor(id, color); });
-  that._viewController = ViewController(that._view);
-  that._viewController.$
-    .on('pointClicked', function (event, dot) { showDetails(dot); });
+  that._window = Window();
+  that._window.$
+    .on('resize', that._view.resize);
 
   initSelectionMenu();
 
@@ -39,7 +41,7 @@ var Wikimap = function () {
     var color = Data.Colors.pick();
     var id = that._view.addPoint(name, color);
     that._selectionMenu.add(id, name, color);
-    that._viewController.centerOn(name);
+    that._view.centerOn(name);
   }
 
   function addInlinks(name) {
@@ -55,7 +57,7 @@ var Wikimap = function () {
   }
 
   function initSelectionMenu() {
-    var id = that._view.tiles.getId();
+    var id = that._view._tiles.getId();
     that._selectionMenu.add(id, 'Unselected points', Data.Colors.getDefault());
     that._selectionMenu.get(id).removeButton.disable();
   }
@@ -72,7 +74,7 @@ var Wikimap = function () {
     return Data.Bounds.get()
       .then(function (bounds) {
         Converters.setDataBounds(bounds);
-        that._viewController.start();
+        that._view.resize();
       });
   };
 };

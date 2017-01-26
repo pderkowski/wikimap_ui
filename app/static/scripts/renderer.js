@@ -80,10 +80,7 @@ var Renderer = function (canvas) {
   };
 
   this.redrawAll = function () {
-    d3.selectAll(".dot")
-      .attr("cx", function(p) { return Converters.data2viewbox([p.x, p.y])[0]; })
-      .attr("cy", function(p) { return Converters.data2viewbox([p.x, p.y])[1]; });
-
+    updatePointPositions();
     updatePointSizes();
     updatePointColors();
     updateLabelPositions();

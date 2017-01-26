@@ -19,6 +19,7 @@ rect {
   shape-rendering: crispEdges;
   stroke: #000;
   stroke-width: 1;
+  pointer-events: none;
 }
 
 .canvas-labels {

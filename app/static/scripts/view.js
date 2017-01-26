@@ -1,162 +1,79 @@
-var TileDrawer = require('./tiledrawer');
 var Renderer = require('./renderer');
 var Canvas = require('./canvas');
 var Data = require('./data');
-
-var Selection = function (renderer, id) {
-  this.renderer = renderer;
-  this.id = id;
-};
-
-Selection.prototype.remove = function () {
-  this.renderer.remove(this.id);
-};
-
-Selection.prototype.toggle = function () {
-  if (this.renderer.has(this.id)) {
-    this.renderer.hide(this.id);
-  } else {
-    this.renderer.show(this.id);
-  }
-};
-
-Selection.prototype.changeColor = function (color) {
-  this.renderer.changeColor(this.id, color);
-};
-
-
-var Category = function (renderer, id, name, color) {
-  Selection.call(this, renderer, id);
-
-  var that = this;
-  Data.Category.get(name)
-    .then(function (points) {
-      that.renderer.add(id, points, 1, color);
-    });
-};
-
-Category.prototype = Object.create(Selection.prototype);
-
-var Point = function (renderer, id, name, color) {
-  Selection.call(this, renderer, id);
-
-  var that = this;
-  Data.Point.get(name)
-    .then(function (point) {
-      renderer.add(id, [point], 2, color);
-    });
-};
-
-Point.prototype = Object.create(Selection.prototype);
-
-var Inlinks = function (renderer, id, name, color) {
-  Selection.call(this, renderer, id);
-
-  var that = this;
-  Data.Inlinks.get(name)
-    .then(function (points) {
-      that.renderer.add(id, points, 1, color);
-    });
-};
-
-Inlinks.prototype = Object.create(Selection.prototype);
-
-var Outlinks = function (renderer, id, name, color) {
-  Selection.call(this, renderer, id);
-
-  var that = this;
-  Data.Outlinks.get(name)
-    .then(function (points) {
-      that.renderer.add(id, points, 1, color);
-    });
-};
-
-Outlinks.prototype = Object.create(Selection.prototype);
-
-
-var Tiles = function (renderer, id) {
-  var tileDrawer = new TileDrawer(renderer);
-
-  this.getId = function () {
-    return id;
-  };
-
-  this.toggle = function () {
-    if (tileDrawer.isEnabled()) {
-      tileDrawer.disable();
-    } else {
-      tileDrawer.enable();
-    }
-  };
-
-  this.changeColor = function (color) {
-    tileDrawer.changeColor(color);
-  };
-
-  this.draw = function (tlIdx, brIdx, zoomLevel) {
-    tileDrawer.draw(enumerateTiles(tlIdx, brIdx, zoomLevel));
-  };
-
-  function enumerateTiles(tlIdx, brIdx, zoomLevel) {
-    var tiles = [];
-    for (var i = tlIdx[0]; i <= brIdx[0]; i++) {
-      for (var j = tlIdx[1]; j <= brIdx[1]; j++) {
-        tiles.push([i, j, zoomLevel]);
-      }
-    }
-    return tiles;
-  };
-};
+var Converters = require('./converters');
+var Zoom = require('./zoom');
+var Elements = require('./viewelements');
 
 var View = function () {
   var that = this;
+  that.$ = $(this);
 
-  this.canvas = new Canvas();
-  this.renderer = new Renderer(this.canvas);
+  this._canvas = Canvas();
+  this._renderer = new Renderer(this._canvas);
 
-  this.tiles = new Tiles(this.renderer, getId());
+  this._tiles = new Elements.Tiles(this._renderer, getId());
 
-  var id2object = Object.create(null);
-  id2object[this.tiles.getId()] = this.tiles;
+  that._zoom = Zoom(this._canvas.content);
+  that._zoom.$
+    .on("zoom", function (e, transform) { applyZoom(transform); });
 
-  this.drawTiles = function (tlIdx, brIdx, zoomLevel) {
-    that.tiles.draw(tlIdx, brIdx, zoomLevel);
-  };
+  var id2element = Object.create(null);
+  id2element[this._tiles.getId()] = this._tiles;
 
   this.addCategory = function (name, color) {
     var id = getId();
-    id2object[id] = new Category(that.renderer, id, name, color);
+    id2element[id] = new Elements.Category(that._renderer, id, name, color);
     return id;
   };
 
   this.addPoint = function (name, color) {
     var id = getId();
-    id2object[id] = new Point(that.renderer, id, name, color);
+    id2element[id] = new Elements.Point(that._renderer, id, name, color);
     return id;
   };
 
   this.addInlinks = function (name, color) {
     var id = getId();
-    id2object[id] = new Inlinks(that.renderer, id, name, color);
+    id2element[id] = new Elements.Inlinks(that._renderer, id, name, color);
     return id;
   };
 
   this.addOutlinks = function (name, color) {
     var id = getId();
-    id2object[id] = new Outlinks(that.renderer, id, name, color);
+    id2element[id] = new Elements.Outlinks(that._renderer, id, name, color);
     return id;
   };
 
   this.remove = function (id) {
-    id2object[id].remove();
+    id2element[id].remove();
   };
 
   this.toggle = function (id) {
-    id2object[id].toggle();
+    id2element[id].toggle();
   };
 
   this.changeColor = function (id, color) {
-    id2object[id].changeColor(color);
+    id2element[id].changeColor(color);
+  };
+
+  this.resize = function () {
+    that._canvas.stretchToFit();
+
+    Converters.setViewboxSize(that._canvas.getSize());
+
+    that._zoom.reset();
+    that._renderer.redrawAll();
+  }
+
+  this.centerOn = function (name) {
+    Data.Point.get(name)
+      .then(function (datapoint) {
+        var center = Converters.view2viewbox([that._canvas.getSize()[0] / 2, that._canvas.getSize()[1] / 2]);
+        var point = Converters.data2viewbox([datapoint.x, datapoint.y]);
+        var transform = that._zoom.get().translate(center[0] - point[0], center[1] - point[1]);
+        that._zoom.set(transform);
+      });
   };
 
   function getId() {
@@ -165,6 +82,26 @@ var View = function () {
     }
     return (this.nextId++).toString();
   }
+
+  function getZoomLevel(transform) {
+    var scale = transform.k;
+    return Math.max(0, Math.floor(Math.log2(scale)));
+  }
+
+  function applyZoom(transform) {
+    Converters.setZoom(transform);
+    that._renderer.setZoom(transform);
+
+    var tlPoint = Converters.view2data([0, 0]);
+    var brPoint = Converters.view2data(that._canvas.getSize());
+    var zoomLevel = getZoomLevel(transform);
+
+    var tlIdx = Converters.data2index(tlPoint, zoomLevel);
+    var brIdx = Converters.data2index(brPoint, zoomLevel);
+    that._tiles.draw(tlIdx, brIdx, zoomLevel);
+  }
+
+  return that;
 };
 
 module.exports = View;

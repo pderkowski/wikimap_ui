@@ -3,6 +3,7 @@ var d3tip = require('d3-tip');
 
 var Canvas = function () {
   var that = this;
+  this.$ = $(this);
 
   function getContainerSize() {
     var w = that.container.node().offsetWidth;
@@ -62,6 +63,12 @@ var Canvas = function () {
       this.tip = attachTipTo(this.content);
       this.frame = attachFrameTo(this.content);
 
+  this.dots
+    .on("click", function (p) {
+      if (d3.event.defaultPrevented) return;
+      var selection = d3.select(d3.event.target); // we listen on a group of dots, this gets the specific dot
+      that.$.trigger('pointClicked', [selection.datum()]);
+    });
 
   this.stretchToFit = function () {
     d3.select(".canvas-frame")
@@ -74,6 +81,8 @@ var Canvas = function () {
   };
 
   this.getSize = getContentSize;
+
+  return this;
 };
 
 module.exports = Canvas;

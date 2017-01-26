@@ -9,6 +9,6 @@ WEBPACK = $(realpath node_modules/.bin/webpack)
 
 js: $(JSSOURCES)
 	cd $(realpath $(JSDIR)) && \
-	$(WEBPACK)
+	$(WEBPACK) --display-modules
 
 build: js
