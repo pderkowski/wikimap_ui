@@ -1,8 +1,9 @@
 import shelve
+import os
 from common.Terms import TermIndex
 from common.Zoom import ZoomIndex
-from common.SQLTableDefs import WikimapCategoriesTable, WikimapPointsTable, AggregatedLinksTable
-from common.Paths import paths as Path
+from common.SQLTables import WikimapCategoriesTable, WikimapPointsTable
+from common.OtherTables import AggregatedLinksTable
 
 class Datapoint(object):
     def __init__(self, id_, title, x, y, index, highDimNeighs, highDimDists, lowDimNeighs, lowDimDists):
@@ -25,15 +26,13 @@ class Bounds(object):
 
 class Data(object):
     def __init__(self, dataPath):
-        Path.base = dataPath
-
-        self._datapointsPath = Path['wikimapPoints']()
-        self._categoriesPath = Path['wikimapCategories']()
-        self._termIdxPath = Path['termIndex']()
-        self._zoomIndexPath = Path['zoomIndex']()
-        self._metadataPath = Path['metadata']()
-        self._inlinksPath = Path['aggregatedInlinks']()
-        self._outlinksPath = Path['aggregatedOutlinks']()
+        self._datapointsPath = os.path.join(dataPath, 'wikimap_points.db')
+        self._categoriesPath = os.path.join(dataPath, 'wikimap_categories.db')
+        self._termIdxPath = os.path.join(dataPath, 'term_index.idx')
+        self._zoomIndexPath = os.path.join(dataPath, 'zoom_index.idx')
+        self._metadataPath = os.path.join(dataPath, 'metadata.db')
+        self._inlinksPath = os.path.join(dataPath, 'aggregated_inlinks.cdb')
+        self._outlinksPath = os.path.join(dataPath, 'aggregated_outlinks.cdb')
 
         self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
         self._termIndex = TermIndex(self._termIdxPath)
