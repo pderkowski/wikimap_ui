@@ -1,6 +1,6 @@
 import shelve
 import os
-from common.Terms import TermIndex
+from terms import Terms
 from common.Zoom import ZoomIndex
 from common.SQLTables import WikimapCategoriesTable, WikimapPointsTable
 from common.OtherTables import AggregatedLinksTable
@@ -28,21 +28,20 @@ class Data(object):
     def __init__(self, dataPath):
         self._datapointsPath = os.path.join(dataPath, 'wikimap_points.db')
         self._categoriesPath = os.path.join(dataPath, 'wikimap_categories.db')
-        self._termIdxPath = os.path.join(dataPath, 'term_index.idx')
         self._zoomIndexPath = os.path.join(dataPath, 'zoom_index.idx')
         self._metadataPath = os.path.join(dataPath, 'metadata.db')
         self._inlinksPath = os.path.join(dataPath, 'aggregated_inlinks.cdb')
         self._outlinksPath = os.path.join(dataPath, 'aggregated_outlinks.cdb')
 
         self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
-        self._termIndex = TermIndex(self._termIdxPath)
+        self._terms = Terms()
 
     def getBounds(self):
         metadata = shelve.open(self._metadataPath, 'r')
         return Bounds(metadata['bounds'])
 
     def getSimilarTerms(self, term, limit):
-        return self._termIndex.search(term, limit)
+        return self._terms.search(term, limit)
 
     def getDatapointsByCategory(self, category):
         table = WikimapCategoriesTable(self._categoriesPath)
@@ -72,3 +71,11 @@ class Data(object):
         datapoint = self.getDatapointByTitle(title)
         outlinks = AggregatedLinksTable(self._outlinksPath)
         return outlinks.get(datapoint.id)
+
+    def getDatapointTitles(self):
+        table = WikimapPointsTable(self._datapointsPath)
+        return table.selectTitles()
+
+    def getCategoryTitles(self):
+        table = WikimapCategoriesTable(self._categoriesPath)
+        return table.selectTitles()

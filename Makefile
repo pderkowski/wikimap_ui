@@ -1,4 +1,4 @@
-JSDIR = app/static/scripts
+JSDIR = wikimap_ui/static/scripts
 JSSOURCES = $(wildcard $(JSDIR)/*.js)
 
 WEBPACK = $(realpath node_modules/.bin/webpack)

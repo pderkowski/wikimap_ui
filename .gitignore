@@ -4,6 +4,6 @@
 bin
 node_modules/
 env/
-app/static/scripts/dist/
+wikimap_ui/static/scripts/dist/
 data
 sync.py
