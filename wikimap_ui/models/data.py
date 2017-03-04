@@ -6,7 +6,7 @@ from common.SQLTables import WikimapCategoriesTable, WikimapPointsTable
 from common.OtherTables import AggregatedLinksTable
 
 class Datapoint(object):
-    def __init__(self, id_, title, x, y, index, highDimNeighs, highDimDists, lowDimNeighs, lowDimDists):
+    def __init__(self, id_, title, x, y, _, index, highDimNeighs, highDimDists, lowDimNeighs, lowDimDists):
         self.id = id_
         self.title = title.replace('_', ' ')
         self.x = x
@@ -84,3 +84,7 @@ class Data(object):
     def getCategoryTitles(self):
         table = WikimapCategoriesTable(self._categoriesPath)
         return table.selectTitles()
+
+    def getDatapointTitlesAndRanks(self):
+        table = WikimapPointsTable(self._datapointsPath)
+        return table.selectTitlesAndRanks()

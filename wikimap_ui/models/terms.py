@@ -13,11 +13,12 @@ class Terms(object):
     def add(self, data):
         logger.info('Adding terms...')
 
-        documents = imap(lambda (term, is_category): {
+        documents = imap(lambda (term, is_category, rank): {
                 '_index': self._index_name,
                 '_type': 'term',
                 'term': term.replace('_', ' '),
-                'category': is_category
+                'category': is_category,
+                'rank': rank
             }, data)
 
         helpers.bulk(self._client, documents)
@@ -27,10 +28,17 @@ class Terms(object):
     def search(self, query, size):
         request_body = {
             "query": {
-                "match": {
-                    "term": {
-                        "query": query,
-                        "operator": "and"
+                "function_score": {
+                    "query": {
+                        "match": {
+                            "term": {
+                                "query": query,
+                                "operator": "and"
+                            }
+                        }
+                    },
+                    "field_value_factor": {
+                        "field": "rank"
                     }
                 }
             }
@@ -96,6 +104,10 @@ class Terms(object):
                             'index': 'not_analyzed',
                             'type': 'boolean'
                         },
+                        'rank': {
+                            'index': 'not_analyzed',
+                            'type': 'double'
+                        }
                     }
                 }
             }
