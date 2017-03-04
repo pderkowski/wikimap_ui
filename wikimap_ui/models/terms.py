@@ -16,21 +16,22 @@ class Terms(object):
         documents = imap(lambda (term, is_category): {
                 '_index': self._index_name,
                 '_type': 'term',
-                'term': term,
+                'term': term.replace('_', ' '),
                 'category': is_category
             }, data)
 
-        response = helpers.bulk(self._client, documents)
-        logger.info(response)
+        helpers.bulk(self._client, documents)
         logger.info('Refreshing index...')
-        response = self._client.indices.refresh(index=self._index_name)
-        logger.info(response)
+        self._client.indices.refresh(index=self._index_name)
 
     def search(self, query, size):
         request_body = {
             "query": {
                 "match": {
-                    "term": query
+                    "term": {
+                        "query": query,
+                        "operator": "and"
+                    }
                 }
             }
         }
@@ -48,8 +49,7 @@ class Terms(object):
 
     def _delete_index(self):
         logger.info('Deleting index...')
-        response = self._client.indices.delete(index=self._index_name)
-        logger.info(response)
+        self._client.indices.delete(index=self._index_name)
 
     def _create_index(self):
         logger.info('Creating index...')
@@ -63,14 +63,19 @@ class Terms(object):
                             "type":     "edge_ngram",
                             "min_gram": 1,
                             "max_gram": 15
+                        },
+                        "my_asciifolding" : {
+                            "type" : "asciifolding",
+                            "preserve_original" : True
                         }
                     },
                     "analyzer": {
-                        "autocomplete": {
+                        "autocomplete_index": {
                             "type":      "custom",
                             "tokenizer": "standard",
                             "filter": [
                                 "lowercase",
+                                "my_asciifolding",
                                 "autocomplete_filter"
                             ]
                         }
@@ -82,8 +87,10 @@ class Terms(object):
                     'properties': {
                         'term': {
                             'index': 'analyzed',
-                            'analyzer': 'autocomplete',
-                            'type': 'string'
+                            'analyzer': 'autocomplete_index',
+                            'search_analyzer': 'standard',
+                            'type': 'string',
+                            "index_options": "docs" # ignore term frequency
                         },
                         'category': {
                             'index': 'not_analyzed',
@@ -93,8 +100,7 @@ class Terms(object):
                 }
             }
         }
-        response = self._client.indices.create(index=self._index_name, body=request_body)
-        logger.info(response)
+        self._client.indices.create(index=self._index_name, body=request_body)
 
     @staticmethod
     def _extract_data_from_search_result(response):

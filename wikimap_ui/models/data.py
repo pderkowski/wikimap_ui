@@ -24,6 +24,11 @@ class Bounds(object):
         self.xMax = boundsTuple[2]
         self.yMax = boundsTuple[3]
 
+class Term(object):
+    def __init__(self, term, isCategory):
+        self.term = term
+        self.isCategory = isCategory
+
 class Data(object):
     def __init__(self, dataPath):
         self._datapointsPath = os.path.join(dataPath, 'wikimap_points.db')
@@ -41,7 +46,7 @@ class Data(object):
         return Bounds(metadata['bounds'])
 
     def getSimilarTerms(self, term, limit):
-        return self._terms.search(term, limit)
+        return [Term(term, is_category) for (term, is_category) in self._terms.search(term, limit)]
 
     def getDatapointsByCategory(self, category):
         table = WikimapCategoriesTable(self._categoriesPath)

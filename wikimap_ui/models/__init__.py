@@ -1,3 +1,2 @@
-from data import Data, Datapoint, Bounds
-from common.Terms import Term
+from data import Data, Datapoint, Bounds, Term
 from common.Zoom import Zoom
