@@ -1,6 +1,6 @@
 var Data = require('./data');
 var View = require('./view');
-var Search = require('./search');
+var Search = require('controls/search');
 var PointInfo = require('controls/pointinfo');
 var SelectionMenu = require('controls/selectionmenu');
 var Converters = require('./converters');

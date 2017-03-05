@@ -1,19 +1,27 @@
-var Data = require('./data');
-require('jquery-ui/ui/widgets/autocomplete');
-
-var Control = require('./controls/control');
+var Data = require('../data');
+var Control = require('./control');
 
 var Search = function (options) {
   var that = Control($('<input type="search" placeholder="Search...">').classify('search'), options);
 
-  that.$.autocomplete({
+  var categories = 'Categories';
+  var pages = 'Pages';
+
+  that.$.groupedAutocomplete({
+    _renderItem: function(ul, item) {
+      var div = $('<div>')
+        .append($('<span>')
+          .text(item.label)
+          .classify('search-label'));
+      return $("<li>");
+    },
     source: function(request, response) {
       Data.Term.get(request.term)
         .done(function (data) {
           response($.map(data, function (hit) {
             return {
               value: hit.term,
-              isCategory: hit.isCategory,
+              group: (hit.isCategory ? categories : pages),
             };
           }));
         });
@@ -28,27 +36,13 @@ var Search = function (options) {
       collision: "none"
     },
     select: function (event, ui) {
-      if (ui.item.isCategory) {
+      if (ui.item.group == categories) {
         that.$.trigger('categorySelected', [ui.item.value]);
       } else {
         that.$.trigger('pointSelected', [ui.item.value]);
       }
     },
-  })
-  .autocomplete("instance")._renderItem = function(ul, item) {
-    var div = $('<div>')
-      .append($('<span>')
-        .text(item.label)
-        .classify('search-label'));
-
-    if (item.isCategory) {
-      div.append($("<span>").text('category').classify('search-description'));
-    }
-
-    return $("<li>")
-      .append(div)
-      .appendTo(ul);
-  };
+  });
 
   return that;
 };
