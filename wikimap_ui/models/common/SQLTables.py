@@ -87,3 +87,6 @@ class WikimapCategoriesTable(TableProxy):
 
     def selectTitles(self):
         return self.select(Query(u"SELECT wc_title FROM wikicategories"))
+
+    def selectTitlesAndSizes(self):
+        return self.select(Query(u"SELECT wc_title, wc_pages_count FROM wikicategories"))

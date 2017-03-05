@@ -1,6 +1,6 @@
 import shelve
 import os
-from terms import Terms
+from terms import PageIndex, CategoryIndex
 from common.Zoom import ZoomIndex
 from common.SQLTables import WikimapCategoriesTable, WikimapPointsTable
 from common.OtherTables import AggregatedLinksTable
@@ -24,10 +24,11 @@ class Bounds(object):
         self.xMax = boundsTuple[2]
         self.yMax = boundsTuple[3]
 
-class Term(object):
-    def __init__(self, term, isCategory):
+class SearchResult(object):
+    def __init__(self, term, type_, size):
         self.term = term
-        self.isCategory = isCategory
+        self.type = type_
+        self.size = size
 
 class Data(object):
     def __init__(self, dataPath):
@@ -39,14 +40,18 @@ class Data(object):
         self._outlinksPath = os.path.join(dataPath, 'aggregated_outlinks.cdb')
 
         self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
-        self._terms = Terms()
+        self._pageIndex = PageIndex()
+        self._categoryIndex = CategoryIndex()
 
     def getBounds(self):
         metadata = shelve.open(self._metadataPath, 'r')
         return Bounds(metadata['bounds'])
 
-    def getSimilarTerms(self, term, limit):
-        return [Term(term, is_category) for (term, is_category) in self._terms.search(term, limit)]
+    def searchPages(self, title, limit):
+        return [SearchResult(title, 'page', None) for title in self._pageIndex.search(title, limit)]
+
+    def searchCategories(self, title, limit):
+        return [SearchResult(title, 'category', size) for (title, size) in self._categoryIndex.search(title, limit)]
 
     def getDatapointsByCategory(self, category):
         table = WikimapCategoriesTable(self._categoriesPath)
@@ -77,14 +82,14 @@ class Data(object):
         outlinks = AggregatedLinksTable(self._outlinksPath)
         return outlinks.get(datapoint.id)
 
-    def getDatapointTitles(self):
+    def getPageTitles(self):
         table = WikimapPointsTable(self._datapointsPath)
         return table.selectTitles()
 
-    def getCategoryTitles(self):
+    def getCategoryTitlesAndSizes(self):
         table = WikimapCategoriesTable(self._categoriesPath)
-        return table.selectTitles()
+        return table.selectTitlesAndSizes()
 
-    def getDatapointTitlesAndRanks(self):
+    def getPageTitlesAndRanks(self):
         table = WikimapPointsTable(self._datapointsPath)
         return table.selectTitlesAndRanks()

@@ -1,6 +1,6 @@
 from flask import render_template, request, url_for, jsonify, Blueprint, current_app, g
 from models import Zoom
-from adapters import prepareDatapoints, prepareBasicDatapoints, prepareBounds
+from utils import prepareDatapoints, prepareBasicDatapoints, prepareBounds
 
 bp = Blueprint('routes', __name__, template_folder='templates', static_folder='static')
 
@@ -28,10 +28,11 @@ def getPoints(x, y, z):
 
 @bp.route('/search')
 def search():
-    term = request.args.get('title')
-    similars = g.data.getSimilarTerms(term, 5)
+    term = request.args.get('term')
+    pages = g.data.searchPages(term, 5)
+    categories = g.data.searchCategories(term, 5)
     current_app.logger.debug(u'Searching for: {}'.format(term))
-    return jsonify(similars)
+    return jsonify(pages + categories)
 
 @bp.route('/point')
 def getPoint():

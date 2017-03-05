@@ -8,26 +8,20 @@ var Search = function (options) {
   var pages = 'Pages';
 
   that.$.groupedAutocomplete({
-    _renderItem: function(ul, item) {
-      var div = $('<div>')
-        .append($('<span>')
-          .text(item.label)
-          .classify('search-label'));
-      return $("<li>");
-    },
     source: function(request, response) {
-      Data.Term.get(request.term)
+      Data.Terms.get(request.term)
         .done(function (data) {
           response($.map(data, function (hit) {
             return {
               value: hit.term,
-              group: (hit.isCategory ? categories : pages),
+              group: (hit.type == 'category')? categories : pages,
+              size: hit.size // only for categories
             };
           }));
         });
     },
     minLength: 1,
-    delay: 100,
+    delay: 50,
     autoFocus: true,
     appendTo: '#'+options.hook.attr('id'),
     position: {
@@ -42,7 +36,21 @@ var Search = function (options) {
         that.$.trigger('pointSelected', [ui.item.value]);
       }
     },
-  });
+  }).groupedAutocomplete("instance")._renderItem = function(ul, item) {
+      var div = $('<div>')
+        .append($('<span>')
+          .text(item.label)
+          .classify('search-label'));
+      if (item.group == categories) {
+        div.append($('<span>')
+          .text(item.size)
+          .classify('search-description'));
+      }
+
+      return $("<li>")
+        .append(div)
+        .appendTo(ul);
+    };
 
   return that;
 };

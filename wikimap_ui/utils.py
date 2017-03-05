@@ -1,6 +1,6 @@
-from flask.json import JSONEncoder
-from models import Datapoint, Bounds, Term
 from itertools import imap
+from models import Datapoint, Bounds, SearchResult
+from flask.json import JSONEncoder
 
 def pipe(iterator, *transforms):
     for t in transforms:
@@ -46,9 +46,18 @@ class RenameColumns(object):
 
         return imap(rename, self.iterator)
 
+def prepareDatapoints(datapoints):
+    return pipe(datapoints, Object2Dict, list)
+
+def prepareBasicDatapoints(datapoints):
+    return pipe(prepareDatapoints(datapoints), SelectColumns(['id', 'title', 'x', 'y', 'z']), list)
+
+def prepareBounds(bounds):
+    return [[bounds.xMin, bounds.yMin], [bounds.xMax, bounds.yMax]]
+
 class MyEncoder(JSONEncoder):
     def default(self, o):
-        if isinstance(o, (Datapoint, Bounds, Term)):
+        if isinstance(o, (Datapoint, Bounds, SearchResult)):
             return o.__dict__
         else:
             return JSONEncoder.default(self, o)
