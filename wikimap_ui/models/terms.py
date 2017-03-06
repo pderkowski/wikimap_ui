@@ -68,19 +68,19 @@ class TermIndex(object):
         pass
 
     def add(self, data):
-        self._logger.info('Adding documents to {}...'.format(self.index_name))
+        self._logger.info(u'Adding documents to {}...'.format(self.index_name))
         helpers.bulk(self._client, imap(self._make_document, data))
-        self._logger.info('Refreshing {}...'.format(self.index_name))
+        self._logger.info(u'Refreshing {}...'.format(self.index_name))
         self._client.indices.refresh(index=self.index_name)
 
     def search(self, query, size):
-        self._logger.info('Searching for {} in {} (returning max {})'.format(query, self.index_name, size))
+        self._logger.info(u'Searching for {} in {} (returning max {})'.format(query, self.index_name, size))
         request_body = self._make_search_request(query)
         response = self._client.search(index=self.index_name, body=request_body, size=size)
         return self._extract_data_from_search_response(response)
 
     def reset_index(self):
-        self._logger.info('Reseting {}...'.format(self.index_name))
+        self._logger.info(u'Reseting {}...'.format(self.index_name))
         if self._index_exists():
             self._delete_index()
         self._create_index()
@@ -89,11 +89,11 @@ class TermIndex(object):
         return self._client.indices.exists(self.index_name)
 
     def _delete_index(self):
-        self._logger.info('Deleting {}...'.format(self.index_name))
+        self._logger.info(u'Deleting {}...'.format(self.index_name))
         self._client.indices.delete(index=self.index_name)
 
     def _create_index(self):
-        self._logger.info('Creating {}...'.format(self.index_name))
+        self._logger.info(u'Creating {}...'.format(self.index_name))
         request_body = self._make_create_request()
         self._client.indices.create(index=self.index_name, body=request_body)
 
