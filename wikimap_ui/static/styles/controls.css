@@ -106,8 +106,8 @@ body {
 }
 
 .my.pointinfo-header {
-  height: 38px;
-  line-height: 38px;
+  padding: 10px;
+  line-height: 20px;
   border-bottom: 1px solid #000;
   text-align: center;
 }
