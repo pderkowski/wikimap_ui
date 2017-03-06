@@ -21,13 +21,13 @@ var Class = require('./class');
   $.widget("custom.groupedAutocomplete", $.ui.autocomplete, {
     _create: function() {
       this._super();
-      this.widget().menu("option", "items", "> :not(.ui-autocomplete-group)");
+      this.widget().menu("option", "items", "> :not(.autocomplete-group-separator)");
     },
     _renderMenu: function(ul, items) {
       var that = this, currentGroup = "";
       $.each(items, function(index, item) {
         if (item.group != currentGroup) {
-          ul.append("<li class='ui-autocomplete-group'>" + item.group + "</li>");
+          that._renderGroupSeparator(ul, item).addClass('autocomplete-group-separator');
           currentGroup = item.group;
         }
         var li = that._renderItemData(ul, item);
@@ -35,6 +35,11 @@ var Class = require('./class');
           li.attr("aria-label", item.group + " : " + item.label);
         }
       });
+    },
+    _renderGroupSeparator: function(ul, item) {
+      return $("<li>")
+        .text(item.group)
+        .appendTo(ul);
     }
   });
 }(jQuery));

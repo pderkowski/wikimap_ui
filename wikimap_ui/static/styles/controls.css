@@ -11,48 +11,35 @@ body {
   list-style-type: none;
   padding: 6px 8px;
   margin: 0;
-  background: #fff;
 }
 
 .my.list-item {
-  /*padding: 6px 8px;*/
   position: relative;
-  /*font: bold 12px Arial, Helvetica, Sans-serif;*/
-  color: #222;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-  height: 16px;
+  height: 20px;
 }
 
 .my.item-label {
-  line-height: 16px;
+  line-height: 20px;
   width: 75%;
   display: inline-block;
 }
 
-
-.my.button-container {
-  float: right;
-}
-
 .my.button-container > * {
   margin-left: 3px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 .my.button,.my.colorpicker {
   padding: 0;
-  border: none;
-  background: none;
   width: 16px;
   height: 16px;
   position: relative;
-  color: #222;
   display: inline-block;
 }
 
-
 .my.colorpalette {
   z-index: 2;
-  background: #fff;
   padding: 6px;
   position: absolute;
   left: 50%;
@@ -62,14 +49,17 @@ body {
   transform: translate(-50%, -100%);
 }
 
-.my.colorpalette-row, .my.button-container {
+.my.button-container {
+  white-space: nowrap;
+  height: 20px
+}
+
+.my.colorpalette-row {
   white-space: nowrap;
   height: 16px
 }
 
-
 .my.panel {
-  background: #fff;
   margin: 0;
 }
 
@@ -104,7 +94,6 @@ body {
 }
 
 .my.table-cell {
-  border: 0;
   padding: 2px 0px 2px 8px;
 }
 
@@ -112,8 +101,13 @@ body {
   padding-right: 8px;
 }
 
+.my.panel.rounded {
+  overflow: hidden;
+}
 
 .my.pointinfo-header {
+  height: 38px;
+  line-height: 38px;
   border-bottom: 1px solid #000;
   text-align: center;
 }
@@ -122,24 +116,47 @@ body {
   padding: 8px;
 }
 
-
 .my.search-box {
-  background: url(../images/search-dark.png) no-repeat 10px 6px #fff;
+  background: url(../images/search-dark.png) no-repeat 10px 6px;
   color: #777;
   padding: 6px 15px 6px 35px;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
 
-.my.search-label {
-  width: 75%;
-  display: inline-block;
-  color: #222;
+.my.search-menu-content.ui-state-active {
+  background: #777!important;
+  margin: 0!important;
 }
 
-.my.search-description {
-  color: #555;
-  font-style: italic;
-  float: right;
+/*.my.search-menu {
+  padding: 8px 0;
+}*/
+
+.my.search-menu-item {
+  padding: 0;
+}
+
+.my.search-menu.rounded {
+  overflow: hidden;
+}
+
+.my.search-group-separator:first-child {
+  border-top-width: 0;
+}
+
+.my.search-group-separator {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
+  line-height: 20px;
+  height: 28px;
+  border: solid #000;
+  border-width: 1px 0;
+}
+
+.my.search-menu-content {
+  height: 24px;
+  padding: 2px 12px 2px 12px;
 }
 
 .my.panel-group {
@@ -267,8 +284,20 @@ body {
   font-size: 14px;
 }
 
-.my.font.bold {
+.my.with-big.font {
+  font-size: 18px;
+}
+
+.my.bold.font {
   font-weight: bold;
+}
+
+.my.italic.font {
+  font-style: italic;
+}
+
+.my.global.font {
+  font-family: 'Open Sans', sans-serif;
 }
 
 .my.btn {
@@ -277,4 +306,36 @@ body {
 
 .my.clickable {
   cursor: pointer;
+}
+
+.my.floating-right {
+  float: right;
+}
+
+.my.borderless {
+  border: 0;
+}
+
+.my.transparent-background {
+  background-color: transparent;
+}
+
+.my.white-background {
+  background-color: #fff;
+}
+
+.my.light-grey-background {
+  background-color: #ddd;
+}
+
+.my.animated {
+  transition: all 0.4s ease 0s;
+}
+
+.my.with-text-shadow {
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.my.dark-grey {
+  color: #222;
 }

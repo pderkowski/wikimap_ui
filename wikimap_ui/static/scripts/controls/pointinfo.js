@@ -9,7 +9,7 @@ var PointInfo = function (options) {
   var that = Control($('<div>').classify('pointinfo'), options);
   that = Dismissable(that);
 
-  var $header = $('<h4>')
+  var $header = $('<span>')
     .appendTo($('<div>').classify('pointinfo-header')
       .appendTo(that.$));
   var $content = $('<div>').classify('pointinfo-content').appendTo(that.$);

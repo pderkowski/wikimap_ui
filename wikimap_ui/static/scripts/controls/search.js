@@ -2,7 +2,7 @@ var Data = require('../data');
 var Control = require('./control');
 
 var Search = function (options) {
-  var that = Control($('<input type="search" placeholder="Search...">').classify('search'), options);
+  var that = Control($('<input type="search" placeholder="Search...">').classify('search-box'), options);
 
   var categories = 'Categories';
   var pages = 'Pages';
@@ -35,22 +35,32 @@ var Search = function (options) {
       } else {
         that.$.trigger('pointSelected', [ui.item.value]);
       }
-    },
-  }).groupedAutocomplete("instance")._renderItem = function(ul, item) {
-      var div = $('<div>')
-        .append($('<span>')
-          .text(item.label)
-          .classify('search-label'));
-      if (item.group == categories) {
-        div.append($('<span>')
-          .text(item.size)
-          .classify('search-description'));
-      }
+    }
+  });
+  that.$.groupedAutocomplete("widget").classify('search-menu');
+  that.$.groupedAutocomplete("instance")._renderItem = function(ul, item) {
+    var div = $('<div>')
+      .classify('search-menu-content')
+      .append($('<span>')
+        .text(item.label)
+        .classify('search-label'));
+    if (item.group == categories) {
+      div.append($('<span>')
+        .text(item.size)
+        .classify('search-description'));
+    }
 
-      return $("<li>")
-        .append(div)
-        .appendTo(ul);
-    };
+    return $("<li>")
+      .classify('search-menu-item')
+      .append(div)
+      .appendTo(ul);
+  };
+  that.$.groupedAutocomplete("instance")._renderGroupSeparator = function(ul, item) {
+    return $("<li>")
+      .classify('search-group-separator')
+      .text(item.group)
+      .appendTo(ul);
+  };
 
   return that;
 };
