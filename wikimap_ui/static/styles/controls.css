@@ -238,7 +238,7 @@ body {
 }
 
 .my.deactivated {
-  color: #ccc;
+  color: #ccc!important;
 }
 
 .my.expanding {
