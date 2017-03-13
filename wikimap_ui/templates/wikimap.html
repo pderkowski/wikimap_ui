@@ -1,0 +1,12 @@
+{% extends "index.html" %}
+{% block wikimap %}
+  <script type=text/javascript>
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+  </script>
+  {% include 'icons.svg' %}
+  <div id="canvas-container"></div>
+  <div id="search-container"></div>
+  <div id="selections-container"></div>
+  <div id="pointinfo-container"></div>
+  <script src="static/scripts/dist/app.bundle.js" charset="utf-8"></script>
+{% endblock %}
