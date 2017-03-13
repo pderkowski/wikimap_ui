@@ -2,10 +2,10 @@ var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
-  entry: './main.js',
+  entry: "./main.js",
   output: {
-    path: './dist',
-    filename: 'app.bundle.js'
+    path: path.join(__dirname, "dist"),
+    filename: "app.bundle.js"
   },
   module: {
     rules: [
@@ -24,10 +24,5 @@ module.exports = {
       jQuery: "jquery",
       "window.jQuery": "jquery"
     })
-  ],
-  resolve: {
-    root: [
-      path.resolve('.')
-    ]
-  }
+  ]
 };

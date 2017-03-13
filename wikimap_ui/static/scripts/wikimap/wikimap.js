@@ -1,8 +1,9 @@
+require('./extensions');
 var Data = require('./data');
 var View = require('./view');
-var Search = require('controls/search');
-var PointInfo = require('controls/pointinfo');
-var SelectionMenu = require('controls/selectionmenu');
+var Search = require('./controls/search');
+var PointInfo = require('./controls/pointinfo');
+var SelectionMenu = require('./controls/selectionmenu');
 var Converters = require('./converters');
 var Window = require('./window');
 
