@@ -4,6 +4,15 @@ from itertools import imap
 from abc import ABCMeta, abstractproperty, abstractmethod
 import logging
 
+def delete_all_indices():
+    client = Elasticsearch()
+    client.indices.delete(index='_all')
+    client.indices.flush(index='_all')
+
+def list_indices():
+    client = Elasticsearch()
+    return client.indices.get(index='_all', expand_wildcards='all')
+
 class ESDef(object):
     def __init__(self, name, body):
         self.name = name
@@ -98,10 +107,10 @@ class TermIndex(object):
         self._client.indices.create(index=self.index_name, body=request_body)
 
 class PageIndex(TermIndex):
-    def __init__(self):
+    def __init__(self, lang):
         super(PageIndex, self).__init__()
         self._document_type_name = 'page'
-        self._index_name = 'pages'
+        self._index_name = lang + '_pages'
 
     @property
     def index_name(self):
@@ -167,10 +176,10 @@ class PageIndex(TermIndex):
         return [hit['_source']['term'] for hit in response['hits']['hits']]
 
 class CategoryIndex(TermIndex):
-    def __init__(self):
+    def __init__(self, lang):
         super(CategoryIndex, self).__init__()
         self._document_type_name = 'category'
-        self._index_name = 'categories'
+        self._index_name = lang + '_categories'
 
     @property
     def index_name(self):

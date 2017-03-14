@@ -1,5 +1,6 @@
 import shelve
 import os
+import terms
 from terms import PageIndex, CategoryIndex
 from common.Zoom import ZoomIndex
 from common.SQLTables import WikimapCategoriesTable, WikimapPointsTable
@@ -30,8 +31,9 @@ class SearchResult(object):
         self.type = type_
         self.size = size
 
-class Data(object):
+class LangDataset(object):
     def __init__(self, dataPath):
+        self._lang = os.path.basename(dataPath)
         self._datapointsPath = os.path.join(dataPath, 'wikimap_points.db')
         self._categoriesPath = os.path.join(dataPath, 'wikimap_categories.db')
         self._zoomIndexPath = os.path.join(dataPath, 'zoom_index.idx')
@@ -40,8 +42,8 @@ class Data(object):
         self._outlinksPath = os.path.join(dataPath, 'aggregated_outlinks.cdb')
 
         self._zoomIndex = ZoomIndex(self._zoomIndexPath).load()
-        self._pageIndex = PageIndex()
-        self._categoryIndex = CategoryIndex()
+        self._pageIndex = PageIndex(self._lang)
+        self._categoryIndex = CategoryIndex(self._lang)
 
     def getBounds(self):
         metadata = shelve.open(self._metadataPath, 'r')
@@ -93,3 +95,31 @@ class Data(object):
     def getPageTitlesAndRanks(self):
         table = WikimapPointsTable(self._datapointsPath)
         return table.selectTitlesAndRanks()
+
+    def resetIndex(self):
+        self._pageIndex.reset_index()
+        self._pageIndex.add(self.getPageTitlesAndRanks())
+        self._categoryIndex.reset_index()
+        self._categoryIndex.add(self.getCategoryTitlesAndSizes())
+
+class Data(object):
+    def __init__(self, data_dir):
+        self._data_dir = data_dir
+        self._lang_2_dataset = self._create_lang_datasets()
+
+    def __getitem__(self, lang):
+        return self._lang_2_dataset[lang]
+
+    def delete_all_indices(self):
+        terms.delete_all_indices()
+
+    def list_indices(self):
+        return terms.list_indices()
+
+    def _create_lang_datasets(self):
+        lang_2_dataset = {}
+        for lang in os.listdir(self._data_dir):
+            lang_dir = os.path.join(self._data_dir, lang)
+            if os.path.isdir(lang_dir):
+                lang_2_dataset[lang] = LangDataset(lang_dir)
+        return lang_2_dataset

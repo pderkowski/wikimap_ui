@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, jsonify, Blueprint, current_app, g, redirect
+from flask import render_template, request, url_for, jsonify, Blueprint, current_app, g, redirect, abort
 from models import Zoom
 from utils import prepareDatapoints, prepareBasicDatapoints, prepareBounds
 
@@ -8,12 +8,15 @@ main = Blueprint('main', __name__, template_folder='templates', static_folder='s
 def index():
     return redirect(url_for('wikimap.wikimap_index', lang='en'))
 
-wikimap = Blueprint('wikimap', __name__, template_folder='templates', static_folder='static', url_prefix='/<lang>')
+wikimap = Blueprint('wikimap', __name__, template_folder='templates', static_folder='static', url_prefix='/map/<lang>')
 
 @wikimap.before_request
 def before_request(*args, **kwargs):
     g.lang = request.view_args.pop('lang')
-    g.data = current_app.data
+    try:
+        g.data = current_app.data[g.lang]
+    except KeyError:
+        abort(404)
 
 @wikimap.route("/")
 def wikimap_index():

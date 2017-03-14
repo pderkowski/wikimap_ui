@@ -33,14 +33,14 @@ def unpack(path):
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--remotename', '-n', dest='remotename', type=str, default=os.environ.get("SYNC_REMOTENAME", None),
-        help="Specify the name of a remote server. Can also be set by SYNC_REMOTENAME environment variable.")
-    parser.add_argument('--remotepath', '-r', dest='remotepath', type=str, default=os.environ.get("SYNC_REMOTEPATH", None),
-        help="Specify a remote directory where files are located. Can also be set by SYNC_REMOTEPATH environment variable.")
-    parser.add_argument('--localpath', '-l', dest='localpath', type=str, default=os.environ.get("SYNC_LOCALPATH", None),
-        help="Specify a local directory to which files should be copied. Can also be set by SYNC_LOCALPATH environment variable.")
-    parser.add_argument('--subdirectory', '-s', dest='subdirectory', type=str,
-        help="Specify a subdirectory that will be created inside the directory given by --remotepath")
+    parser.add_argument('--remotename', '-n', dest='remotename', type=str, default=os.environ.get("WIKIMAP_REMOTENAME", None),
+        help="Specify the name of a remote server. Can also be set by WIKIMAP_REMOTENAME environment variable.")
+    parser.add_argument('--remotepath', '-r', dest='remotepath', type=str, default=os.environ.get("WIKIMAP_REMOTEPATH", None),
+        help="Specify a remote directory where files are located. Can also be set by WIKIMAP_REMOTEPATH environment variable.")
+    parser.add_argument('--localpath', '-l', dest='localpath', type=str, default=os.environ.get("WIKIMAP_LOCALPATH", None),
+        help="Specify a local directory to which files should be copied. Can also be set by WIKIMAP_LOCALPATH environment variable.")
+    parser.add_argument('--subdirectory', '-s', dest='subdirectory', type=str, required=True,
+        help="Specify a subdirectory that will be created inside the directory given by --localpath.")
     args = parser.parse_args()
 
     localpath = args.localpath
