@@ -8,7 +8,7 @@ main = Blueprint('main', __name__, template_folder='templates', static_folder='s
 def index():
     return redirect(url_for('wikimap.wikimap_index', lang='en'))
 
-wikimap = Blueprint('wikimap', __name__, template_folder='templates', static_folder='static', url_prefix='/map/<lang>')
+wikimap = Blueprint('wikimap', __name__, template_folder='templates', static_folder='static', url_prefix='/<lang>')
 
 @wikimap.before_request
 def before_request(*args, **kwargs):
