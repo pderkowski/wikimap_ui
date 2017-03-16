@@ -12,10 +12,17 @@ var Class = require('./class');
   $.fn.addTooltipIfOverflows = function () {
     return this.each(function () {
       var $this = $(this);
-      if (this.offsetWidth < this.scrollWidth) {
-        $this.attr('title', $this.text());
-        $this.tooltip({ container: 'body' });
-      }
+      $this.on('mouseover', function() {
+        var title = $this.attr('data-original-title');
+        // For some browsers, `attr` is undefined; for others,
+        // `attr` is false.  Check for both.
+        var hasTitle = typeof title !== typeof undefined && title !== false;
+        if (this.offsetWidth < this.scrollWidth && !hasTitle) {
+          $this.attr('title', $this.text());
+          $this.tooltip({ container: 'body' });
+          $this.tooltip('show');
+        }
+      });
     });
   };
 
