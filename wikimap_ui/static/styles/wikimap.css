@@ -70,7 +70,7 @@ rect {
 
 .my.list {
   list-style-type: none;
-  padding: 6px 8px;
+  padding: 4px 8px;
   margin: 0;
 }
 
@@ -186,7 +186,7 @@ rect {
 .my.search-box {
   background: url(../images/search-dark.png) no-repeat 10px 6px;
   color: #777;
-  padding: 6px 15px 6px 35px;
+  padding: 4px 15px 4px 35px;
 }
 
 .my.search-menu-content.ui-state-active {
