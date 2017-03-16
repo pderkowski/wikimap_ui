@@ -77,6 +77,7 @@ rect {
 .my.list-item {
   position: relative;
   height: 20px;
+  cursor: default;
 }
 
 .my.item-label {
@@ -127,6 +128,7 @@ rect {
 
 .my.tab-list a {
   padding: 4px 8px;
+  cursor: pointer;
 }
 
 .my.tab-list.nav-justified {
@@ -143,6 +145,10 @@ rect {
   border-color: #ddd;
   border-style: solid;
   border-radius: 0 0 4px 4px;
+}
+
+.my.table-container {
+  cursor: default;
 }
 
 .my.table-header {
