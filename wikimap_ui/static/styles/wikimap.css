@@ -37,32 +37,35 @@ rect {
 }
 
 .d3-tip {
-  line-height: 1;
-  font-weight: bold;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.8);
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.9);
   color: #fff;
-  border-radius: 2px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
 }
 
-/* Creates a small triangle extender for the tooltip */
 .d3-tip:after {
   box-sizing: border-box;
-  display: inline;
-  font-size: 10px;
-  width: 100%;
+  display: block;
+  font-size: 12px;
+  /*width: 100%;*/
   line-height: 1;
-  color: rgba(0, 0, 0, 0.8);
-  content: "\25BC";
+  /*color: rgba(0, 0, 0, 0.9);*/
   position: absolute;
-  text-align: center;
-}
-
-/* Style northward tooltips differently */
-.d3-tip.n:after {
-  margin: -1px 0 0 0;
-  top: 100%;
-  left: 0;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  /*text-align: center;*/
+  margin-left: -5px;
+  border-width: 5px 5px 0;
+  margin-bottom: -5px;
+  border-top-color: #000;
+  opacity: 0.9;
+  bottom: 0;
+  content: '';
+  left: 50%;
 }
 
 .my.list {
