@@ -3,3 +3,7 @@ body {
   margin: 0;
   overflow: hidden;
 }
+
+.tooltip {
+  font-family: 'Open Sans', sans-serif;
+}

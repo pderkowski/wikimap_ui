@@ -14,6 +14,7 @@ var Class = require('./class');
       var $this = $(this);
       if (this.offsetWidth < this.scrollWidth) {
         $this.attr('title', $this.text());
+        $this.tooltip({ container: 'body' });
       }
     });
   };
