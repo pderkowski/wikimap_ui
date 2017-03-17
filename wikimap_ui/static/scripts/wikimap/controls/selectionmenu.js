@@ -11,14 +11,14 @@ var MenuItem = function (id, label, color, options) {
 
   $label.addTooltipIfOverflows();
 
-  that.toggleButton = Button({ icon: Icons.eye });
+  that.toggleButton = Button({ icon: Icons.eye, tooltip: 'Show/Hide' });
   that.toggleButton.$.click(function () { that.$.trigger('toggle', [id]); });
   that.toggleButton.$.click(function () { that.toggleButton.$.toggleClass("deactivated"); });
 
-  that.removeButton = Button({ icon: Icons.close });
+  that.removeButton = Button({ icon: Icons.close, tooltip: 'Remove' });
   that.removeButton.$.click(function () { that.$.trigger('remove', [id]); });
 
-  that.colorPicker = ColorPicker({ icon: Icons.circle });
+  that.colorPicker = ColorPicker({ icon: Icons.circle, tooltip: 'Change color' });
   that.colorPicker.changeColor(color);
   that.colorPicker.$.on('select', function (event, color) { event.stopPropagation(); that.$.trigger('color', [id, color]); });
 

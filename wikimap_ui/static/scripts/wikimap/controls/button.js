@@ -7,6 +7,14 @@ var Button = function (options) {
     that.icon = $(options.icon).appendTo(that.$);
   }
 
+  if (options.tooltip) {
+    that.$.tooltip({
+      title: options.tooltip,
+      trigger: 'hover',
+      container: 'body'
+    });
+  }
+
   that.disable = function () {
     that.$.prop('disabled', true);
     that.$.addClass("deactivated");

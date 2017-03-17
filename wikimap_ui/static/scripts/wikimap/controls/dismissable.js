@@ -1,10 +1,10 @@
 var Dismissable = function (that) {
-  var locals = {}
+  var locals = {};
 
   function isTarget(e) {
     return (that.$.is(e.target) // the target of the click is the element...
       || that.$.has(e.target).length !== 0); // ... or a descendant of the element
-  };
+  }
 
   function callHide(e) {
     if (!isTarget(e)) { // don't blur if clicked on the palette
@@ -20,6 +20,6 @@ var Dismissable = function (that) {
   };
 
   return that;
-}
+};
 
 module.exports = Dismissable;
