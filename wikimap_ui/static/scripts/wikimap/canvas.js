@@ -40,8 +40,10 @@ var Canvas = function () {
   }
 
   function attachLabelsTo(selection) {
+    var baseFontSize = 10;
     return selection.append("g")
-      .classed("canvas-labels", true);
+      .classed("canvas-labels", true)
+      .style("font-size", that.fontSize+"px");
   }
 
   function attachTipTo(selection) {
@@ -55,6 +57,8 @@ var Canvas = function () {
     selection.call(tip);
     return tip;
   }
+
+  this.fontSize = 10;
 
   this.container = d3.select("#canvas-container");
     this.content = attachContentTo(this.container);
