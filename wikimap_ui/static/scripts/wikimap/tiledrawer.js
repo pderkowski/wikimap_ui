@@ -18,7 +18,7 @@ var TileDrawer = function (renderer) {
 
   this.draw = function (tiles) {
     // a new request invalidates the previous one
-    register.clearRequested()     // so whatever was requested and not processed is no longer needed
+    register.clearRequested();     // so whatever was requested and not processed is no longer needed
     register.retireCompleted();   // and whatever was processed should be removed at next opportunity
 
     tiles.forEach(function (t) {
@@ -50,7 +50,7 @@ var TileDrawer = function (renderer) {
   this.disable = function () {
     that._enabled = false;
     removeTiles(register.getPresent());
-  }
+  };
 
   this.isEnabled = function () {
     return that._enabled;
@@ -74,9 +74,9 @@ var TileDrawer = function (renderer) {
         }
       })
       .then(function () {
-        collectGarbage()
+        collectGarbage();
       });
-  };
+  }
 
   function collectGarbage() {
     if (!register.hasRequested()) { // only trigger the removal of old tiles if none are expected soon
@@ -87,13 +87,8 @@ var TileDrawer = function (renderer) {
   }
 
   function removeTiles(tiles) {
-    tiles.forEach(function (tile) {
-      if (renderer.has(tile)) {
-        renderer.remove(tile);
-        // console.log("Removed "+tile);
-      }
-    });
-  };
+    renderer.removeMany(tiles.filter(renderer.has));
+  }
 };
 
 module.exports = TileDrawer;

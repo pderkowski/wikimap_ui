@@ -23,7 +23,7 @@ var Renderer = function (canvas) {
     var scale = transform.k;
     if (that._lastScale != scale) {
       that._lastScale = scale;
-      that._labels.updateVisibility();
+      // that._labels.updateVisibility();
     }
 
     var z = Math.log2(scale);
@@ -44,27 +44,64 @@ var Renderer = function (canvas) {
     delete that._name2priority[name];
     delete that._name2color[name];
     delete that._name2points[name];
-    if (that.has(name)) {
-      that.hide(name);
+    that.hide(name);
+  };
+
+  this.removeMany = function (names) {
+    if (names.some(that.has)) {
+      names.forEach(function (name) {
+        delete that._name2priority[name];
+        delete that._name2color[name];
+        delete that._name2points[name];
+      });
+      that.hideMany(names);
     }
   };
 
   this.show = function (name) {
     var points = that._name2points[name];
     that._renderedPoints.add(name, getPointIds(points));
-    that._points.show(points);
-    that._labels.show(points);
+    doShow(points);
   };
 
   this.hide = function (name) {
+    if (that.has(name)) {
+      var removed = getPointsToRemove(name);
+      doHide(removed);
+    }
+  };
+
+  this.hideMany = function (names) {
+    var allRemoved = Object.create(null);
+    names.forEach(function (name) {
+      if (that.has(name)) {
+        var removed = getPointsToRemove(name);
+        for (var point in removed) {
+          allRemoved[point] = removed[point];
+        }
+      }
+    });
+    doHide(allRemoved);
+  };
+
+  function doShow(points) {
+    that._points.show(points);
+    that._labels.show(points);
+  }
+
+  function doHide(points) {
+    that._points.hide(points);
+    that._labels.hide(points);
+  }
+
+  function getPointsToRemove(name) {
     var ids = that._renderedPoints.getElements(name);
     that._renderedPoints.remove(name);
     var removed = Object.create(null);
     ids.filter(function (id) { return !that._renderedPoints.hasElement(id); })
       .forEach(function (id) { removed[id] = true; });
-    that._points.hide(removed);
-    that._labels.hide(removed);
-  };
+    return removed;
+  }
 
   this.redrawAll = function () {
     that._points.updatePositions();
