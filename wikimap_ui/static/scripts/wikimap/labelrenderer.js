@@ -7,13 +7,13 @@ var LabelRenderer = function (parent, canvas) {
 
   var debug = false;
   if (debug) {
-    canvas.content
+    canvas.d3content
       .append("g")
       .classed("debug", true);
   }
 
   this.show = function (points) {
-    var labels = d3.select('.canvas-labels')
+    var labels = canvas.d3labels
       .selectAll('.wikimap-label')
       .data(points, function (p) { return p.id; })
       .enter() // add new points
@@ -34,42 +34,55 @@ var LabelRenderer = function (parent, canvas) {
   };
 
   this.updatePositions = function () {
-    d3.select('.canvas-labels')
+    canvas.d3labels
       .selectAll('.wikimap-label')
-      .attr("dy", "1em")
       .attr("x", function (p) { return Converters.data2view([+p.x, +p.y])[0]; })
-      .attr("y", function (p) { return Converters.data2view([+p.x, +p.y])[1] + parent.getRadius(p.z) + canvas.fontSize / 6; });
+      .attr("y", function (p) { return Converters.data2view([+p.x, +p.y])[1] + parent.getRadius(p.z) + canvas.fontSize + 2; });
+
+    if (debug) { that.updateVisibility(); }
   };
 
   this.updateVisibility = function () {
-    var maxSize = getMaxRectSize();
-    var collisionDetector = new CollisionDetector(maxSize);
+    // function logBounds(bounds) {
+    //   console.log('['+bounds[0][0].toFixed(1)+', '+bounds[0][1].toFixed(1)+'] ['+bounds[1][0].toFixed(1)+', '+bounds[1][1].toFixed(1)+']');
+    // }
+
+    var bounds = getBounds();
+    var bucketSize = [200, 30];
+
+    var collisionDetector = new CollisionDetector.BCollisionDetector(bounds, bucketSize);
+
+    if (debug) { clearDebugRects(); }
 
     // first insert dots to make sure that labels don't collide with them
     d3.selectAll('.dot')
       .each(function (p) {
-        // this points to the respective DOM element
-        var pos = Converters.data2view([p.x, p.y]);
+        var bbox = this.getBBox();
         var rect = {
-          cx: pos[0],
-          cy: pos[1],
-          width: 2 * this.getAttribute("r"),
-          height: 2 * this.getAttribute("r"),
+          cx: bbox.x + bbox.width / 2,
+          cy: bbox.y + bbox.height / 2,
+          width: bbox.width,
+          height: bbox.height
         };
 
         if (debug) { addDebugRect(rect); }
         collisionDetector.add(rect);
       });
 
+    var id2bbox = Object.create(null);
+    d3.selectAll('.wikimap-label')
+      .each(function (p) {
+        id2bbox[p.id] = this.getBBox();
+      });
+
     d3.selectAll('.wikimap-label')
       .attr("visibility", function (p) {
-        // this points to the respective DOM element
-        var bbox = this.getBBox();
+        var bbox = id2bbox[p.id];
         var rect = {
           cx: bbox.x + bbox.width / 2,
           cy: bbox.y + bbox.height / 2,
           width: bbox.width,
-          height: bbox.height,
+          height: bbox.height
         };
 
         if (debug) { addDebugRect(rect); }
@@ -87,21 +100,6 @@ var LabelRenderer = function (parent, canvas) {
     return (string.length <= length)? string : string.substring(0, length - 3)+'...';
   }
 
-  function getMaxRectSize() {
-    var maxTextSize = [0, 0];
-    d3.selectAll(".wikimap-label")
-      .each(function () {
-        //this points to the label
-        var bbox = this.getBBox();
-        maxTextSize[0] = Math.max(maxTextSize[0], bbox.width);
-        maxTextSize[1] = Math.max(maxTextSize[1], bbox.height);
-      });
-
-    var r = parent.getRadius(0); // max possible radius of a dot
-
-    return [Math.max(2 * r, maxTextSize[0]), Math.max(2 * r, maxTextSize[1])];
-  }
-
   function addDebugRect(rect) {
     d3.select(".debug")
       .append("rect")
@@ -111,6 +109,24 @@ var LabelRenderer = function (parent, canvas) {
       .attr("height", function () { return rect.height; })
       .style("stroke-width", 1)
       .style("stroke", "red");
+  }
+
+  function clearDebugRects() {
+    d3.select(".debug")
+      .selectAll("rect")
+      .remove();
+  }
+
+  function getBounds() {
+    var origin = canvas.content.getBoundingClientRect(); // the (0, 0) point of labels and dots may not be (0, 0) of the window
+    var rect1 = canvas.labels.getBoundingClientRect();
+    var rect2 = canvas.dots.getBoundingClientRect();
+    var bounds = [[Math.min(rect1.left, rect2.left), Math.min(rect1.top, rect2.top)], [Math.max(rect1.right, rect2.right), Math.max(rect1.bottom, rect2.bottom)]];
+    bounds[0][0] -= origin.left;
+    bounds[1][0] -= origin.left;
+    bounds[0][1] -= origin.top;
+    bounds[1][1] -= origin.top;
+    return bounds;
   }
 };
 

@@ -5,7 +5,7 @@ var PointRenderer = function (parent, canvas) {
   var that = this;
 
   this.show = function (points) {
-    d3.select('.canvas-dots')
+    canvas.d3dots
       .selectAll('.dot')
       .data(points, function (p) { return p.id; })
       .enter() // add new points
@@ -14,8 +14,8 @@ var PointRenderer = function (parent, canvas) {
       .attr("cx", function(p) { return Converters.data2view([+p.x, +p.y])[0]; })
       .attr("cy", function(p) { return Converters.data2view([+p.x, +p.y])[1]; })
       .attr("r", function(p) { return parent.getRadius(p.z); })
-      .on("mouseover", canvas.tip.show)
-      .on("mouseout", canvas.tip.hide);
+      .on("mouseover", canvas.d3tip.show)
+      .on("mouseout", canvas.d3tip.hide);
 
     that.updatePositions();
     that.updateColors();

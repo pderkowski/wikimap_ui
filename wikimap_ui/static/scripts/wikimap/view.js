@@ -14,7 +14,7 @@ var View = function () {
 
   this._tiles = new Elements.Tiles(this._renderer, getId());
 
-  that._zoom = Zoom(this._canvas.content);
+  that._zoom = Zoom(this._canvas.d3content);
   that._zoom.$
     .on("zoom", function (e, transform) { applyZoom(transform); });
 
@@ -64,7 +64,7 @@ var View = function () {
 
     that._zoom.reset();
     that._renderer.redrawAll();
-  }
+  };
 
   this.centerOn = function (name) {
     Data.Point.get(name)

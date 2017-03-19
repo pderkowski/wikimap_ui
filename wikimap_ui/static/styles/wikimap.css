@@ -24,6 +24,7 @@ rect {
 .canvas-labels {
   text-anchor: middle;
   pointer-events: none;
+  line-height: 1;
 }
 
 .canvas-content {

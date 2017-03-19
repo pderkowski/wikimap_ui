@@ -6,14 +6,14 @@ var Canvas = function () {
   this.$ = $(this);
 
   function getContainerSize() {
-    var w = that.container.node().offsetWidth;
-    var h = that.container.node().offsetHeight;
+    var w = that.container.offsetWidth;
+    var h = that.container.offsetHeight;
     return [+w, +h];
   }
 
   function getContentSize() {
-    var w = that.content.attr("width");
-    var h = that.content.attr("height");
+    var w = that.d3content.attr("width");
+    var h = that.d3content.attr("height");
     return [+w, +h];
   }
 
@@ -60,14 +60,20 @@ var Canvas = function () {
 
   this.fontSize = 10;
 
-  this.container = d3.select("#canvas-container");
-    this.content = attachContentTo(this.container);
-      this.dots = attachDotsTo(this.content);
-      this.labels = attachLabelsTo(this.content);
-      this.tip = attachTipTo(this.content);
-      this.frame = attachFrameTo(this.content);
+  this.container = document.getElementById('canvas-container');
 
-  this.dots
+  this.d3container = d3.select("#canvas-container");
+  this.d3content = attachContentTo(this.d3container);
+  this.d3dots = attachDotsTo(this.d3content);
+  this.d3labels = attachLabelsTo(this.d3content);
+  this.d3tip = attachTipTo(this.d3content);
+  this.d3frame = attachFrameTo(this.d3content);
+
+  this.content = document.getElementsByClassName('canvas-content')[0];
+  this.dots = document.getElementsByClassName('canvas-dots')[0];
+  this.labels = document.getElementsByClassName('canvas-labels')[0];
+
+  this.d3dots
     .on("click", function (p) {
       if (d3.event.defaultPrevented) return;
       var selection = d3.select(d3.event.target); // we listen on a group of dots, this gets the specific dot
@@ -75,11 +81,11 @@ var Canvas = function () {
     });
 
   this.stretchToFit = function () {
-    d3.select(".canvas-frame")
+    that.d3frame
       .attr("width", getContainerSize()[0] - 1)
       .attr("height", getContainerSize()[1] - 1);
 
-    d3.select(".canvas-content")
+    that.d3content
       .attr("width", getContainerSize()[0])
       .attr("height", getContainerSize()[1]);
   };

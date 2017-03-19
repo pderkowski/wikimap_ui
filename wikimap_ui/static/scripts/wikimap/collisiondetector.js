@@ -1,7 +1,7 @@
 var d3 = require('d3');
 
-var CollisionDetector = function (maxRectSize) {
-  this._maxRectSize = maxRectSize;
+var QCollisionDetector = function () {
+  this._maxRectSize = [0, 0];
   this._qtree = createQuadtree();
 
   function createQuadtree() {
@@ -11,15 +11,12 @@ var CollisionDetector = function (maxRectSize) {
   }
 };
 
-CollisionDetector.prototype.add = function (rect) {
+QCollisionDetector.prototype.add = function (rect) {
+  this._maxRectSize = [Math.max(this._maxRectSize[0], rect[0]), Math.max(this._maxRectSize[1], rect[1])];
   this._qtree.add(rect);
 };
 
-CollisionDetector.prototype.remove = function (rect) {
-  this._qtree.remove(rect);
-};
-
-CollisionDetector.prototype.isColliding = function (rect) {
+QCollisionDetector.prototype.isColliding = function (rect) {
   var that = this;
 
   var collisionDetected = false;
@@ -56,5 +53,75 @@ CollisionDetector.prototype.isColliding = function (rect) {
   return collisionDetected;
 };
 
+// bounds - [[x1, y1], [x2, y2]]
+// bucketSize - [x, y]
+// IMPORTANT ASSUMPTION: all rects are smaller than the bucket
+var BCollisionDetector = function (bounds, bucketSize) {
+  this._bounds = bounds;
+  this._bucketSize = bucketSize;
+  this._buckets = createBuckets(bounds, bucketSize);
 
-module.exports = CollisionDetector;
+  function createBuckets(bounds, bucketSize) {
+    var bWidth = bucketSize[0];
+    var bHeight = bucketSize[1];
+    var xSpan = bounds[1][0] - bounds[0][0];
+    var ySpan = bounds[1][1] - bounds[0][1];
+    var cols = Math.ceil(xSpan / bWidth);
+    var rows = Math.ceil(ySpan / bHeight);
+    var buckets = [];
+    while(rows--) buckets[rows] = createRow(cols);
+    return buckets;
+  }
+
+  function createRow(cols) {
+    row = [];
+    while(cols--) row[cols] = [];
+    return row;
+  }
+};
+
+BCollisionDetector.prototype._getIndex = function (x, y) {
+  var xIdx = Math.floor((x - this._bounds[0][0]) / this._bucketSize[0]);
+  var yIdx = Math.floor((y - this._bounds[0][1]) / this._bucketSize[1]);
+  return [xIdx, yIdx];
+};
+
+BCollisionDetector.prototype._addToBucket = function(bucket, rect) {
+  this._buckets[bucket[1]][bucket[0]].push(rect);
+};
+
+BCollisionDetector.prototype._getCornerIndices = function (rect) {
+  var x1 = rect.cx - rect.width / 2;
+  var x2 = rect.cx + rect.width / 2;
+  var y1 = rect.cy - rect.height / 2;
+  var y2 = rect.cy + rect.height / 2;
+  return [this._getIndex(x1, y1), this._getIndex(x2, y1), this._getIndex(x2, y2), this._getIndex(x1, y2)];
+};
+
+BCollisionDetector.prototype.add = function (rect) {
+  var cornerIndices = this._getCornerIndices(rect);
+  var tl = cornerIndices[0], tr = cornerIndices[1], br = cornerIndices[2], bl = cornerIndices[3];
+  this._addToBucket(tl, rect);
+  if (tr != tl) { this._addToBucket(tr, rect); }
+  if (br != tr) { this._addToBucket(br, rect); }
+  if (bl != tl && bl != br) { this._addToBucket(bl, rect); }
+};
+
+BCollisionDetector.prototype.isColliding = function (rect) {
+  var cornerIndices = this._getCornerIndices(rect);
+  var tl = cornerIndices[0], tr = cornerIndices[1], br = cornerIndices[2], bl = cornerIndices[3];
+  return this._isCollidingInBucket(tl, rect)
+    || (tr != tl && this._isCollidingInBucket(tr, rect))
+    || (br != tr && this._isCollidingInBucket(br, rect))
+    || (bl != tl && bl != br && this._isCollidingInBucket(br, rect));
+};
+
+BCollisionDetector.prototype._isCollidingInBucket = function (bucket, rect1) {
+  return this._buckets[bucket[1]][bucket[0]].some(function (rect2) {
+    return Math.abs(rect1.cx - rect2.cx) <= (rect1.width + rect2.width) / 2
+        && Math.abs(rect1.cy - rect2.cy) <= (rect1.height + rect2.height) / 2;
+  });
+};
+
+module.exports.QCollisionDetector = QCollisionDetector;
+module.exports.BCollisionDetector = BCollisionDetector;
