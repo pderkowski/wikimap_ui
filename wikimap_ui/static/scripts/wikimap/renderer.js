@@ -23,7 +23,6 @@ var Renderer = function (canvas) {
     var scale = transform.k;
     if (that._lastScale != scale) {
       that._lastScale = scale;
-      // that._labels.updateVisibility();
     }
 
     var z = Math.log2(scale);

@@ -98,13 +98,19 @@ BCollisionDetector.prototype._getCornerIndices = function (rect) {
   return [this._getIndex(x1, y1), this._getIndex(x2, y1), this._getIndex(x2, y2), this._getIndex(x1, y2)];
 };
 
+BCollisionDetector.prototype._bucketExists = function (bucket) {
+  var rows = this._buckets.length;
+  var cols = this._buckets[0].length;
+  return 0 <= bucket[1] && bucket[1] < rows && 0 <= bucket[0] && bucket[0] < cols;
+};
+
 BCollisionDetector.prototype.add = function (rect) {
   var cornerIndices = this._getCornerIndices(rect);
   var tl = cornerIndices[0], tr = cornerIndices[1], br = cornerIndices[2], bl = cornerIndices[3];
-  this._addToBucket(tl, rect);
-  if (tr != tl) { this._addToBucket(tr, rect); }
-  if (br != tr) { this._addToBucket(br, rect); }
-  if (bl != tl && bl != br) { this._addToBucket(bl, rect); }
+  if (this._bucketExists(tl)) this._addToBucket(tl, rect);
+  if (tr != tl && this._bucketExists(tr)) { this._addToBucket(tr, rect); }
+  if (br != tr && this._bucketExists(br)) { this._addToBucket(br, rect); }
+  if (bl != tl && bl != br && this._bucketExists(bl)) { this._addToBucket(bl, rect); }
 };
 
 BCollisionDetector.prototype.isColliding = function (rect) {
