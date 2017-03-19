@@ -13,6 +13,9 @@ var Button = function (options) {
       trigger: 'hover',
       container: 'body'
     });
+    that.$.on('remove', function () {
+      that.$.tooltip('destroy');
+    });
   }
 
   that.disable = function () {
