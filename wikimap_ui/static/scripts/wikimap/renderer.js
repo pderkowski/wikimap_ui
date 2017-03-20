@@ -29,6 +29,7 @@ var Renderer = function (canvas) {
     if (that._lastZ != z) {
       that._lastZ = z;
       that._points.updateSizes(z);
+      that._labels.updateVisibility();
     }
   };
 

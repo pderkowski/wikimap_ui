@@ -69,7 +69,7 @@ var View = function () {
   this.centerOn = function (name) {
     Data.Point.get(name)
       .then(function (datapoint) {
-        var center = Converters.view2viewbox([that._canvas.getSize()[0] / 2, that._canvas.getSize()[1] / 2]);
+        var center = Converters.view2viewbox(that._canvas.getCenter());
         var point = Converters.data2viewbox([datapoint.x, datapoint.y]);
         var transform = that._zoom.get().translate(center[0] - point[0], center[1] - point[1]);
         that._zoom.set(transform);

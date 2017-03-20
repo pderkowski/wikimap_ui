@@ -129,5 +129,62 @@ BCollisionDetector.prototype._isCollidingInBucket = function (bucket, rect1) {
   });
 };
 
+// unbounded version
+// bucketSize - [x, y]
+// IMPORTANT ASSUMPTION: all rects are smaller than the bucket
+var UBCollisionDetector = function (bucketSize) {
+  this._bucketSize = bucketSize;
+  this._buckets = Object.create(null);
+};
+
+UBCollisionDetector.prototype._getIndex = function (x, y) {
+  var xIdx = Math.floor(x / this._bucketSize[0]);
+  var yIdx = Math.floor(y / this._bucketSize[1]);
+  return [xIdx, yIdx];
+};
+
+UBCollisionDetector.prototype._addToBucket = function(bucket, rect) {
+  this._getBucket(bucket).push(rect);
+};
+
+UBCollisionDetector.prototype._getBucket = function(bucket) {
+  var row = (this._buckets[bucket[1]] = this._buckets[bucket[1]] || Object.create(null));
+  return (row[bucket[0]] = row[bucket[0]] || []);
+};
+
+UBCollisionDetector.prototype._getCornerIndices = function (rect) {
+  var x1 = rect.cx - rect.width / 2;
+  var x2 = rect.cx + rect.width / 2;
+  var y1 = rect.cy - rect.height / 2;
+  var y2 = rect.cy + rect.height / 2;
+  return [this._getIndex(x1, y1), this._getIndex(x2, y1), this._getIndex(x2, y2), this._getIndex(x1, y2)];
+};
+
+UBCollisionDetector.prototype.add = function (rect) {
+  var cornerIndices = this._getCornerIndices(rect);
+  var tl = cornerIndices[0], tr = cornerIndices[1], br = cornerIndices[2], bl = cornerIndices[3];
+  this._addToBucket(tl, rect);
+  if (tr != tl) { this._addToBucket(tr, rect); }
+  if (br != tr) { this._addToBucket(br, rect); }
+  if (bl != tl && bl != br) { this._addToBucket(bl, rect); }
+};
+
+UBCollisionDetector.prototype.isColliding = function (rect) {
+  var cornerIndices = this._getCornerIndices(rect);
+  var tl = cornerIndices[0], tr = cornerIndices[1], br = cornerIndices[2], bl = cornerIndices[3];
+  return this._isCollidingInBucket(tl, rect)
+    || (tr != tl && this._isCollidingInBucket(tr, rect))
+    || (br != tr && this._isCollidingInBucket(br, rect))
+    || (bl != tl && bl != br && this._isCollidingInBucket(br, rect));
+};
+
+UBCollisionDetector.prototype._isCollidingInBucket = function (bucket, rect1) {
+  return this._getBucket(bucket).some(function (rect2) {
+    return Math.abs(rect1.cx - rect2.cx) <= (rect1.width + rect2.width) / 2
+        && Math.abs(rect1.cy - rect2.cy) <= (rect1.height + rect2.height) / 2;
+  });
+};
+
 module.exports.QCollisionDetector = QCollisionDetector;
 module.exports.BCollisionDetector = BCollisionDetector;
+module.exports.UBCollisionDetector = UBCollisionDetector;

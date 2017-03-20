@@ -58,8 +58,6 @@ var Canvas = function () {
     return tip;
   }
 
-  this.fontSize = 10;
-
   this.container = document.getElementById('canvas-container');
 
   this.d3container = d3.select("#canvas-container");
@@ -72,6 +70,9 @@ var Canvas = function () {
   this.content = document.getElementsByClassName('canvas-content')[0];
   this.dots = document.getElementsByClassName('canvas-dots')[0];
   this.labels = document.getElementsByClassName('canvas-labels')[0];
+
+  this.fontSize = parseInt($(this.labels).css('font-size'));
+  this.fontFamily = $(this.labels).css('font-family');
 
   this.d3dots
     .on("click", function (p) {
@@ -91,6 +92,9 @@ var Canvas = function () {
   };
 
   this.getSize = getContentSize;
+  this.getCenter = function () {
+    return [getContentSize[0] / 2, getContentSize[1] / 2];
+  };
 
   return this;
 };

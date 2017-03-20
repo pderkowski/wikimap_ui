@@ -44,6 +44,17 @@ var PointRenderer = function (parent, canvas) {
     d3.selectAll('.dot')
       .attr("r", function(p) { return parent.getRadius(p.z); });
   };
+
+  this._estimateRect = function (p) {
+    var center = Converters.data2view([+p.x, +p.y]);
+    var radius = parent.getRadius(p.z);
+    return {
+      cx: center[0],
+      cy: center[1],
+      width: 2 * radius,
+      height: 2 * radius
+    };
+  };
 };
 
 module.exports = PointRenderer;

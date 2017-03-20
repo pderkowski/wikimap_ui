@@ -43,48 +43,20 @@ var LabelRenderer = function (parent, canvas) {
   };
 
   this.updateVisibility = function () {
-    // function logBounds(bounds) {
-    //   console.log('['+bounds[0][0].toFixed(1)+', '+bounds[0][1].toFixed(1)+'] ['+bounds[1][0].toFixed(1)+', '+bounds[1][1].toFixed(1)+']');
-    // }
-
-    var bounds = getBounds();
     var bucketSize = [200, 30];
-
-    var collisionDetector = new CollisionDetector.BCollisionDetector(bounds, bucketSize);
-
+    var collisionDetector = new CollisionDetector.UBCollisionDetector(bucketSize);
     if (debug) { clearDebugRects(); }
-
     // first insert dots to make sure that labels don't collide with them
     d3.selectAll('.dot')
-      .each(function (p) {
-        var bbox = this.getBBox();
-        var rect = {
-          cx: bbox.x + bbox.width / 2,
-          cy: bbox.y + bbox.height / 2,
-          width: bbox.width,
-          height: bbox.height
-        };
-
+      .each(function (dot) {
+        var rect = parent._points._estimateRect(dot);
         if (debug) { addDebugRect(rect); }
         collisionDetector.add(rect);
       });
 
-    var id2bbox = Object.create(null);
     d3.selectAll('.wikimap-label')
-      .each(function (p) {
-        id2bbox[p.id] = this.getBBox();
-      });
-
-    d3.selectAll('.wikimap-label')
-      .attr("visibility", function (p) {
-        var bbox = id2bbox[p.id];
-        var rect = {
-          cx: bbox.x + bbox.width / 2,
-          cy: bbox.y + bbox.height / 2,
-          width: bbox.width,
-          height: bbox.height
-        };
-
+      .attr("visibility", function (label) {
+        var rect = that._estimateRect(label);
         if (debug) { addDebugRect(rect); }
 
         if (collisionDetector.isColliding(rect)) {
@@ -95,6 +67,27 @@ var LabelRenderer = function (parent, canvas) {
         }
       });
   };
+
+  this._estimateRect = function (p) {
+    var fontStyle = canvas.fontFamily + " " + canvas.fontSize+"px";
+    var text = trimIfLongerThan(p.title, 20);
+    var width = getTextWidth(p.title, fontStyle);
+    var height = canvas.fontSize;
+    return {
+      cx: Converters.data2view([+p.x, +p.y])[0],
+      cy: Converters.data2view([+p.x, +p.y])[1] + parent.getRadius(p.z) + canvas.fontSize / 2 + 2,
+      width: width,
+      height: height
+    };
+  };
+
+  function getTextWidth(text, font) {
+      // re-use canvas object for better performance
+      var canvas = this.canvas || (this.canvas = document.createElement("canvas"));
+      var context = canvas.getContext("2d");
+      context.font = font;
+      return context.measureText(text).width;
+  }
 
   function trimIfLongerThan(string, length) {
     return (string.length <= length)? string : string.substring(0, length - 3)+'...';
@@ -115,18 +108,6 @@ var LabelRenderer = function (parent, canvas) {
     d3.select(".debug")
       .selectAll("rect")
       .remove();
-  }
-
-  function getBounds() {
-    var origin = canvas.content.getBoundingClientRect(); // the (0, 0) point of labels and dots may not be (0, 0) of the window
-    var rect1 = canvas.labels.getBoundingClientRect();
-    var rect2 = canvas.dots.getBoundingClientRect();
-    var bounds = [[Math.min(rect1.left, rect2.left), Math.min(rect1.top, rect2.top)], [Math.max(rect1.right, rect2.right), Math.max(rect1.bottom, rect2.bottom)]];
-    bounds[0][0] -= origin.left;
-    bounds[1][0] -= origin.left;
-    bounds[0][1] -= origin.top;
-    bounds[1][1] -= origin.top;
-    return bounds;
   }
 };
 
