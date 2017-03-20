@@ -18,8 +18,6 @@ var Window = function () {
 
     element.addEventListener("resize", resizeThrottler, false);
   }
-
-  return that;
 };
 
 module.exports = Window;

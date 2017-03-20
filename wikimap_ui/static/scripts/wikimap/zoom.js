@@ -33,8 +33,6 @@ var Zoom = function (target) {
   function emitMousedown () {
     $(target.node()).trigger("mousedown");
   }
-
-  return that;
 };
 
 module.exports = Zoom;

@@ -10,7 +10,7 @@ var Window = require('./window');
 var Wikimap = function () {
   var that = this;
 
-  that._view = View();
+  that._view = new View();
   that._view.$
     .on('pointClicked', function (event, dot) { showDetails(dot); });
   that._pointInfo = PointInfo({ hook: $('#pointinfo-container') });
@@ -26,7 +26,7 @@ var Wikimap = function () {
     .on('toggle', function (event, id) { that._view.toggle(id); })
     .on('remove', function (event, id) { that._view.remove(id); that._selectionMenu.remove(id); })
     .on('color', function (event, id, color) { that._view.changeColor(id, color); });
-  that._window = Window();
+  that._window = new Window();
   that._window.$
     .on('resize', that._view.resize);
 

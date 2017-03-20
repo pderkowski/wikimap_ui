@@ -7,14 +7,12 @@ var Elements = require('./viewelements');
 
 var View = function () {
   var that = this;
-  that.$ = $(this);
+  that.$ = $(document.getElementById('wikimap-container'));
 
   this._canvas = new Canvas();
   this._renderer = new Renderer(this._canvas);
-
   this._tiles = new Elements.Tiles(this._renderer, getId());
-
-  that._zoom = Zoom(this._canvas.d3content);
+  that._zoom = new Zoom(this._canvas.d3content);
   that._zoom.$
     .on("zoom", function (e, transform) { applyZoom(transform); });
 
@@ -101,8 +99,6 @@ var View = function () {
     var brIdx = Converters.data2index(brPoint, zoomLevel);
     that._tiles.draw(tlIdx, brIdx, zoomLevel);
   }
-
-  return that;
 };
 
 module.exports = View;
