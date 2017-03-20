@@ -9,7 +9,7 @@ var View = function () {
   var that = this;
   that.$ = $(this);
 
-  this._canvas = Canvas();
+  this._canvas = new Canvas();
   this._renderer = new Renderer(this._canvas);
 
   this._tiles = new Elements.Tiles(this._renderer, getId());
@@ -69,7 +69,8 @@ var View = function () {
   this.centerOn = function (name) {
     Data.Point.get(name)
       .then(function (datapoint) {
-        var center = Converters.view2viewbox(that._canvas.getCenter());
+        var viewCenter = that._canvas.getCenter();
+        var center = Converters.view2viewbox(viewCenter);
         var point = Converters.data2viewbox([datapoint.x, datapoint.y]);
         var transform = that._zoom.get().translate(center[0] - point[0], center[1] - point[1]);
         that._zoom.set(transform);

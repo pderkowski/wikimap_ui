@@ -14,6 +14,7 @@ var PointRenderer = function (parent, canvas) {
       .attr("cx", function(p) { return Converters.data2view([+p.x, +p.y])[0]; })
       .attr("cy", function(p) { return Converters.data2view([+p.x, +p.y])[1]; })
       .attr("r", function(p) { return parent.getRadius(p.z); })
+      .style("stroke", "black")
       .on("mouseover", canvas.d3tip.show)
       .on("mouseout", canvas.d3tip.hide);
 
@@ -22,7 +23,7 @@ var PointRenderer = function (parent, canvas) {
   };
 
   this.hide = function (points) {
-    d3.selectAll('.dot')
+    canvas.d3dots.selectAll('.dot')
       .filter(function (p) { return points[p.id]; })
       .remove();
 
@@ -30,18 +31,18 @@ var PointRenderer = function (parent, canvas) {
   };
 
   this.updatePositions = function() {
-    d3.selectAll(".dot")
+    canvas.d3dots.selectAll(".dot")
       .attr("cx", function (d) { return Converters.data2view([d.x, d.y])[0]; })
       .attr("cy", function (d) { return Converters.data2view([d.x, d.y])[1]; });
   };
 
   this.updateColors = function() {
-    d3.selectAll('.dot')
+    canvas.d3dots.selectAll('.dot')
       .style('fill', function (p) { return parent.getColor(p.id); });
   };
 
   this.updateSizes = function() {
-    d3.selectAll('.dot')
+    canvas.d3dots.selectAll('.dot')
       .attr("r", function(p) { return parent.getRadius(p.z); });
   };
 

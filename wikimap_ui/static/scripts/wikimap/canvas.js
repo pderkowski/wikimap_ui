@@ -11,12 +11,6 @@ var Canvas = function () {
     return [+w, +h];
   }
 
-  function getContentSize() {
-    var w = that.d3content.attr("width");
-    var h = that.d3content.attr("height");
-    return [+w, +h];
-  }
-
   function attachContentTo(selection) {
     return selection
       .append("svg")
@@ -91,12 +85,11 @@ var Canvas = function () {
       .attr("height", getContainerSize()[1]);
   };
 
-  this.getSize = getContentSize;
+  this.getSize = getContainerSize;
   this.getCenter = function () {
-    return [getContentSize[0] / 2, getContentSize[1] / 2];
+    var size = getContainerSize();
+    return [size[0] / 2, size[1] / 2];
   };
-
-  return this;
 };
 
 module.exports = Canvas;
