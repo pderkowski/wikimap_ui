@@ -71,7 +71,7 @@ var LabelRenderer = function (parent, canvas) {
   this._estimateRect = function (p) {
     var fontStyle = canvas.fontFamily + " " + canvas.fontSize+"px";
     var text = trimIfLongerThan(p.title, 20);
-    var width = getTextWidth(p.title, fontStyle);
+    var width = getTextWidth(text, fontStyle);
     var height = canvas.fontSize;
     return {
       cx: Converters.data2view([+p.x, +p.y])[0],
