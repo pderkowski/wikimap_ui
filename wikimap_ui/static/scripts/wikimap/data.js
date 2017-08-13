@@ -24,7 +24,7 @@ var Tile = function () {
 
 var Category = function () {
   function url(c) {
-    return $SCRIPT_ROOT + 'category?title=' + c;
+    return $SCRIPT_ROOT + 'category?title=' + encodeURIComponent(c);
   }
 
   var cache = new Cache(100, function (c) { return $.getJSON(url(c)); });
@@ -36,7 +36,7 @@ var Category = function () {
 
 var Point = function () {
   function url(p) {
-    return $SCRIPT_ROOT + 'point?title=' + p;
+    return $SCRIPT_ROOT + 'point?title=' + encodeURIComponent(p);
   }
 
   var cache = new Cache(100, function (p) { return $.getJSON(url(p)); });
@@ -48,7 +48,7 @@ var Point = function () {
 
 var Terms = function () {
   function url(t) {
-    return $SCRIPT_ROOT+'search?term='+t;
+    return $SCRIPT_ROOT+'search?term='+encodeURIComponent(t);
   }
 
   var cache = new Cache(1000, function (t) { return $.getJSON(url(t)); });
@@ -60,7 +60,7 @@ var Terms = function () {
 
 var Details = function () {
   function url(p) {
-    return $SCRIPT_ROOT+'details?title='+p;
+    return $SCRIPT_ROOT+'details?title='+encodeURIComponent(p);
   }
 
   var cache = new Cache(100, function (p) { return $.getJSON(url(p)); });
@@ -72,7 +72,7 @@ var Details = function () {
 
 var Inlinks = function () {
   function url(p) {
-    return $SCRIPT_ROOT+'inlinks?title='+p;
+    return $SCRIPT_ROOT+'inlinks?title='+encodeURIComponent(p);
   }
 
   var cache = new Cache(100, function (p) { return $.getJSON(url(p)); });
@@ -84,7 +84,7 @@ var Inlinks = function () {
 
 var Outlinks = function () {
   function url(p) {
-    return $SCRIPT_ROOT+'outlinks?title='+p;
+    return $SCRIPT_ROOT+'outlinks?title='+encodeURIComponent(p);
   }
 
   var cache = new Cache(100, function (p) { return $.getJSON(url(p)); });

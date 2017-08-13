@@ -37,11 +37,19 @@ class ESDefs(object):
 
     autocomplete_analyzer = ESDef('autocomplete_analyzer', {
         "type":      "custom",
-        "tokenizer": "standard",
+        "tokenizer": "whitespace",
         "filter": [
             "lowercase",
             my_asciifolding_filter.name,
             autocomplete_filter.name
+        ]
+    })
+
+    autocomplete_search_analyzer = ESDef('autocomplete_search_analyzer', {
+        "type":      "custom",
+        "tokenizer": "whitespace",
+        "filter": [
+            "lowercase"
         ]
     })
 
@@ -149,8 +157,12 @@ class PageIndex(TermIndex):
             "settings": {
                 "number_of_shards": 1,
                 "analysis": {
-                    "filter": ESDefs.join(ESDefs.autocomplete_filter(), ESDefs.my_asciifolding_filter()),
-                    "analyzer": ESDefs.autocomplete_analyzer()
+                    "filter": ESDefs.join(
+                        ESDefs.autocomplete_filter(),
+                        ESDefs.my_asciifolding_filter()),
+                    "analyzer": ESDefs.join(
+                        ESDefs.autocomplete_analyzer(),
+                        ESDefs.autocomplete_search_analyzer())
                 }
             },
             'mappings': {
@@ -159,7 +171,8 @@ class PageIndex(TermIndex):
                         'term': {
                             'index': 'analyzed',
                             'analyzer': ESDefs.autocomplete_analyzer.name,
-                            'search_analyzer': 'standard',
+                            'search_analyzer':
+                                ESDefs.autocomplete_search_analyzer.name,
                             'type': 'string',
                             "index_options": "docs" # ignore term frequency
                         },
@@ -219,8 +232,12 @@ class CategoryIndex(TermIndex):
             "settings": {
                 "number_of_shards": 1,
                 "analysis": {
-                    "filter": ESDefs.join(ESDefs.autocomplete_filter(), ESDefs.my_asciifolding_filter()),
-                    "analyzer": ESDefs.autocomplete_analyzer()
+                    "filter": ESDefs.join(
+                        ESDefs.autocomplete_filter(),
+                        ESDefs.my_asciifolding_filter()),
+                    "analyzer": ESDefs.join(
+                        ESDefs.autocomplete_analyzer(),
+                        ESDefs.autocomplete_search_analyzer())
                 }
             },
             'mappings': {
@@ -229,7 +246,8 @@ class CategoryIndex(TermIndex):
                         'term': {
                             'index': 'analyzed',
                             'analyzer': ESDefs.autocomplete_analyzer.name,
-                            'search_analyzer': 'standard',
+                            'search_analyzer':
+                                ESDefs.autocomplete_search_analyzer.name,
                             'type': 'string',
                             "index_options": "docs" # ignore term frequency
                         },
