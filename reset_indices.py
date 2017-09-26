@@ -9,15 +9,13 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--datapath', '-d', dest='datapath', type=str, default=os.environ.get("WIKIMAP_DATAPATH", None),
-        help="Specify a data directory in which language-specific subdirectories are located. Can also be set by WIKIMAP_DATAPATH environment variable.")
     parser.add_argument('--langs', '-l', nargs='+', dest='langs', type=str, required=True,
         help="Specify languages for which to reset indices. The names of the languages should correspond to subdirectories in a directory given by --datapath.")
     parser.add_argument('--delete_all', dest='delete_all', action='store_true',
         help="Delete all existing indices.")
     args = parser.parse_args()
 
-    data = Data(args.datapath)
+    data = Data(os.path.realpath('data'))
 
     print 'Indices existing before this operation: ', data.list_indices()
 
