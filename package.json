@@ -16,7 +16,7 @@
     "bootstrap": "^3.3.7",
     "d3": "~4.2.6",
     "d3-tip": "~0.7.1",
-    "jquery": "~3.1.1",
+    "jquery": "~3.5.0",
     "jquery-ui": "^1.12.1",
     "js-lru-cache": "~0.1.10",
     "css-loader": "^0.25.0",
